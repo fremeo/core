@@ -19,7 +19,7 @@ if(($D['ACTION']??null) == 'upload') {
 		$d['FILE']['D'][$md5_File]['Extension'] = $ext;
 		}
 	}
-	$CData->set_object($d);
+	$C['CData']->set_object($d);
 }
 #$F['PLATFORM']['PAGE']['W'][0]['ID'] = [$D['ID']];
 $F['FILE'] = [];

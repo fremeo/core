@@ -7,7 +7,7 @@
     "require": {
         "php": "^8.0",
         "smarty/smarty": "^v4.5",
-		"papp/cdata": "^v2.12"
+		"papp/cdata": "^v2.13"
     },
     "prefer-stable": true,
 	"psr-4": {

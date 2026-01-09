@@ -16,7 +16,8 @@ if(($D['ACTION']??null) == 'save') {
 		}
 	}
 
-	$CData->set_object($D);
+
+	$C['CData']->set_object($D);
 	unset($D['LINK']); 
 }
 
