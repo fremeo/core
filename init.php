@@ -1,5 +1,8 @@
 <?php
 include('system/autoload.php');
+include('system/papp/framework/system/core/CFile.php');
+
+$C['CFile'] = new CFile();
 
 // 1. Module scannen und Metadaten sammeln
 foreach (glob(PROJECT_ROOT . '/system' . '/*/*', GLOB_ONLYDIR) as $moduleDir) {
