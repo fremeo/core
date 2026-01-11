@@ -1,6 +1,6 @@
 <?php
 include('system/autoload.php');
-include('system/papp/framework/system/core/CFile.php');
+include('system/papp/framework/core/CFile.php');
 
 $C['CFile'] = new CFile();
 

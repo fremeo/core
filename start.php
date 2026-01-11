@@ -56,7 +56,7 @@ if( isset($D['SEO_URL'] ) ) {
 	
 			$D = array_merge_recursive($D,(array)$d['D']);
 			if(isset($d['R'])) {
-				$D['R'] = array_merge_recursive((array)$d['R']);#ToDo: 
+				$R = $D['R'] = array_merge_recursive((array)$d['R']);#ToDo: 
 			}
 		
 
