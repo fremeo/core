@@ -50,7 +50,7 @@ if( isset($D['SEO_URL'] ) ) {
 		$f['LINK']['W'][0]['ID'] = $hURL;
 		$C['CData']->get_object($D,$f);
 		
-		if(isset($D['LINK']['D'][ $hURL ]) && $D['LINK']['D'][ $hURL ]['Active'] && strpos($D['LINK']['D'][ $hURL ]['ToURL'], 'D[_PAGE]') !== false ) {
+		if(isset($D['LINK']['D'][ $hURL ]) && ($D['LINK']['D'][ $hURL ]['Active']??false) && strpos($D['LINK']['D'][ $hURL ]['ToURL'], 'D[_PAGE]') !== false ) {
 			
 			parse_str($D['LINK']['D'][ $hURL ]['ToURL'], $d);
 	

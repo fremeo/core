@@ -116,7 +116,7 @@
 						</div>
 					</div>
 					<div class="col-xxl-5 col-lg-5">
-						<form methode="post">
+						<form methode="post" action="./artikel">
 							<div class="input-group">
 								<input name="D[SEARCH]" value="{$D.SEARCH}" class="form-control rounded-l" type="search" placeholder="Search for products">
 								<span class="input-group-append">
