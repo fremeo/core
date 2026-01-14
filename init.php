@@ -1,8 +1,16 @@
 <?php
 include('system/autoload.php');
 include('system/papp/framework/core/CFile.php');
+include('system/papp/framework/core/Packagist.php');
+include('system/papp/framework/core/ComposerManager.php');
+
+require_once('system/papp/cdata/lib/CData.php');
 
 $C['CFile'] = new CFile();
+$C['CCache'] = new papp\CCache([ 'DB' => ['FILENAME' => PROJECT_ROOT.'data_c/papp_framework/cache.cache' ] ]);
+
+$C['Packagist'] = new Packagist();
+$C['ComposerManager'] = new ComposerManager(__DIR__.'/core/composer.phar', 'data_c/papp_framework/log.txt');
 
 // 1. Module scannen und Metadaten sammeln
 foreach (glob(PROJECT_ROOT . '/system' . '/*/*', GLOB_ONLYDIR) as $moduleDir) {

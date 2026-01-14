@@ -53,7 +53,7 @@ class Packagist
         $versions = [];
         if (isset($data['packages'][$package]) && is_array($data['packages'][$package])) {
             foreach ($data['packages'][$package] as $ver) {
-                $versions[] = [
+                $versions[$ver['version']] = [
                     'version' => $ver['version'] ?? '',
                     'require' => $ver['require'] ?? [],
                     'time' => $ver['time'] ?? null

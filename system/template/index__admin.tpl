@@ -148,6 +148,7 @@
 				<div class="collapse ps-3" id="submenu5">
 					<ul class="nav flex-column">
 						{block name="sidebar_system"}
+						<li class="nav-item"><a class="nav-link" href="?D[_PAGE]=admin__module.list&R[ModuleId]=papp/framework#submenu5"><i class="fa-solid fa-puzzle-piece"></i> Module</a></li>
 						<li class="nav-item"><a class="nav-link" href="?D[_PAGE]=admin__link.list&R[ModuleId]=papp/framework#submenu5"><i class="fas fa-link"></i> Link</a></li>
 						<li class="nav-item"><a class="nav-link" href="?D[_PAGE]=admin__file.list&R[ModuleId]=papp/framework#submenu5"><i class="fas fa-file-alt"></i> Dateien</a></li>
 						<li class="nav-item"><a class="nav-link" href="?D[_PAGE]=admin__setting.list&R[ModuleId]=papp/framework#submenu5"><i class="fas fa-ellipsis-v"></i> Menu</a></li>	
