@@ -12,10 +12,10 @@ if(($D['ACTION']??null) == 'upload') {
 		$md5_File = md5_file($File);
 		$basename = pathinfo($_FILES['file']['name'][$kFile], PATHINFO_FILENAME);
 		$ext = pathinfo($_FILES['file']['name'][$kFile], PATHINFO_EXTENSION);
-		$C['CFile']->move($File,"data/papp_framework/file/{$md5_File}.{$ext}");
+		$C['CFile']->move($File,"data/papp_phpapp/file/{$md5_File}.{$ext}");
 		
 		$d['FILE']['D'][$md5_File]['Name'] = $basename;
-		$d['FILE']['D'][$md5_File]['Size'] = filesize("data/papp_framework/file/{$md5_File}.{$ext}");
+		$d['FILE']['D'][$md5_File]['Size'] = filesize("data/papp_phpapp/file/{$md5_File}.{$ext}");
 		$d['FILE']['D'][$md5_File]['Extension'] = $ext;
 		}
 	}

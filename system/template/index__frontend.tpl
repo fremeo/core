@@ -268,7 +268,7 @@
 		  });
 		</script>*}
 
-		{*<link rel="stylesheet" href="view/shop/template/core/framework/file_upload/css/jquery.fileupload.css">*}
+		{*<link rel="stylesheet" href="view/shop/template/core/phpapp/file_upload/css/jquery.fileupload.css">*}
 		{*<link rel="stylesheet" href="view/shopXX/template/core/main.css">*}
 	{/block}
 </html>

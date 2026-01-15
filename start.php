@@ -19,7 +19,7 @@ foreach ($D['MODUL']['D'] as $moduleDir => $info) {
 
 	// Konfiguration (optional)
 	#$C['Smarty']->setTemplateDir(__DIR__ . '/system/template/');
-	$C['Smarty']->addTemplateDir(__DIR__ . '/system/template/', 'framework');
+	$C['Smarty']->addTemplateDir(__DIR__ . '/system/template/', 'phpapp');
 	$C['Smarty']->setCompileDir("{$D['MY']['CacheDir']}template_c/");
 	$C['Smarty']->error_reporting = E_ALL & ~E_NOTICE & ~E_WARNING & ~E_DEPRECATED;
 
@@ -69,7 +69,7 @@ if( isset($D['SEO_URL'] ) ) {
 			header( "HTTP/1.1 404 Not Found" );
 			$D['_PAGE'] = 'error.404';
 			$D['R']['Page'] = 'error.404';
-			$D['R']['ModuleId'] = 'papp/framework';
+			$D['R']['ModuleId'] = 'papp/phpapp';
 		}
 	}
 	#print_r($D['PLATFORM']['D'][ $D['PLATFORM_ID'] ]['SETTING']);
@@ -103,7 +103,7 @@ $D['MODUL']['D'][ $Id ] = [
 		header( "HTTP/1.1 404 Not Found" );
 		$D['_PAGE'] = 'error.404';
 		$D['R']['Page'] = 'error.404';
-		$D['R']['ModuleId'] = 'papp/framework';
+		$D['R']['ModuleId'] = 'papp/phpapp';
 	}
 	
 }

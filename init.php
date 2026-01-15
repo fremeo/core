@@ -1,16 +1,16 @@
 <?php
 include('system/autoload.php');
-include('system/papp/framework/core/CFile.php');
-include('system/papp/framework/core/Packagist.php');
-include('system/papp/framework/core/ComposerManager.php');
+include(__dir__.'/core/CFile.php');
+include(__dir__.'/core/Packagist.php');
+include(__dir__.'/core/ComposerManager.php');
 
 require_once('system/papp/cdata/lib/CData.php');
 
 $C['CFile'] = new CFile();
-$C['CCache'] = new papp\CCache([ 'DB' => ['FILENAME' => PROJECT_ROOT.'data_c/papp_framework/cache.cache' ] ]);
+$C['CCache'] = new papp\CCache([ 'DB' => ['FILENAME' => PROJECT_ROOT.'data_c/papp_phpapp/cache.cache' ] ]);
 
 $C['Packagist'] = new Packagist();
-$C['ComposerManager'] = new ComposerManager(__DIR__.'/core/composer.phar', 'data_c/papp_framework/log.txt');
+$C['ComposerManager'] = new ComposerManager(__DIR__.'/core/composer.phar', 'data_c/papp_phpapp/log.txt');
 
 // 1. Module scannen und Metadaten sammeln
 foreach (glob(PROJECT_ROOT . '/system' . '/*/*', GLOB_ONLYDIR) as $moduleDir) {
@@ -72,7 +72,7 @@ $frame->setLink($active,$FromURL,$ToURL);
 
 // 2. Phase: alle init.php laden
 foreach ($D['MODUL']['D'] as $moduleDir => $info) {
-	if('papp/framework' != $moduleDir) {
+	if('papp/phpapp' != $moduleDir) {
 		$D['MY'] = $info;
 		
 		$init = $info['ModulDir'] . '/init.php';

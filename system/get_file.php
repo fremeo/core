@@ -9,8 +9,8 @@ if(isset($d['FILE']['D'])) {
 	$File_id = $key[0];
 
 	$D['IMAGE'] = [
-		'SOURCE_FILE'	=> "data/papp_framework/file/{$File_id}.{$d['FILE']['D'][$File_id]['Extension']}",
-		'TARGET_DIR'	=> "data_c/papp_framework/file/",
+		'SOURCE_FILE'	=> "data/papp_phpapp/file/{$File_id}.{$d['FILE']['D'][$File_id]['Extension']}",
+		'TARGET_DIR'	=> "data_c/papp_phpapp/file/",
 		'TARGET_FILE'	=> "{$File_id}_{$R['x']}x{$R['y']}.{$R['extension']}",
 		'X'				=> $R['x'],
 		'Y'				=> $R['y'],
