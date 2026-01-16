@@ -31,13 +31,15 @@ foreach (glob(PROJECT_ROOT . '/system' . '/*/*', GLOB_ONLYDIR) as $moduleDir) {
 }
 
 
-session_start();
-$D['SESSION'] = $_SESSION['D'];
+##session_start();
+#$D['SESSION'] = $_SESSION['D'];
 
 $C['Smarty'] = new Smarty();
 $C['CData'] = new papp\CData( [ 'DB' => ['FILENAME' => __DIR__.'/../../../data/data.db' ] ] );
 #DB-----------------
 
+ 
+ 
 $C['CData']->registerPattern([ 
 	'SETTING'	=> [
 			'Active'		=> ['Type' => 'checkbox'],
@@ -60,7 +62,24 @@ $C['CData']->registerPattern([
 			'Mail'			=> ['Type' => 'text'],
 			'Password'		=> ['Type' => 'text'],
 		],
+	
  ]);
+ 
+$Pattern['USER']['D']['GROUP'] = [
+			'Active'		=> ['Type' => 'checkbox'],
+];
+ 
+$Pattern['USER_GROUP'] = [
+			'Active'		=> ['Type' => 'checkbox'],
+			'Name'			=> ['Type' => 'text'],
+];
+		
+$Pattern['USER_GROUP']['D']['PAGE'] = [
+			'Active'		=> ['Type' => 'checkbox'],
+];
+ 
+  
+$C['CData']->registerPattern($Pattern);
  
 
 /*

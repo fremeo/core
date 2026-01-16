@@ -92,7 +92,7 @@
 			{*<li><a class="dropdown-item" href="#">Profil</a></li>
 			<li><a class="dropdown-item" href="#">Einstellungen</a></li>*}
 			<li><hr class="dropdown-divider"></li>
-			<li><a class="dropdown-item" href="?D[_PAGE]=login&D[ACTION]=logout">Logout</a></li>
+			<li><a class="dropdown-item" href="?D[_PAGE]=index__login&R[ModuleId]=papp/phpapp&D[ACTION]=logout">Logout</a></li>
 		  </ul>
 		</div>
 	  </div>
@@ -148,6 +148,9 @@
 				<div class="collapse ps-3" id="submenu5">
 					<ul class="nav flex-column">
 						{block name="sidebar_system"}
+						<li class="nav-item"><a class="nav-link" href="?D[_PAGE]=admin__user.list&R[ModuleId]=papp/phpapp#submenu5"><i class="fa-solid fa-puzzle-piece"></i> Benutzer</a></li>
+						<li class="nav-item"><a class="nav-link" href="?D[_PAGE]=admin__user_group.list&R[ModuleId]=papp/phpapp#submenu5"><i class="fa-solid fa-puzzle-piece"></i> Gruppen</a></li>
+						
 						<li class="nav-item"><a class="nav-link" href="?D[_PAGE]=admin__module.list&R[ModuleId]=papp/phpapp#submenu5"><i class="fa-solid fa-puzzle-piece"></i> Module</a></li>
 						<li class="nav-item"><a class="nav-link" href="?D[_PAGE]=admin__link.list&R[ModuleId]=papp/phpapp#submenu5"><i class="fas fa-link"></i> Link</a></li>
 						<li class="nav-item"><a class="nav-link" href="?D[_PAGE]=admin__file.list&R[ModuleId]=papp/phpapp#submenu5"><i class="fas fa-file-alt"></i> Dateien</a></li>
