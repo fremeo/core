@@ -3,14 +3,12 @@
 
 ##if(check_user_page_right(['guest','admin2l'],$D['_PAGE'], $C)) echo "OK"; else echo "nein";
 
-if(!check_user_page_right(['guest'],$D['_PAGE'], $C)) { #Prüfe ob die Guest Rechte bereits ausreichen
-	#Gast Rechte Reichen nicht aus, es muss eine Session erzeugt werden
-	
-	
-	if( !isset($D['SESSION']['UserId']) ) { #User ist nicht eingeloggt, dann vorher einloggen
+if(!check_user_page_right(['guest',$D['SESSION']['UserId']??null],$D['_PAGE'], $C)) { #Prüfe ob die Guest Rechte und falls eingellogt auch User Rechte bereits ausreichen
+	#Rechte Reichen nicht aus
+	if( !isset($D['SESSION']['UserId']) ) { #Fals User nicht eingeloggt ist, dann zum Login
 		header("Location: ?D[_PAGE]=index__login&R[ModuleId]=papp/phpapp&R[Return][Page]={$D['_PAGE']}&R[Return][ModuleId]={$R['ModuleId']}");
 	}
-	else if(!check_user_page_right([$D['SESSION']['UserId']??null ],$D['_PAGE'], $C)) { #User ist eingeloggt aber Rechte nicht ausreichend.
+	else { #User ist eingeloggt aber Rechte nicht ausreichend.
 		header("Location: ?D[_PAGE]=error.403&R[ModuleId]=papp/phpapp");
 	}
 	
