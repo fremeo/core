@@ -14,20 +14,6 @@ if(!check_user_page_right(['guest',$D['SESSION']['UserId']??null],$D['_PAGE'], $
 	
 }
 
-
-
-
-
-/*
-if(!$D['SESSION']['ACTIVE_USER']['Id']) {
-	#User ist nicht eingellogt, leite zur Login Seite.
-	#ToDo: Übergib an die Login Seite die Zielurl um nach login wieder zurück zu kehren
-	header("Location: {$D['BasePath']}login");
-} else {
-	#1. Prüfe ob berechtigung für Admin Bereich verfügbar ist
-	#Wenn nicht, dann 404
-}
-*/
 $F['SETTING'] = [];
 
 
