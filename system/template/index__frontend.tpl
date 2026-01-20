@@ -18,12 +18,13 @@
 							
 							<div class="col-md-6 col-12 text-center text-md-end d-md-block">
 							
-								<a href="{$D.BasePath}account/basket" title="Basket"><i class="fas fa-shopping-basket">{count((array)$D['SESSION']['BASKET']['ARTICLE']['D'])}</i></a>
-								{if $D.SESSION.ACCOUNT}
+								{block name="navigation_top"}
+
+								{if $D.SESSION.UserId}
 									<a href="{$D.BasePath}account" title="Account"><i class="fas fa-user-circle"></i></a>
-									<a href="{$D.BasePath}account/logout" title="Logout"><i class="fas fa-sign-out-alt"></i></a>
+									<a href="{$D.BasePath}logout" title="Logout"><i class="fas fa-sign-out-alt"></i></a>
 								{else}
-									<a href="{$D.BasePath}account/login" title="Login"><i class="fas fa-sign-in-alt"></i></a>
+									<a href="{$D.BasePath}login" title="Login"><i class="fas fa-sign-in-alt"></i></a>
 								{/if}
 {*
 								<select class="btn btn-warning btn-sm">
@@ -93,6 +94,7 @@
 									</ul>
 								</div>
 *}
+							{/block}
 							</div>
 							
 						</div>

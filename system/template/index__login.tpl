@@ -1,50 +1,74 @@
 
 {block name="body"}
 		<style>
-			.card-container.card { max-width: 350px;padding: 40px 40px;}
-			.card { background-color: #F7F7F7;padding: 20px 25px 30px;margin: 0 auto 25px;-moz-border-radius: 2px;-webkit-border-radius: 2px;border-radius: 2px;-moz-box-shadow: 0px 2px 2px rgba(0, 0, 0, 0.3);-webkit-box-shadow: 0px 2px 2px rgba(0, 0, 0, 0.3);box-shadow: 0px 2px 2px rgba(0, 0, 0, 0.3);}	
+			.vertical-center {
+				min-height: 100vh;
+				display: flex;
+				justify-content: center;
+				align-items: center;
+				background: #f0f2f5;
+			}
+
+			.login-card {
+				max-width: 380px;
+				width: 100%;
+				background: #ffffff;
+				padding: 32px;
+				border-radius: 12px;
+				box-shadow: 0 8px 25px rgba(0,0,0,0.1);
+			}
+
+			.login-title {
+				font-size: 1.4rem;
+				font-weight: 600;
+				margin-bottom: 1rem;
+				text-align: center;
+			}
+
+			.forgot-link {
+				font-size: 0.9rem;
+				display: block;
+				margin-top: 10px;
+				text-align: right;
+			}
 		</style>
+
 		<div class="vertical-center">
-			<div class="container">
+			<div class="login-card">
 
-			<table style="width:100%;height:100%;">
-				<tr>
-					<td></td>
-					<td class="box" valign="center">
+				<h2 class="login-title">{i18n id="Login"}</h2>
 
-						<div id="login_outer" class="card card-container">
-							<form method="post" class="form-horizontal">
-								<input type="hidden" name="D[PAGE]" value="login">
-								<input type="hidden" name="D[ACTION]" value="login">
-								<p class="text-center">{$D.SESSION.AccountId}</p>
-								<div class="input-group">
-									<div class="input-group-prepend"><span class="input-group-text">🌏</span></div>
-									<select class="form-control" name="R[LanguageId]" onchange="$('form').submit();">
-									{foreach from=explode("|",$D.SETTING.D['language_system'].VALUE) key="kLAN" item="LAN"}
-										<option value='{$LAN}' {if $D.SYSTEM.LANGUAGE_ID == $LAN}selected{/if}>{i18n id="language_{$LAN}" lang=$LAN}</option>
-									{/foreach}
-									</select>
-								</div>
-								<div class="input-group mt-2">
-									<div class="input-group-prepend"><span class="input-group-text">👤</span></div>
-									<input name="R[UserName]" value="{$R.UserName}" class="form-control" type="text" placeholder="{i18n id='Username'}" required autofocus>
-								</div>
-								<div class="input-group mt-2">
-									<div class="input-group-prepend"><span class="input-group-text">🔒</span></div>
-									<input name="R[Password]" class="form-control" type="password" placeholder="{i18n id='Password'}" required>
-								</div>
-								<button type="submit" value="Anmelden" class="btn btn-primary btn-block mt-2">{i18n id="Login"}</button>
-								
-							</form>
-						</div>
+				<form method="post">
+					<input type="hidden" name="D[PAGE]" value="login">
+					<input type="hidden" name="D[ACTION]" value="login">
 
-				</td>
-					<td></td>
-				</tr>
-			</table>
-				
+					<p class="text-center text-muted small">{$D.SESSION.AccountId}</p>
+
+					<!-- Username -->
+					<div class="input-group mb-3">
+						<span class="input-group-text">👤</span>
+						<input name="R[UserName]" value="{$D.R.UserName}" class="form-control" type="text" placeholder="{i18n id='Username'}" required autofocus>
+					</div>
+					<!-- Password -->
+					<div class="input-group mb-2">
+						<span class="input-group-text">🔒</span>
+						<input name="R[Password]" class="form-control" type="password" placeholder="{i18n id='Password'}" required>
+					</div>
+
+					<!-- Passwort vergessen -->
+					<a href="?R[Page]=index__password_forgot&R[ModuleId]=papp/phpapp" class="forgot-link">
+						{i18n id="PasswordForgot"}?
+					</a>
+
+					<!-- Login Button -->
+					<button type="submit" class="btn btn-primary w-100 mt-3">
+						{i18n id="Login"}
+					</button>
+				</form>
+
 			</div>
 		</div>
+
 
 	{/block}
 

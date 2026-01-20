@@ -30,35 +30,37 @@ foreach ($D['MODUL']['D'] as $moduleDir => $info) {
 
 	#ToDo: file_get_contents ist keien Sichere Funktion da es Zugrif auf lokale Dateien erlaubt. Es muss eine abgespeckte Version der CFILE Klasse zur verfügung gestelt wertden.
 	#file_get_contents nur auf URLs erlauben nicht auf URIs
-	$my_security_policy->php_functions = ['mail','base64_encode','mb_convert_encoding','hash','header','json_decode','json_encode','serialize','COUNT','file_get_contents','substr','json_decode','array_key_exists','array_merge_recursive','array_diff_key','str_pad','strtotime','date','ceil','array_keys','current','count','strlen','strtolower','number_format','md5','in_array','is_array','time','nl2br','print_r','array_key_first','strpos','strrpos','str_replace','isset','empty','sizeof','trim','explode','implode'];
+	$my_security_policy->php_functions = ['hrtime','rtrim','dirname','mail','base64_encode','mb_convert_encoding','hash','header','json_decode','json_encode','serialize','COUNT','file_get_contents','substr','json_decode','array_key_exists','array_merge_recursive','array_diff_key','str_pad','strtotime','date','ceil','array_keys','current','count','strlen','strtolower','number_format','md5','in_array','is_array','time','nl2br','print_r','array_key_first','strpos','strrpos','str_replace','isset','empty','sizeof','trim','explode','implode'];
 	$my_security_policy->php_modifiers = ['in_array','strlen','strstr','array_keys','count','COUNT','number_format'];#Smarty PHP Erweiteurngen
 	$my_security_policy->streams = null;
 	$my_security_policy->secure_dir = ['system/'];
 	
 	$C['Smarty']->enableSecurity($my_security_policy);
-$_tpl = null;
-if($D['SEO_URL'] == 'admin') {
-	$_tpl = 'index.tpl';
-	$D['R']['ModuleId'] = 'papp/admin';
-	##include(__DIR__."/system/index.php");
-}
+	$_tpl = null;
+	if($D['SEO_URL'] == 'admin') {
+		$_tpl = 'index.tpl';
+		$D['R']['ModuleId'] = 'papp/admin';
+		##include(__DIR__."/system/index.php");
+	}
 
-if( isset($D['SEO_URL'] ) ) {
+if( isset($D['SEO_URL']) ) {
 
-	if(!isset($D['_PAGE'])) { #Mit SEO Link darf kein Page übergeben werden
+
+	if(!isset($R['Page'])) { #Mit SEO Link darf kein Page übergeben werden
+	
 		$hURL = hash("crc32b", rtrim($D['SEO_URL'],'/'));
 		
 		#$F['PLATFORM']['W'][0]['ID'] = [ $D['PLATFORM_ID'] ];
 		$f['LINK']['W'][0]['ID'] = $hURL;
 		$C['CData']->get_object($D,$f);
 		
-		if(isset($D['LINK']['D'][ $hURL ]) && ($D['LINK']['D'][ $hURL ]['Active']??false) && strpos($D['LINK']['D'][ $hURL ]['ToURL'], 'D[_PAGE]') !== false ) {
+		if(isset($D['LINK']['D'][ $hURL ]) && ($D['LINK']['D'][ $hURL ]['Active']??false) &&  strpos($D['LINK']['D'][ $hURL ]['ToURL'], 'R[Page]') !== false ) {
 			
 			parse_str($D['LINK']['D'][ $hURL ]['ToURL'], $d);
 	
-			$D = array_merge_recursive($D,(array)$d['D']);
+			$D = array_merge_recursive((array)($D??[]),(array)($d['D']??[]));
 			if(isset($d['R'])) {
-				$R = $D['R'] = array_merge_recursive((array)$d['R']);#ToDo: 
+				$R = $D['R'] = array_replace_recursive((array)($d['R']),($R??[]) );#ToDo: 
 			}
 		
 
@@ -74,32 +76,6 @@ if( isset($D['SEO_URL'] ) ) {
 			$D['R']['ModuleId'] = 'papp/phpapp';
 		}
 	}
-	#print_r($D['PLATFORM']['D'][ $D['PLATFORM_ID'] ]['SETTING']);
-	##include("view/shop/".(($D['PAGE'])?$D['PAGE']:'index').".php");
-	##include(__DIR__."/system/index.php");
-
-/*
-
-	$_path = "{PROJECT_ROOT}/system/{$D['R']['ModuleId']}/system/";
-
-	if( is_file("{$_path}{$D['_PAGE']}.php") ) {
-		
-		include("{$_path}{$D['_PAGE']}.php");  #Fügt ggf. Seiten Spezifische Ausgaben $F hinzu
-	}
-
-	$C['CData']->get_object($D,$F); 
-*/
-
-/*
-$D['MODUL']['D'][ $Id ] = [
-		'Id'			=> $Id,
-		'ModulDir'		=> $moduleDir,
-		'VendorName'	=> $vendor,
-		'PackageName'	=> $package,
-		'CacheDir'		=> "data_c/{$vendor}_{$package}/",
-		'DataDir'		=> "data/{$vendor}_{$package}/",
-	];
-*/
 
 	if(!isset($D['R']['ModuleId'])) {
 		header( "HTTP/1.1 404 Not Found" );
@@ -111,8 +87,8 @@ $D['MODUL']['D'][ $Id ] = [
 }
 
 	#Template und php Verkettung
-	
-	$_tpl = getExtends($D['MODUL']['D'], $D['R']['ModuleId'], $D['_PAGE']);
+
+	$_tpl = getExtends($D['MODUL']['D'], $D['R']['ModuleId'], $D['R']['Page']);
 	
 	foreach($_tpl['php'] AS $kFile) {
 		include_once ($kFile);
@@ -231,9 +207,9 @@ foreach ($modules as $moduleId => $moduleDir) {
     // ---------------------------------------------------------
     // 5. Rekursiv: *__base.tpl nach oben suchen
     //    – base__base.tpl dabei überspringen
-    //    – z.B. index__admin.tpl
     // ---------------------------------------------------------
-    $currentBase = $base;
+    $currentBase  = $base;
+    $visitedBases = [];
 
     while (true) {
         $candidates = [];
@@ -243,7 +219,7 @@ foreach ($modules as $moduleId => $moduleDir) {
 
                 $name = basename($file);
 
-                // base__base.tpl überspringen (haben wir schon)
+                // base__base.tpl überspringen (haben wir in Schritt 4 schon)
                 if ($name === $baseBase) {
                     continue;
                 }
@@ -251,8 +227,8 @@ foreach ($modules as $moduleId => $moduleDir) {
                 [$newBase] = explode('__', $name, 2);
 
                 $candidates[] = [
-                    'tpl'     => $moduleDir['ModulDir'] . '/system/template/' . $name,
-                    'newBase' => $newBase
+                    'tpl'     => $file,
+                    'newBase' => $newBase,
                 ];
             }
         }
@@ -261,33 +237,53 @@ foreach ($modules as $moduleId => $moduleDir) {
             break;
         }
 
-        // bevorzugt eines, bei dem newBase != currentBase (z.B. index__admin)
-        $chosen = null;
+        // Sortierung:
+        //  - zuerst Templates, deren newBase == currentBase (z.B. frontend__frontend)
+        //  - danach Templates, deren newBase != currentBase (z.B. index__frontend)
+        //  (weil wir am Ende die Kette umdrehen!)
+        usort($candidates, function ($a, $b) use ($currentBase) {
+            $aSelf = ($a['newBase'] === $currentBase);
+            $bSelf = ($b['newBase'] === $currentBase);
+
+            if ($aSelf === $bSelf) {
+                return 0;
+            }
+
+            // self zuerst
+            return $aSelf ? -1 : 1;
+        });
+
+        // Alle Kandidaten in Chain aufnehmen (ohne Duplikate)
+        foreach ($candidates as $cand) {
+            $tplPath = $cand['tpl'];
+
+            if (!in_array($tplPath, $tplChain, true)) {
+                $tplChain[] = $tplPath;
+
+                $phpPath = $toPhp($tplPath);
+                if ($phpExists($phpPath) && !in_array($phpPath, $phpChain, true)) {
+                    $phpChain[] = $phpPath;
+                }
+            }
+        }
+
+        // Nächste Base: erste, deren newBase != currentBase (also "eine Ebene höher")
+        $nextBase = null;
         foreach ($candidates as $cand) {
             if ($cand['newBase'] !== $currentBase) {
-                $chosen = $cand;
+                $nextBase = $cand['newBase'];
                 break;
             }
         }
-        // falls keins gefunden → erstes nehmen
-        if ($chosen === null) {
-            $chosen = $candidates[0];
-        }
 
-        $tplChain[] = $chosen['tpl'];
-
-        $phpPath = $toPhp($chosen['tpl']);
-        if ($phpExists($phpPath)) {
-            $phpChain[] = $phpPath;
-        }
-
-        // wenn wir oben angekommen sind (z.B. index__index), abbrechen
-        if ($chosen['newBase'] === $currentBase) {
+        if ($nextBase === null || isset($visitedBases[$nextBase])) {
             break;
         }
 
-        $currentBase = $chosen['newBase'];
+        $visitedBases[$nextBase] = true;
+        $currentBase             = $nextBase;
     }
+
 
     // ---------------------------------------------------------
     // 6. root.tpl = currentBase.tpl (oberstes Template, z.B. index.tpl)

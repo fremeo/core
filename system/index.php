@@ -3,13 +3,13 @@
 
 ##if(check_user_page_right(['guest','admin2l'],$D['_PAGE'], $C)) echo "OK"; else echo "nein";
 
-if(!check_user_page_right(['guest',$D['SESSION']['UserId']??null],$D['_PAGE'], $C)) { #Prüfe ob die Guest Rechte und falls eingellogt auch User Rechte bereits ausreichen
+if(!check_user_page_right(['guest',$D['SESSION']['UserId']??null],$R['Page'], $C)) { #Prüfe ob die Guest Rechte und falls eingellogt auch User Rechte bereits ausreichen
 	#Rechte Reichen nicht aus
 	if( !isset($D['SESSION']['UserId']) ) { #Fals User nicht eingeloggt ist, dann zum Login
-		header("Location: ?D[_PAGE]=index__login&R[ModuleId]=papp/phpapp&R[Return][Page]={$D['_PAGE']}&R[Return][ModuleId]={$R['ModuleId']}");
+		header("Location: ?R[Page]=index__login&R[ModuleId]=papp/phpapp&R[Return][Page]={$D['_PAGE']}&R[Return][ModuleId]={$R['ModuleId']}");
 	}
 	else { #User ist eingeloggt aber Rechte nicht ausreichend.
-		header("Location: ?D[_PAGE]=error.403&R[ModuleId]=papp/phpapp");
+		header("Location: ?R[Page]=error.403&R[ModuleId]=papp/phpapp");
 	}
 	
 }
@@ -23,7 +23,7 @@ function check_user_page_right($userId, $page, &$C)
 {
 	$f['USER']['W'][0]['ID'] = $userId;
 	$f['USER']['W'][0]['Active'] = 1;
-	$f['USER']['GROUP'] = [];
+	$f['USER']['GROUP']['W'][0]['Active'] = 1; #deaktivierte Gruppen, nicht listen
 	$f['USER_GROUP']['PAGE'] = [];
 	$f['USER_GROUP']['W'][0]['Active'] = 1;
 	$C['CData']->get_object($d,$f);

@@ -79,6 +79,15 @@ $Pattern['USER_GROUP']['D']['PAGE'] = [
 ];
  
   
+$Pattern['USER']['D']['ACCOUNT'] = [
+			'Active'		=> ['Type' => 'checkbox'],
+];
+$Pattern['ACCOUNT'] = [ #Kunden Accounts
+			'Active'		=> ['Type' => 'checkbox'],
+			'Name'			=> ['Type' => 'text'], #??
+];
+
+  
 $C['CData']->registerPattern($Pattern);
  
 

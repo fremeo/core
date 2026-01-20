@@ -4,6 +4,7 @@
 <html lang="de">
 	<head>
 		{block name="head"}
+		<base href="{SCRIPT_NAME}">
 		<meta charset="utf-8">
 		<meta http-equiv="X-UA-Compatible" content="IE=edge">
 		{*mobile Start*}

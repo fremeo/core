@@ -3,15 +3,17 @@ switch($D['ACTION']??null)
 {
 	case 'login':#1. User Login
 
-		$dumy_Pass = 'adminadmin';
 		if(isset($R['UserName']) && isset($R['Password'])) {
-			$D['USER']['D'] = null; #Sicherheit
 
-			if($R['Password'] == $dumy_Pass){
+			$f['USER']['W'][0]['Active'] = 1;
+			$f['USER']['W'][0]['Name'] = $R['UserName'];
+			$f['USER']['W'][1]['Mail'] = $R['UserName'];
+			$C['CData']->get_object($d,$f);
+			if( isset($d['USER']['D']) && password_verify($R['Password'], $d['USER']['D'][ array_key_first((array)($d['USER']['D']??[])) ]['Password']) ){
 				$_SESSION['UserId'] = 'admin2';
 				
 				if($R['Return']['Page'] && $R['Return']['ModuleId']) {
-					header("Location: ?D[_PAGE]={$R['Return']['Page']}&R[ModuleId]={$R['Return']['ModuleId']}");
+					header("Location: ?R[Page]={$R['Return']['Page']}&R[ModuleId]={$R['Return']['ModuleId']}");
 				}
 				else {
 					header("Location: ./");
@@ -20,8 +22,6 @@ switch($D['ACTION']??null)
 		}
 		break;
 	case 'logout':
-		#$_SESSION = null;
-		
 		session_destroy(); #Alle Session löschen beim ausloggen.
 		header("Location: ./");
 		break;

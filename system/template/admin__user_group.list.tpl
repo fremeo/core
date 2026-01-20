@@ -29,8 +29,8 @@
 		</table>
 		<div style="position:fixed;bottom:0px; background:#eee;width:100%;">
 		<button type="submit" class="btn btn-primary btn-sm">Save</button>
-		Anzahl: {$D.USR.COUNT}
+		Anzahl: {$D.USER_GROUP.COUNT}
 		</div>
-		{*<input name="D[USER_GROUP][D][guest][PAGE][D][index__][Active]" value="1">*}
+
 	</form>
 {/block}

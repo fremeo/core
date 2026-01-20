@@ -304,6 +304,8 @@
 		{elseif $p.type ==  'hidden'}{*Change muss getriggert werden um ischanged zu prüfen: $('#').val('-2').trigger('change');*}
 			<input ischanged="{$p.ischanged}" type="hidden" onchange="input_onmouseout(this,'{md5($p.value)}');" id="{if $p.id}{$p.id}{else}{$p.name}{/if}" name="{$p.name}" value="{$p.value}">
 		{else}
+		{*$p.name = hash("crc32b", "{$p.name}{hrtime(1)}" )*}
+		
 			<input ischanged="{$p.ischanged}" 
 			{if $p.title}title="{$p.title}"{/if}
 			{if $p.onchange}onchange="{$p.onchange}"{/if} style="{if $p.ischanged}background-color:#fffedd;{/if}" list="{md5($p.name)}" 
