@@ -16,6 +16,49 @@ class ComposerManager
 		$this->phpBin = $this->detectPhpBinary();   // hier intern setzen
     }
 
+public function regenerateAutoload(): array
+{
+    $vendorDir = $this->getVendorDir();
+    $composerDir = $vendorDir . '/composer';
+
+    // 1. Nur Autoload-Dateien löschen, NICHT installed.php / installed.json
+    if (is_dir($composerDir)) {
+        foreach (scandir($composerDir) as $file) {
+            if ($file === '.' || $file === '..') {
+                continue;
+            }
+
+            $path = $composerDir . '/' . $file;
+
+            // Dateien, die NICHT gelöscht werden dürfen
+            if (
+                $file === 'installed.php' ||
+                $file === 'installed.json' ||
+                $file === 'platform_check.php'
+            ) {
+                continue;
+            }
+
+            // Alles andere löschen (autoload_* Dateien)
+            if (is_file($path)) {
+                unlink($path);
+            } elseif (is_dir($path)) {
+                $this->deleteDirectory($path);
+            }
+        }
+    }
+
+    // 2. vendor/autoload.php löschen
+    $autoloadFile = $vendorDir . '/autoload.php';
+    if (is_file($autoloadFile)) {
+        unlink($autoloadFile);
+    }
+
+    // 3. Autoloader neu generieren
+    return $this->runComposer(['dump-autoload', '-o']);
+}
+
+
 private function detectPhpBinary(): string
 {
     // Unter Windows direkt den absoluten Pfad zurückgeben

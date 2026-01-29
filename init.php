@@ -1,8 +1,8 @@
 <?php
 include('system/autoload.php');
-include(__dir__.'/core/CFile.php');
-include(__dir__.'/core/Packagist.php');
-include(__dir__.'/core/ComposerManager.php');
+include_once(__dir__.'/core/CFile.php');
+include_once(__dir__.'/core/Packagist.php');
+include_once(__dir__.'/core/ComposerManager.php');
 
 require_once('system/papp/cdata/lib/CData.php');
 
@@ -38,7 +38,7 @@ $C['Smarty'] = new Smarty();
 $C['CData'] = new papp\CData( [ 'DB' => ['FILENAME' => __DIR__.'/../../../data/data.db' ] ] );
 #DB-----------------
 
- 
+$Pattern = [];
  
 $C['CData']->registerPattern([ 
 	'SETTING'	=> [
@@ -87,9 +87,8 @@ $Pattern['ACCOUNT'] = [ #Kunden Accounts
 			'Name'			=> ['Type' => 'text'], #??
 ];
 
-  
+
 $C['CData']->registerPattern($Pattern);
- 
 
 /*
 $frame = new papp\framework($ModulId);

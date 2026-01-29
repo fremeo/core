@@ -285,24 +285,41 @@ foreach ($modules as $moduleId => $moduleDir) {
     }
 
 
-    // ---------------------------------------------------------
     // 6. root.tpl = currentBase.tpl (oberstes Template, z.B. index.tpl)
-    // ---------------------------------------------------------
-    $rootTplName = $currentBase . '.tpl';
-    foreach ($modules as $moduleId => $moduleDir) {
-        if ($exists($moduleDir, $rootTplName)) {
+	$rootTplName = $currentBase . '.tpl';
+	$rootPhpPath = null;
 
-            $tplPath = $moduleDir['ModulDir'] . '/system/template/' . $rootTplName;
-            $tplChain[] = $tplPath;
+	// 6a. root__root.php zuerst einfügen (z.B. index__index.php)
+	$rootBaseBasePhp = $currentBase . '__' . $currentBase . '.php';
 
-            $phpPath = $toPhp($tplPath);
-            if ($phpExists($phpPath)) {
-                $phpChain[] = $phpPath;
-            }
+	foreach ($modules as $moduleId => $moduleDir) {
+		$phpPath = $moduleDir['ModulDir'] . '/system/' . $rootBaseBasePhp;
 
-            break;
-        }
-    }
+		if ($phpExists($phpPath)) {
+			$phpChain[] = $phpPath;   // index__index.php
+			break;
+		}
+	}
+
+	// 6b. root.php danach einfügen (z.B. index.php)
+	foreach ($modules as $moduleId => $moduleDir) {
+		if ($exists($moduleDir, $rootTplName)) {
+
+			$tplPath = $moduleDir['ModulDir'] . '/system/template/' . $rootTplName;
+			$tplChain[] = $tplPath;
+
+			$phpPath = $toPhp($tplPath);
+			if ($phpExists($phpPath)) {
+				$phpChain[] = $phpPath;   // index.php
+			}
+
+			break;
+		}
+	}
+
+	
+	
+	
 
     // ---------------------------------------------------------
     // 7. Kette umdrehen: von root → Seite
