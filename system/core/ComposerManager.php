@@ -1,7 +1,9 @@
 <?php
+declare(strict_types=1);
+
 // classes/ComposerManager.php
 
-declare(strict_types=1);
+
 
 class ComposerManager
 {

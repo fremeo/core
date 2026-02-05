@@ -11,6 +11,6 @@
     },
     "prefer-stable": true,
 	"psr-4": {
-        "papp\\": "system/papp/"
+        "phpapp\\": "system/core/"
     }
 }

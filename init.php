@@ -1,8 +1,8 @@
 <?php
 include('system/autoload.php');
-include_once(__dir__.'/core/CFile.php');
-include_once(__dir__.'/core/Packagist.php');
-include_once(__dir__.'/core/ComposerManager.php');
+include_once(__dir__.'/system/core/CFile.php');
+include_once(__dir__.'/system/core/Packagist.php');
+include_once(__dir__.'/system/core/ComposerManager.php');
 
 require_once('system/papp/cdata/lib/CData.php');
 
