@@ -3,11 +3,14 @@ include('system/autoload.php');
 include_once(__dir__.'/system/core/CFile.php');
 include_once(__dir__.'/system/core/Packagist.php');
 include_once(__dir__.'/system/core/ComposerManager.php');
+include_once(__dir__.'/system/core/Link.php');
 
 require_once('system/papp/cdata/lib/CData.php');
 
+
+
 $C['CFile'] = new CFile();
-$C['CCache'] = new papp\CCache([ 'DB' => ['FILENAME' => PROJECT_ROOT.'data_c/papp_phpapp/cache.cache' ] ]);
+$C['CCache'] = new \papp\CCache([ 'DB' => ['FILENAME' => PROJECT_ROOT.'data_c/papp_phpapp/cache.cache' ] ]);
 
 $C['Packagist'] = new Packagist();
 $C['ComposerManager'] = new ComposerManager(__DIR__.'/core/composer.phar', 'data_c/papp_phpapp/log.txt');
@@ -35,7 +38,10 @@ foreach (glob(PROJECT_ROOT . '/system' . '/*/*', GLOB_ONLYDIR) as $moduleDir) {
 #$D['SESSION'] = $_SESSION['D'];
 
 $C['Smarty'] = new Smarty();
-$C['CData'] = new papp\CData( [ 'DB' => ['FILENAME' => __DIR__.'/../../../data/data.db' ] ] );
+$C['CData'] = new \papp\CData( [ 'DB' => ['FILENAME' => __DIR__.'/../../../data/data.db' ] ] );
+
+$C['papp_phpapp']['Link'] = new \papp\phpapp\Link( $C['CData'] );
+
 #DB-----------------
 
 $Pattern = [];
@@ -50,6 +56,7 @@ $C['CData']->registerPattern([
 			'Active'		=> ['Type' => 'checkbox'],
 			'FromURL'		=> ['Type' => 'text'],
 			'ToURL'			=> ['Type' => 'text'],
+			'ModuleId'		=> ['Type' => 'id', 'ForeignKey' => 1],
 		],
 	'FILE' 		=> [
 			'Name'			=> ['Type' => 'text'],
