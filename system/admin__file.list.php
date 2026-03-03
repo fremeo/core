@@ -6,7 +6,7 @@ if(($D['ACTION']??null) == 'save') {
 if(($D['ACTION']??null) == 'upload') {
 	foreach((array) $_FILES['file']['tmp_name'] AS $kFile => $File) {
 		if($File) {
-		$platform_id = 'shop';
+		#$platform_id = 'shop';
 		#$CFile->copy($File,"data_c/PLATFORM/{$platform_id}/file/");
 		
 		$md5_File = md5_file($File);

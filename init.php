@@ -1,22 +1,23 @@
 <?php
-include('system/autoload.php');
-include_once(__dir__.'/system/core/CFile.php');
-include_once(__dir__.'/system/core/Packagist.php');
-include_once(__dir__.'/system/core/ComposerManager.php');
-include_once(__dir__.'/system/core/Link.php');
+#include('vendor/autoload.php');
+include_once(__dir__.'/system/core/CFile.php'); #ToDo: Über autoloader laden
 
-require_once('system/papp/cdata/lib/CData.php');
+include_once(__dir__.'/system/core/Link.php'); #ToDo: Über autoloader laden
+
+require_once('system/vendor/papp/cdata/lib/CData.php'); #ToDo: Über autoloader laden
 
 
 
 $C['CFile'] = new CFile();
+if(!is_dir(PROJECT_ROOT.'data_c/papp_phpapp/')) {
+	$C['CFile']->mkdir(PROJECT_ROOT.'data_c/papp_phpapp/');
+}
 $C['CCache'] = new \papp\CCache([ 'DB' => ['FILENAME' => PROJECT_ROOT.'data_c/papp_phpapp/cache.cache' ] ]);
 
-$C['Packagist'] = new Packagist();
-$C['ComposerManager'] = new ComposerManager(__DIR__.'/core/composer.phar', 'data_c/papp_phpapp/log.txt');
+
 
 // 1. Module scannen und Metadaten sammeln
-foreach (glob(PROJECT_ROOT . '/system' . '/*/*', GLOB_ONLYDIR) as $moduleDir) {
+foreach (glob(PROJECT_ROOT . '/system/vendor/' . '/*/*', GLOB_ONLYDIR) as $moduleDir) {
 	$path = realpath($moduleDir); // Pfad zum Projektordner
 	$parts = explode(DIRECTORY_SEPARATOR, $path);
 	$vendor = $parts[count($parts)-2]; // xx
@@ -38,7 +39,7 @@ foreach (glob(PROJECT_ROOT . '/system' . '/*/*', GLOB_ONLYDIR) as $moduleDir) {
 #$D['SESSION'] = $_SESSION['D'];
 
 $C['Smarty'] = new Smarty();
-$C['CData'] = new \papp\CData( [ 'DB' => ['FILENAME' => __DIR__.'/../../../data/data.db' ] ] );
+$C['CData'] = new \papp\CData( [ 'DB' => ['FILENAME' => __DIR__.'/../../../../data/data.db' ] ] );
 
 $C['papp_phpapp']['Link'] = new \papp\phpapp\Link( $C['CData'] );
 

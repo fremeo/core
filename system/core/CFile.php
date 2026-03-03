@@ -55,38 +55,72 @@ class CFile
 		return $D;
 	}
 	
-	/** Kopiert Dateien und Uploads from = $_FILES['files'], to*/
-	function copy($from, $to)
+	/**
+	 * Kopiert Dateien oder Uploads an einen Zielort.
+	 *
+	 * Unterstützt:
+	 *  - normale Dateien
+	 *  - HTTP-URLs (lädt Datei herunter)
+	 *  - $_FILES Upload-Arrays (einzeln oder mehrfach)
+	 *
+	 * Verhalten:
+	 *  - Erstellt automatisch das Zielverzeichnis, falls es nicht existiert
+	 *  - Bei Uploads wird move_uploaded_file() verwendet
+	 *  - Bei HTTP-Quellen wird file_get_contents() genutzt
+	 *  - Bei lokalen Dateien wird copy() verwendet
+	 *
+	 * Parameter:
+	 *  @param string|array $from   Pfad, URL oder $_FILES-Array
+	 *  @param string       $to     Zielpfad oder Zielordner
+	 *
+	 * Rückgabe:
+	 *  @return bool                 true bei Erfolg, false bei Fehler
+	 */
+	static function copy($from, $to)
 	{
-		#Erstelle Verzeichnis fals nicht exsistiert
-		$pi = ($to[ strlen($to)-1 ])? $to : pathinfo($to)['dirname'];
-		$this::mkdir($pi);
-		
-		if(is_array($from) && isset($from['tmp_name'])) #Ist Upload
-		{
-			if(!is_array($from['tmp_name'])) {
-				$from['tmp_name'] = [$from['tmp_name']];
-				$from['name'] = [$from['name']];
+		// Zielverzeichnis bestimmen
+		$dir = is_dir($to) ? $to : dirname($to);
+		CFile::mkdir($dir);
+
+		// ---------------------------------------------------------
+		// 1) UPLOAD-HANDLING
+		// ---------------------------------------------------------
+		if (is_array($from) && isset($from['tmp_name'])) {
+
+			// Normalisieren auf Array
+			$tmp  = (array)$from['tmp_name'];
+			$name = (array)$from['name'];
+
+			foreach ($tmp as $i => $tmpFile) {
+				if (!empty($tmpFile)) {
+					move_uploaded_file($tmpFile, rtrim($to, '/').'/'.$name[$i]);
+				}
 			}
-			
-			for($i=0; $i < count($from['tmp_name']); $i++) {
-				move_uploaded_file($from['tmp_name'][$i], $to.'/'.$from['name'][$i]);
-			}
+
+			return true;
 		}
-		else #File
-		{
-			if(strpos($from,'http') !== false ) {
-				$from = str_replace(' ','%20',$from);
-				$basename = pathinfo($from, PATHINFO_FILENAME);
-				$ext = pathinfo($from, PATHINFO_EXTENSION);
-				file_put_contents("{$to}{$basename}.{$ext}", file_get_contents($from));
-			}
-			else {
-				copy($from,$to);
-			}
-			
+
+		// ---------------------------------------------------------
+		// 2) HTTP-URL HANDLING
+		// ---------------------------------------------------------
+		if (is_string($from) && preg_match('~^https?://~i', $from)) {
+
+			$from = str_replace(' ', '%20', $from);
+
+			$basename = pathinfo($from, PATHINFO_FILENAME);
+			$ext      = pathinfo($from, PATHINFO_EXTENSION);
+
+			$target = rtrim($to, '/')."/{$basename}.{$ext}";
+
+			return (bool)file_put_contents($target, file_get_contents($from));
 		}
+
+		// ---------------------------------------------------------
+		// 3) LOKALE DATEI
+		// ---------------------------------------------------------
+		return copy($from, $to);
 	}
+
 	
 	static function mkdir($pfad, $D=null)
 	{
@@ -121,13 +155,44 @@ class CFile
 			}
 		}
 	}
-	
+
+	/**
+	 * Verschiebt eine Datei an einen neuen Speicherort.
+	 *
+	 * Funktion:
+	 *  - Erstellt automatisch das Zielverzeichnis, falls es nicht existiert
+	 *  - Kopiert die Datei vom Quellpfad zum Zielpfad
+	 *  - Löscht die Originaldatei nur, wenn das Kopieren erfolgreich war
+	 *
+	 * Parameter:
+	 *  @param string $from   Vollständiger Pfad zur Quelldatei
+	 *  @param string $to     Vollständiger Pfad zur Zieldatei
+	 *
+	 * Rückgabe:
+	 *  @return bool          true bei Erfolg, false bei Fehler
+	 *
+	 * Hinweise:
+	 *  - Sicherer als rename(), da rename() bei Cross‑Filesystem‑Moves scheitern kann
+	 *  - Verhindert Datenverlust, da die Originaldatei nur nach erfolgreichem Kopieren gelöscht wird
+	 */
 	static function move($from, $to)
 	{
-		CFile::mkdir( substr($to, 0,strripos($to, '/')) );
-		copy($from, $to);
-		CFile::remove($from);
+		$dir = dirname($to);
+
+		// Zielverzeichnis sicherstellen
+		if (!is_dir($dir)) {
+			CFile::mkdir($dir);
+		}
+
+		// Datei kopieren und nur bei Erfolg löschen
+		if (copy($from, $to)) {
+			CFile::remove($from);
+			return true;
+		}
+
+		return false;
 	}
+
 	
 	/*
 	* $P['SOURCE']['FILE'] OR $P['SOURCE']['CONTANT'] | Pfad+File+Endung  OR Text
@@ -152,239 +217,319 @@ class CFile
 	
 
 	/**
-	 * D[SOURCE_FILE]					!	#Kann mit pfad angegeben werden
-	 * D[SHOW]							opt #gibt Bild aus bzw.streamt es
-	 * D['TARGET_DIR']					opt	#Ziel Ordner z.B. "test/"
-	 * D['TARGET_FILE']					opt	#Ziel Datei Name ohne endung, wird kein Name angegeben so wird die datei dierekt ausgegeben ohne zu speichern
-	 * D['TARGET_QUALITY'] = {0-100}	opt	#Bild Quallitt
-	 * D[X],							opt	#Wird, nicht angegeben so wir original Breite verwendet
-	 * D[Y],							opt	#Wird nicht angegeben, so wirt original hche verwendet
-	 * //D[SCALE]={'relative','absolute'}	opt #Skalierung: relative = X und Y es wird nur eine Seite x oder Y auf die gre reduziert 1:1, absolute = Das Bild wird auf beide Gren skaliert und mit hintergrund farbe gefllt
-	 * 
-	 */	
+	 * Bildskalierung und -konvertierung
+	 *
+	 * Parameter:
+	 * -----------------------------------------
+	 * D[SOURCE_FILE]          (string)   Pfad zur Quelldatei
+	 * D[SHOW]                 (bool)     Bild direkt ausgeben (streamen)
+	 * D[TARGET_DIR]           (string)   Zielordner (optional)
+	 * D[TARGET_FILE]          (string)   Ziel-Dateiname ohne Endung (optional)
+	 * D[TARGET_QUALITY]       (int)      Qualität 0–100
+	 *
+	 * Skalierung:
+	 * D[X]                    (int)      Zielbreite
+	 * D[Y]                    (int)      Zielhöhe
+	 * D[SCALE]                (string)   'relative' (proportional)
+	 *                                      oder
+	 *                                   'absolute-relative' (proportional + Hintergrund)
+	 *
+	 * Hintergrund:
+	 * D[BACKGROUND]           (string)   Hex-Farbe:
+	 *                                   - 3-stellig: FFF
+	 *                                   - 6-stellig: FFFFFF
+	 *                                   - 8-stellig: FFFFFFAA (inkl. Alpha)
+	 *                                   Standard: auto
+	 *                                   auto => automatisch ermitteln des Hintergrunds
+	 *
+	 * Schärfen:
+	 * D[SHARPEN]              (bool)     true = Unsharp Mask anwenden
+	 *
+	 * Unterstützte Formate:
+	 * GIF, JPG/JPEG, PNG, WEBP, AVIF
+	 *
+	 * Rückgabe:
+	 * true bei Erfolg, false bei Fehler
+	 */
 	static function image($D)
 	{
-		if ( !file_exists($D['SOURCE_FILE']) || is_dir($D['SOURCE_FILE']) ) {
-			return false; 
-		}
-		$_availableImageType = imagetypes();
-
-		$file_info = pathinfo($D['SOURCE_FILE']);
-		$_TargetExtension = $file_info['extension'];
-		if(isset($D['TARGET_FILE'])) {
-			$file_info = pathinfo($D['TARGET_FILE']);
-			$_TargetExtension = $file_info['extension'];
-		}
-
-		$filepath_new = $D['NAME']??null;
-		$QUALITY = $D['TARGET_QUALITY']??-1;
-
-		$image_attributes = getimagesize($D['SOURCE_FILE']); 
-		$image_width_old = $image_attributes[0];
-		$image_height_old = $image_attributes[1];
-		$image_filetype = $image_attributes[2];
-		
-
-		#Seitenverhltnis =========
-		$image_dimension = ($image_width_old > $image_height_old)? $D['X']??$image_width_old : $D['Y']??$image_height_old;
-		$image_aspectratio = $image_width_old / $image_height_old;
-		$scale_mode = $scale_mode??0; 
-		if ($scale_mode == 0) 
-		{ 
-			$scale_mode = ($image_aspectratio > 1 ? -1 : -2); 
-		} 
-		elseif ($scale_mode == 1)
-		{ 
-			$scale_mode = ($image_aspectratio > 1 ? -2 : -1); 
-		}
-
-		if ($scale_mode == -1)
-		{ 
-			$image_width_new = $image_dimension; 
-			$image_height_new = round($image_dimension / $image_aspectratio); 
-		}
-		elseif ($scale_mode == -2)
-		{ 
-			$image_height_new = $image_dimension; 
-			$image_width_new = round($image_dimension * $image_aspectratio); 
-		}
-		
-		#================================
-		
-		#Lese Quelldatei ein
-		switch ($image_filetype)
-		{ 
-			case 1: #gif IMG_GIF
-				$image_old = imagecreatefromgif($D['SOURCE_FILE']); 
-				break; 
-			
-			case 2: #jpg IMG_JPG IMG_JPEG
-				$image_old = imageCreateFromJPEG($D['SOURCE_FILE']); 
-				break; 
-
-			case 3: #png IMG_PNG ToDo:
-				$image_old = imagecreatefrompng($D['SOURCE_FILE']); 
-				break;
-
-			case 18: #IMG_WEBP
-				$image_old = imagecreatefromwebp($D['SOURCE_FILE']); 
-				
-				break;
-			case 19: #IMG_AVIF 
-				$image_old = imagecreatefromavif($D['SOURCE_FILE']); 
-				
-				break;
-			default: 
-				return false; 
-		}
-		
-		$image_new = imagecreatetruecolor($image_width_new, $image_height_new);
-		imagecopyresampled($image_new, $image_old, 0, 0, 0, 0, $image_width_new, $image_height_new, $image_width_old, $image_height_old); 
-
-		$_TargetFile = (isset($D['TARGET_FILE']))?($D['TARGET_DIR']??'').$D['TARGET_FILE']:null;
-		#Ausgabe: Bild Speichern und Ausgabe
-		if($_TargetExtension == 'gif') {
-			
-			if($D['SHOW']) {
-				Header ("Content-type: image/gif");
-				imagegif($image_new);
-			}
-			if($_TargetFile) {
-				imagegif($image_new,$_TargetFile);
-			}
-		}
-		elseif($_TargetExtension == 'jpg') {
-			
-			if($D['SHOW']) {
-				Header ("Content-type: image/jpg");
-				imagejpeg($image_new,null,$QUALITY);
-			}
-			if($_TargetFile) {
-				imagejpeg($image_new,$_TargetFile,$QUALITY);
-			}
-		}
-		elseif($_TargetExtension == 'png') {
-			if($D['SHOW']) {
-				Header ("Content-type: image/png");
-				imagepng($image_new,null,$QUALITY);
-			}
-			if($_TargetFile) {
-				imagepng($image_new,$_TargetFile,$QUALITY);
-			}
-		}
-		elseif($_TargetExtension == 'webp') {
-			
-			if($D['SHOW']) {
-				Header ("Content-type: image/webp");
-				imagewebp($image_new,null,$QUALITY);
-			}
-			if($_TargetFile) {
-				imagewebp($image_new,$_TargetFile,$QUALITY);
-			}
-		}
-		elseif($_TargetExtension == 'avif') {
-			
-			if($D['SHOW']) {
-				Header ("Content-type: image/avif");
-				imageavif($image_new,null,$QUALITY);
-			}
-			if($_TargetFile) {
-				imageavif($image_new,$_TargetFile,$QUALITY);
-			}
-		}
-		else {
+		if (!file_exists($D['SOURCE_FILE']) || is_dir($D['SOURCE_FILE'])) {
 			return false;
 		}
 
-		imagedestroy($image_old); 
-		imagedestroy($image_new);
-	}
-	
-	
+		// --- Ziel-Extension bestimmen ---
+		$file_info = pathinfo($D['SOURCE_FILE']);
+		$_TargetExtension = strtolower($file_info['extension']);
 
+		if (!empty($D['TARGET_FILE'])) {
+			$file_info = pathinfo($D['TARGET_FILE']);
+			$_TargetExtension = strtolower($file_info['extension']);
+		}
+
+		if ($_TargetExtension === 'jpeg') {
+			$_TargetExtension = 'jpg';
+		}
+
+		// --- Bildattribute ---
+		$attr = getimagesize($D['SOURCE_FILE']);
+		if (!$attr) return false;
+
+		[$wOld, $hOld, $type] = $attr;
+		$ratio = $wOld / $hOld;
+
+		// --- Zielgröße bestimmen ---
+		$scale = $D['SCALE'] ?? 'relative';
+		$targetX = $D['X'] ?? $wOld;
+		$targetY = $D['Y'] ?? $hOld;
+
+		// --- RELATIVE (proportional) ---
+		if ($scale === 'relative') {
+			if ($ratio > 1) {
+				$wNew = $targetX;
+				$hNew = round($targetX / $ratio);
+			} else {
+				$hNew = $targetY;
+				$wNew = round($targetY * $ratio);
+			}
+			$canvasW = $wNew;
+			$canvasH = $hNew;
+		}
+
+		// --- ABSOLUTE-RELATIVE (proportional + Hintergrund) ---
+		elseif ($scale === 'absolute-relative') {
+
+			// Verhältnis der Zielbox
+			$scaleX = $targetX / $wOld;
+			$scaleY = $targetY / $hOld;
+
+			// Immer die kleinere Skalierung nehmen
+			$scaleFactor = min($scaleX, $scaleY);
+
+			$wNew = round($wOld * $scaleFactor);
+			$hNew = round($hOld * $scaleFactor);
+
+			// Canvas bleibt die Zielgröße
+			$canvasW = $targetX;
+			$canvasH = $targetY;
+		}
+
+		// --- Bild einlesen ---
+		switch ($type) {
+			case IMAGETYPE_GIF:  $image_old = imagecreatefromgif($D['SOURCE_FILE']); break;
+			case IMAGETYPE_JPEG: $image_old = imagecreatefromjpeg($D['SOURCE_FILE']); break;
+			case IMAGETYPE_PNG:  $image_old = imagecreatefrompng($D['SOURCE_FILE']); break;
+			case IMAGETYPE_WEBP: $image_old = imagecreatefromwebp($D['SOURCE_FILE']); break;
+			case IMAGETYPE_AVIF: $image_old = imagecreatefromavif($D['SOURCE_FILE']); break;
+			default: return false;
+		}
+
+		// --- Canvas erstellen ---
+		$image_new = imagecreatetruecolor($canvasW, $canvasH);
+
+		// ============================================================
+		//  AUTO-HINTERGRUND ERMITTELN (Standard)
+		// ============================================================
+		$background = strtoupper($D['BACKGROUND'] ?? 'AUTO');
+
+		if ($background === 'AUTO') {
+
+			// Eckpixel holen
+			$corners = [
+				imagecolorat($image_old, 0, 0),
+				imagecolorat($image_old, $wOld - 1, 0),
+				imagecolorat($image_old, 0, $hOld - 1),
+				imagecolorat($image_old, $wOld - 1, $hOld - 1)
+			];
+
+			$rSum = $gSum = $bSum = 0;
+
+			foreach ($corners as $c) {
+				$rSum += ($c >> 16) & 0xFF;
+				$gSum += ($c >> 8) & 0xFF;
+				$bSum += $c & 0xFF;
+			}
+
+			$r = intval($rSum / 4);
+			$g = intval($gSum / 4);
+			$b = intval($bSum / 4);
+
+			$alpha = 0; // keine Transparenz bei auto
+		}
+
+		// ============================================================
+		//  MANUELLE HINTERGRUND-FARBE
+		// ============================================================
+		else {
+
+			$bg = $background;
+
+			if (strlen($bg) === 3) {
+				$bg = $bg[0].$bg[0].$bg[1].$bg[1].$bg[2].$bg[2];
+			}
+
+			$alpha = 0;
+			if (strlen($bg) === 8) {
+				$alpha = hexdec(substr($bg, 6, 2));
+				$bg = substr($bg, 0, 6);
+			}
+
+			$r = hexdec(substr($bg, 0, 2));
+			$g = hexdec(substr($bg, 2, 2));
+			$b = hexdec(substr($bg, 4, 2));
+		}
+
+		// --- Transparenz für PNG/GIF ---
+		if ($_TargetExtension === 'png' || $_TargetExtension === 'gif') {
+			imagealphablending($image_new, false);
+			imagesavealpha($image_new, true);
+
+			$color = imagecolorallocatealpha(
+				$image_new,
+				$r, $g, $b,
+				intval($alpha / 2)
+			);
+		} else {
+			$color = imagecolorallocate($image_new, $r, $g, $b);
+		}
+
+		imagefill($image_new, 0, 0, $color);
+
+		// --- Bild proportional einfügen ---
+		$dstX = ($canvasW - $wNew) / 2;
+		$dstY = ($canvasH - $hNew) / 2;
+
+		imagecopyresampled(
+			$image_new, $image_old,
+			$dstX, $dstY,
+			0, 0,
+			$wNew, $hNew,
+			$wOld, $hOld
+		);
+
+		// --- SHARPEN (optional) ---
+		if (!empty($D['SHARPEN'])) {
+			$sharpen = [
+				[ 0, -1,  0],
+				[-1,  5, -1],
+				[ 0, -1,  0]
+			];
+			$divisor = array_sum(array_map('array_sum', $sharpen));
+			imageconvolution($image_new, $sharpen, $divisor, 0);
+		}
+
+		// --- Ausgabe ---
+		$_TargetFile = !empty($D['TARGET_FILE'])
+			? ($D['TARGET_DIR'] ?? '') . $D['TARGET_FILE']
+			: null;
+
+		$QUALITY = $D['TARGET_QUALITY'] ?? -1;
+
+		switch ($_TargetExtension) {
+			case 'gif':
+				if (!empty($D['SHOW'])) { header("Content-Type: image/gif"); imagegif($image_new); }
+				if ($_TargetFile) imagegif($image_new, $_TargetFile);
+				break;
+
+			case 'jpg':
+				if (!empty($D['SHOW'])) { header("Content-Type: image/jpeg"); imagejpeg($image_new, null, $QUALITY); }
+				if ($_TargetFile) imagejpeg($image_new, $_TargetFile, $QUALITY);
+				break;
+
+			case 'png':
+				// PNG Qualität von 0–100 → 0–9 umrechnen
+				if ($QUALITY >= 0 && $QUALITY <= 100) {
+					$pngQ = 9 - round($QUALITY / 100 * 9);
+				} else {
+					$pngQ = 6; // Standardwert
+				}
+				if (!empty($D['SHOW'])) { header("Content-Type: image/png"); imagepng($image_new, null, $pngQ); }
+				if ($_TargetFile) imagepng($image_new, $_TargetFile, $pngQ);
+				break;
+
+			case 'webp':
+				if (!empty($D['SHOW'])) { header("Content-Type: image/webp"); imagewebp($image_new, null, $QUALITY); }
+				if ($_TargetFile) imagewebp($image_new, $_TargetFile, $QUALITY);
+				break;
+
+			case 'avif':
+				if (!empty($D['SHOW'])) { header("Content-Type: image/avif"); imageavif($image_new, null, $QUALITY); }
+				if ($_TargetFile) imageavif($image_new, $_TargetFile, $QUALITY);
+				break;
+
+			default:
+				return false;
+		}
+
+		imagedestroy($image_old);
+		imagedestroy($image_new);
+
+		return true;
+	}
 
 	function mime_type($filename)
 	{
-		/*
-		if(!function_exists('mime_content_type'))
-		{*/
-			$mime_types = array(
+		static $mime = [
+			// text
+			'txt'=>'text/plain','csv'=>'text/plain','htm'=>'text/html','html'=>'text/html',
+			'php'=>'text/html','css'=>'text/css','js'=>'application/javascript',
+			'json'=>'application/json','xml'=>'application/xml',
 
-				'csv' => 'text/plain',
-				'txt' => 'text/plain',
-				'htm' => 'text/html',
-				'html' => 'text/html',
-				'php' => 'text/html',
-				'css' => 'text/css',
-				'js' => 'application/javascript',
-				'json' => 'application/json',
-				'xml' => 'application/xml',
-				'swf' => 'application/x-shockwave-flash',
-				'flv' => 'video/x-flv',
+			// images
+			'png'=>'image/png','jpg'=>'image/jpeg','jpeg'=>'image/jpeg','jpe'=>'image/jpeg',
+			'gif'=>'image/gif','bmp'=>'image/bmp','ico'=>'image/vnd.microsoft.icon',
+			'tif'=>'image/tiff','tiff'=>'image/tiff','svg'=>'image/svg+xml','svgz'=>'image/svg+xml',
+			'webp'=>'image/webp','avif'=>'image/avif','heic'=>'image/heic','heif'=>'image/heif',
 
-				// images
-				'png' => 'image/png',
-				'jpe' => 'image/jpeg',
-				'jpeg' => 'image/jpeg',
-				'jpg' => 'image/jpeg',
-				'gif' => 'image/gif',
-				'bmp' => 'image/bmp',
-				'ico' => 'image/vnd.microsoft.icon',
-				'tiff' => 'image/tiff',
-				'tif' => 'image/tiff',
-				'svg' => 'image/svg+xml',
-				'svgz' => 'image/svg+xml',
+			// video
+			'mp4'=>'video/mp4','mov'=>'video/quicktime','qt'=>'video/quicktime',
+			'webm'=>'video/webm','flv'=>'video/x-flv',
 
-				// archives
-				'zip' => 'application/zip',
-				'rar' => 'application/x-rar-compressed',
-				'exe' => 'application/x-msdownload',
-				'msi' => 'application/x-msdownload',
-				'cab' => 'application/vnd.ms-cab-compressed',
+			// audio
+			'mp3'=>'audio/mpeg','wav'=>'audio/wav','ogg'=>'audio/ogg','m4a'=>'audio/mp4',
 
-				// audio/video
-				'mp3' => 'audio/mpeg',
-				'qt' => 'video/quicktime',
-				'mov' => 'video/quicktime',
+			// archives
+			'zip'=>'application/zip','rar'=>'application/x-rar-compressed',
+			'gz'=>'application/gzip','tar'=>'application/x-tar','7z'=>'application/x-7z-compressed',
 
-				// adobe
-				'pdf' => 'application/pdf',
-				'psd' => 'image/vnd.adobe.photoshop',
-				'ai' => 'application/postscript',
-				'eps' => 'application/postscript',
-				'ps' => 'application/postscript',
+			// executables
+			'exe'=>'application/x-msdownload','msi'=>'application/x-msdownload',
+			'cab'=>'application/vnd.ms-cab-compressed',
 
-				// ms office
-				'doc' => 'application/msword',
-				'rtf' => 'application/rtf',
-				'xls' => 'application/vnd.ms-excel',
-				'xlsx' => 'application/vnd.ms-excel',
-				'ppt' => 'application/vnd.ms-powerpoint',
+			// adobe
+			'pdf'=>'application/pdf','psd'=>'image/vnd.adobe.photoshop',
+			'ai'=>'application/postscript','eps'=>'application/postscript','ps'=>'application/postscript',
 
-				// open office
-				'odt' => 'application/vnd.oasis.opendocument.text',
-				'ods' => 'application/vnd.oasis.opendocument.spreadsheet',
-				);
+			// office
+			'doc'=>'application/msword','rtf'=>'application/rtf',
+			'xls'=>'application/vnd.ms-excel',
+			'xlsx'=>'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
+			'ppt'=>'application/vnd.ms-powerpoint',
+			'pptx'=>'application/vnd.openxmlformats-officedocument.presentationml.presentation',
 
-			$ext = strtolower(array_pop(explode('.',$filename)));
-			if (array_key_exists($ext, $mime_types)) {
-				return $mime_types[$ext];
-			}
-			elseif (function_exists('finfo_open')) {
-				$finfo = finfo_open(FILEINFO_MIME);
-				$mimetype = finfo_file($finfo, $filename);
-				finfo_close($finfo);
-				return $mimetype;
-			}
-			else {
-				return 'application/octet-stream';
-			}
-			/*
+			// open office
+			'odt'=>'application/vnd.oasis.opendocument.text',
+			'ods'=>'application/vnd.oasis.opendocument.spreadsheet'
+		];
+
+		$ext = strtolower(pathinfo($filename, PATHINFO_EXTENSION));
+
+		// 1) Lookup
+		if ($ext && isset($mime[$ext])) {
+			return $mime[$ext];
 		}
-		else
-			return mime_content_type($filename);
-		*/
+
+		// 2) Fallback: finfo
+		if (function_exists('finfo_open')) {
+			$f = finfo_open(FILEINFO_MIME_TYPE);
+			$m = finfo_file($f, $filename);
+			finfo_close($f);
+			if ($m) return $m;
+		}
+
+		// 3) Default
+		return 'application/octet-stream';
 	}
+
 
 	static function url($URL,$D=null)
 	{

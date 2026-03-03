@@ -361,9 +361,7 @@ class Link {
         foreach ($ids as $id) {
 			$D['LINK']['D'][$id] = '__DELETE__';
         }
-
         $this->DB->set_object($D);
-
     }
 
     /**

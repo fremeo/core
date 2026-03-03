@@ -2,10 +2,16 @@
 
 if(($D['ACTION']??null) == 'save') {
 
+// 1. IDs sammeln, die gelöscht werden sollen
+    $deleteIds = [];
+    if (!empty($R['delete'])) {
+        $deleteIds = array_values($R['delete']);
+    }
+
 	#erstelle neues SEO Link weiterleitung und lösche alte und weise die Link-ID der Seite neu zu.
 	foreach((array)$D['LINK']['D'] AS $kLNK => $LNK) {
-		if(is_array($LNK)) {
-			$hURL = hash("crc32b", $LNK['FromURL']);
+		if(is_array($LNK) && isset($LNK['ToURL']) && !in_array($kLNK,($R['delete']??[])  ) ) {
+			$hURL = hash("crc32b", ($LNK['FromURL']??''));
 			
 			$D['LINK']['D'][$hURL] = [
 				'Active'	=> $LNK['Active'],
@@ -15,9 +21,15 @@ if(($D['ACTION']??null) == 'save') {
 			if($kLNK != $hURL) { #Überprüfe ob sich die FromURL geändert hat, denn dann alte löschen.
 				$D['LINK']['D'][ $kLNK ]['Active'] = -2;#Alte URL löschen
 			}
+		} else {
+			unset($D['LINK']['D'][$kLNK] );
 		}
 	}
 
+	// 3. Löschen 
+	if (!empty($deleteIds)) { 
+		$C['papp_phpapp']['Link']->deleteById($deleteIds); 
+	}
 
 	$C['CData']->set_object($D);
 	unset($D['LINK']); 
@@ -25,3 +37,4 @@ if(($D['ACTION']??null) == 'save') {
 
 #$F['PLATFORM']['PAGE']['W'][0]['ID'] = [$D['ID']];
 $F['LINK'] = [];
+

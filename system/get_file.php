@@ -15,7 +15,9 @@ if(isset($d['FILE']['D'])) {
 		'X'				=> $R['x'],
 		'Y'				=> $R['y'],
 		'SHOW'			=> true, #gibt das Bild sofort aus
-		'QUALITY'		=> 90,
+		#'TARGET_QUALITY'=> 90,
+		'BACKGROUND'	=> 'FFF',
+		'SCALE'			=> 'absolute-relative',
 	];
 
 	$C['CFile']->image($D['IMAGE']);

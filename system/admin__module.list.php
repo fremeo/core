@@ -1,7 +1,10 @@
 <?php
 
-if(($D['ACTION']??null) == 'save') {
+if(($R['ACTION']??null) == 'save') {
 	$C['CData']->set_object($D); 
+}
+if(($R['ACTION']??null) == 'regenerateAutoload') { 
+	$C['ComposerManager']->regenerateAutoload();
 }
 #$F['PLATFORM']['PAGE']['W'][0]['ID'] = [$D['ID']];
 $F['SETTING'] = [];

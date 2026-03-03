@@ -1,13 +1,13 @@
 {block name="inner_body"}
 
 	<form method="post">
-		<input type="hidden" name="D[ACTION]" value='save'>
+		<input type="hidden" name="R[ACTION]" value='save'>
 		
 		
 		<table class="table table-hover align-middle">
           <thead class="table-light">
             <tr>
-              <th>Auswahl</th><th>Projekt</th><th>Autor</th><th>Beschreibung</th><th>Type</th><th>Status</th><th>Version</th>
+              <th>Auswahl</th><th>Projekt</th><th>Autor</th><th>Beschreibung</th><th>Type</th><th>Version</th>
             </tr>
           </thead>
           <tbody>
@@ -20,8 +20,8 @@
 			{if $MOD.require}<br>Require: {foreach from=$MOD.require key="kR" item="R"}{$kR}:{$R}{/foreach}{/if}
 			</td>
 			<td>{$MOD.type}</td>
-			<td><span class="status-installed">Installiert ({$MOD.version})</span></td>
-			<td>{$MOD.latest}</td></tr><tr>
+			<td><span class="status-installed">{$MOD.version} ({$MOD.latest})</span></td>
+			</tr>
 			{/foreach}
 
 			</tbody>
@@ -29,5 +29,7 @@
 		
 		
 		<button type="submit" class="btn btn-primary btn-sm">Save</button>
+		
+		<a class="btn btn-primary btn-sm" href="?R[Page]=admin__module.list&R[ModuleId]=papp/phpapp&R[ACTION]=regenerateAutoload">regenerateAutoload</a>
 	</form>
 {/block}

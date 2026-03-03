@@ -31,12 +31,15 @@
 	}
 	.content-wrapper {
 	flex-grow: 1;
-	padding-right: 0.5rem;
+	padding: 0.5rem;
 	display: flex;		   /* neu */
 	flex-direction: column;  /* neu */
 	overflow: auto;
+border-radius: .75rem;
+background-color: #fff;
+margin-right:0.5rem;
 	}
-	.inner-frame { border-radius: .75rem; background-color: #fff;padding: 1rem; height: 100%;flex: 1 1 auto;min-height: 0;overflow-y: auto; }
+	.inner-frame { border-radius: .75rem; background-color: #fff; height: 100%;flex: 1 1 auto;min-height: 0;overflow-y: auto; }
 	.user-img { width: 40px; height: 40px; object-fit: cover;}
 	  
 	  
