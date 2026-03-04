@@ -86,7 +86,7 @@ $Pattern['USER_GROUP']['D']['PAGE'] = [
 			'Active'		=> ['Type' => 'checkbox'],
 ];
  
-  
+ #ToDo: Prüfen ob Accounts wirklich in phpapp angelegt werden müssen. 
 $Pattern['USER']['D']['ACCOUNT'] = [
 			'Active'		=> ['Type' => 'checkbox'],
 ];

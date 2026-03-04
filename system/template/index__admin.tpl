@@ -109,40 +109,7 @@ margin-right:0.5rem;
 		<ul class="nav nav-pills flex-column">
 			{*<li class="nav-item"><a class="nav-link active" href="admin"><i class="fas fa-home"></i> Home</a></li>*}
 			{block name="sidebar"}
-				{*
-			<li class="nav-item">
-				<a class="nav-link" data-bs-toggle="collapse" href="#submenu1" aria-expanded="false"><i class="far fa-file-alt"></i><span> Seiten</span></a>
-				<div class="collapse ps-3" id="submenu1">
-					<ul class="nav flex-column">
-						<li class="nav-item"><a class="nav-link" href="?R[Page]=page.list#submenu1"><i class="far fa-file-alt"></i> Alle Seiten</a></li>
-						<li class="nav-item"><a class="nav-link" href="?R[Page]=setting.list#submenu1"><i class="fas fa-ellipsis-v"></i> Menu</a></li>
-					</ul>
-				</div>
-		  	</li>*}
-			{*
-			<li class="nav-item">
-				<a class="nav-link" data-bs-toggle="collapse" href="#submenu2" aria-expanded="false">
-					<i class="far fa-file-alt"></i><span> Blog</span>
-				</a>
-				<div class="collapse ps-3" id="submenu2">
-					<ul class="nav flex-column">
-						<li class="nav-item"><a class="nav-link" href="?R[Page]=blog.list#submenu2"><i class="far fa-file-alt"></i> Alle Beiträge</a></li>
-					</ul>
-				</div>
-			</li>
-*}
-			<li class="nav-item">
-				<a class="nav-link" data-bs-toggle="collapse" href="#submenu4" aria-expanded="false">
-					<i class="fas fa-user"></i><span> Kunden</span>
-				</a>
-				<div class="collapse ps-3" id="submenu4">
-					<ul class="nav flex-column">
-						{*<li class="nav-item"><a class="nav-link" href="?R[Page]=account.group.list#submenu4"><i class="fas fa-users-cog"></i> Kunden Gruppe</a></li>*}
-						<li class="nav-item"><a class="nav-link" href="?R[Page]=account.list#submenu4"><i class="fas fa-user-circle"></i> Kunden</a></li>
-						{*<li class="nav-item"><a class="nav-link" href="?R[Page]=order.list#submenu4"><i class="fas fa-clipboard"></i> Bestellungen</a></li>*}
-					</ul>
-				</div>
-			</li>
+	
 			{/block}
 			<li class="nav-item">
 				<a class="nav-link" data-bs-toggle="collapse" href="#submenu5" aria-expanded="false">
