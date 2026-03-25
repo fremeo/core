@@ -127,8 +127,6 @@ margin-right:0.5rem;
 						<li class="nav-item"><a class="nav-link" href="?R[Page]=admin__setting.list&R[ModuleId]=papp/phpapp#submenu5"><i class="fas fa-ellipsis-v"></i> Menu</a></li>	
 						
 						<li class="nav-item"><a class="nav-link" href="?R[Page]=assistant#submenu5"><i class="fas fa-parachute-box"></i> Assistent</a></li>
-						<li class="nav-item"><a class="nav-link" href="?R[Page]=shipping.list#submenu5"><i class="fas fa-shipping-fast"></i> Versandarten</a></li>
-						<li class="nav-item"><a class="nav-link" href="?R[Page]=payment.list#submenu5"><i class="far fa-money-bill-alt"></i> Zahlungsarten</a></li>
 						<li class="nav-item"><a class="nav-link" href="?R[Page]=setting.list#submenu5"><i class="fas fa-cog"></i> Einstellungen</a></li>
 						{*<li class="nav-item"><a class="nav-link" href="?R[Page]=admin__link.list#submenu5"><i class="fas fa-link"></i> Link</a></li>
 						<li class="nav-item"><a class="nav-link" href="?R[Page]=file.list#submenu5"><i class="fas fa-file-alt"></i> Dateien</a></li>*}

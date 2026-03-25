@@ -15,7 +15,7 @@
 			
 			{foreach from=$D.USER.D key="kUSR" item="USR"}
 				<tr>
-					<td scope="row"><a href="?D[_PAGE]=admin__user.edit&R[ModuleId]=papp/phpapp&R[Id]={$kUSR}">{$kUSR}</a></td> 
+					<td scope="row"><a href="?R[Page]=admin__user.edit&R[ModuleId]=papp/phpapp&R[Id]={$kUSR}">{$kUSR}</a></td> 
 					<td scope="row">{input p=['name' => "D[USER][D][{$kUSR}][Active]", 'type' => 'checkbox', 'value'=>$USR.Active]}</td>
 					<td>{$USR.Name}</td>
 					<td>{$USR.Mail}</td>

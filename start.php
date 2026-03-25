@@ -159,6 +159,26 @@ function getExtends(array $modules, string $activeModuleId, string $page): array
     // ---------------------------------------------------------
     [$base, $sub] = explode('__', $page);
 
+// ---------------------------------------------------------
+// 2b. sub__sub.tpl (z.B. user.register__user.register.tpl) – ALLE Module
+//      → bewusst VOR der eigentlichen Kette einsortieren
+// ---------------------------------------------------------
+$subBase = "{$sub}__{$sub}.tpl";
+
+foreach ($modules as $moduleId => $moduleDir) {
+    if ($exists($moduleDir, $subBase)) {
+        $tplPath = $moduleDir['ModulDir'] . '/system/template/' . $subBase;
+        $tplChain[] = $tplPath;              // kommt als ERSTES in die Chain
+
+        $phpPath = $toPhp($tplPath);
+        if ($phpExists($phpPath)) {
+            $phpChain[] = $phpPath;
+        }
+
+        break; // nur das erste gefundene Modul verwenden
+    }
+}
+
     // ---------------------------------------------------------
     // 3. konkrete Seite (nur aktives Modul) → unterstes Element
     // ---------------------------------------------------------
@@ -173,10 +193,12 @@ function getExtends(array $modules, string $activeModuleId, string $page): array
         }
     }
 
+
 // 4. base__base.tpl (admin__admin.tpl) – ALLE Module sammeln
 $baseBase = "{$base}__{$base}.tpl";
 
 foreach ($modules as $moduleId => $moduleDir) {
+
 
     // hypothetischer TPL-Pfad
     $tplPath = $moduleDir['ModulDir'] . '/system/template/' . $baseBase;
@@ -215,7 +237,7 @@ foreach ($modules as $moduleId => $moduleDir) {
         $candidates = [];
 
         foreach ($modules as $moduleId => $moduleDir) {
-            foreach (glob($moduleDir['ModulDir'] . "/system/template/*__{$currentBase}.tpl") as $file) {
+            foreach (glob($moduleDir['ModulDir'] . "/system/template/*__{$currentBase}.tpl",) as $file) {
 
                 $name = basename($file);
 

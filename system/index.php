@@ -1,9 +1,9 @@
 <?php
 
-
+#ToDo: Gast und User Gruppe soll zur Standard Gruppe werden, so dass es Gast und User User nicht merh benötigt wird!
 ##if(check_user_page_right(['guest','admin2l'],$D['_PAGE'], $C)) echo "OK"; else echo "nein";
 
-if(!check_user_page_right(['guest',$D['SESSION']['UserId']??null],$R['Page'], $C)) { #Prüfe ob die Guest Rechte und falls eingellogt auch User Rechte bereits ausreichen
+if(!check_user_page_right(['guest',(isset($D['SESSION']['UserId']))?'user':null,($D['SESSION']['UserId'])??null],$R['Page'], $C)) { #Prüfe ob die Guest Rechte und falls eingellogt auch User Rechte bereits ausreichen
 	#Rechte Reichen nicht aus
 	if( !isset($D['SESSION']['UserId']) ) { #Fals User nicht eingeloggt ist, dann zum Login
 		header("Location: ?R[Page]=index__login&R[ModuleId]=papp/phpapp&R[Return][Page]={$D['_PAGE']}&R[Return][ModuleId]={$R['ModuleId']}");
@@ -31,14 +31,14 @@ function check_user_page_right($userId, $page, &$C)
 	if(!isset($d['USER']['D'])) {
 		return false;
 	}
-	
+	##print_r($d['USER']['D']);
 	$user_right = [];
 	foreach((array)$d['USER']['D'] AS $kUSR => $USR) {
-		foreach($USR['GROUP']['D'] AS $kUG => $UG ) {
-			$user_right = array_merge_recursive((array)$user_right, (array)($d['USER_GROUP']['D'][ $kUG ]['PAGE']['D']??[]));
+		foreach($USR['GROUP']['D']??[] AS $kUG => $UG ) {
+			$user_right = array_replace_recursive((array)$user_right, (array)($d['USER_GROUP']['D'][ $kUG ]['PAGE']['D']??[]));
 		}
 	}
-
+##print_R($user_right);exit;
     // Basisname extrahieren:
     // "admin__user.list" → "admin"
     // "frontend__page"   → "frontend"

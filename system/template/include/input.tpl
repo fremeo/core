@@ -1,4 +1,5 @@
 {function name=input p=null}
+{strip}
 	{*$p.ischanged = ($p.ischanged == 1)?$p.ischanged:0*}
 	
 		{if $p.type == 'file_old'}
@@ -94,7 +95,7 @@
 		<section class="section-preview">
 			{foreach name=nVAL from=$p.option key="kVAL" item="VAL"}
 			<div class="custom-control custom-radio">
-				<input type="radio" ischanged="0" onmouseout="input_onmouseout(this,'{md5($p.value)}');" onfocusout="input_onmouseout(this,'{md5($p.value)}');" class="custom-control-input" value="{$kVAL}" onclick="{$p.onclick}" {if $kVAL == $p.value}checked{/if} {if $p.group}group="{$p.group}"{/if} id="radio{md5($p.name)}_{$smarty.foreach.nVAL.index}" name="{$p.name}">
+				<input type="radio" ischanged="0" onmouseout="input_onmouseout(this);" onfocusout="input_onmouseout(this);" class="custom-control-input" value="{$kVAL}" onclick="{$p.onclick}" {if $kVAL == $p.value}checked{/if} {if $p.group}group="{$p.group}"{/if} id="radio{md5($p.name)}_{$smarty.foreach.nVAL.index}" name="{$p.name}">
 				<label class="custom-control-label" for="radio{md5($p.name)}_{$smarty.foreach.nVAL.index}">{$VAL}</label>
 			</div>
 			{/foreach}
@@ -106,8 +107,8 @@
 				{if $p.title}title="{$p.title}"{/if}
 				{if $p.readonly}readonly{/if} class="form-control" ischanged="0" 
 				{if !$p.readonly}
-				onmouseout="input_onmouseout(this,'{md5($p.value)}');" 
-				onfocusout="input_onmouseout(this,'{md5($p.value)}');" style="width:100%;" 
+				onmouseout="input_onmouseout(this);" 
+				onfocusout="input_onmouseout(this);" style="width:100%;" 
 				onchange="$('#{md5($p.name)}VALUE').val( $(this).val() );$('#{md5($p.name)}VALUE').val($('#{md5($p.name)}VALUE').val().replace(/,/g, '|'));/*document.getElementById('id{md5($p.name)}ACTIVE').value = ($('#{md5($p.name)}VALUE').val().length >0)?1:-2;*/"
 				{else}
 				readonly="readonly"
@@ -152,10 +153,12 @@
 			</div>
 		{elseif $p.type == 'select'}
 			<div class="input-group mb-0 {if $p.required}{if !$p.name}has-error{else}has-success{/if}{/if}">
-				<select {if $p.readonly}readonly{/if} class="form-control" ischanged="0" 
+				<select {if $p.readonly}readonly{/if} class="form-control {if $p.required} border-danger{/if}" ischanged="0" 
 				{if $p.onchange}onchange="{$p.onchange}"{/if}
-				onmouseout="input_onmouseout(this,'{md5($p.value)}');" 
-				onfocusout="input_onmouseout(this,'{md5($p.value)}');" style="width:100%;" name="{$p.name}">
+				{*onmouseout="input_onmouseout(this);" 
+				onfocusout="input_onmouseout(this);"*}
+				onchange="input_onmouseout(this);" 
+				style="width:100%;" name="{$p.name}">
 					<option value="">---</option>
 					{$FIND = 0}
 					
@@ -195,7 +198,7 @@
 				{/if}
 			</div>
 		{elseif $p.type == 'json' || $p.type == 'textarea'}
-			<textarea id="{$p.name}" ischanged="0" onmouseout="input_onmouseout(this,'{md5($p.value)}');" onfocusout="input_onmouseout(this,'{md5($p.value)}');" {if $p.maxlength}maxlength='{$p.maxlength}'{/if} placeholder="{$p.placeholder}" class="form-control" style="{$p.style}" name="{$p.name}">{$p.value}</textarea>
+			<textarea id="{$p.name}" ischanged="0" onmouseout="input_onmouseout(this);" onfocusout="input_onmouseout(this);" {if $p.maxlength}maxlength='{$p.maxlength}'{/if} placeholder="{$p.placeholder}" class="form-control" style="{$p.style}" name="{$p.name}">{$p.value}</textarea>
 		{elseif $p.type == 'wysiwyg'}
 		{*https://developer.mozilla.org/en-US/docs/Web/API/Document/execCommand*}
 			<div style="background:#eee;">
@@ -272,11 +275,17 @@
 				<input type="datetime-local" ischanged="0" 
 				{if $p.required}required{/if}
 				onchange="document.getElementById('{$p.name}').value = (Date.parse(this.value)/ 1000);{$p.onchange}"
-				onmouseout="input_onmouseout(this,'{md5($p.value)}');" onfocusout="input_onmouseout(this,'{md5($p.value)}');" class="form-control" style="text-align:right;" placeholder="{$p.placeholder}" value="{date("Y-m-d\TH:i",(int)$p.value)}">
+				onmouseout="input_onmouseout(this);" onfocusout="input_onmouseout(this);" class="form-control" style="text-align:right;" placeholder="{$p.placeholder}" value="{date("Y-m-d\TH:i",(int)$p.value)}">
 		{elseif $p.type ==  'checkbox'}{*ToDo: Active Box muss gesetzt werden, auch nicht bewust ob 0/1 oder 1/-2 sein soll*}
 			<input id="{$p.name}" type="hidden" name="{$p.name}" value="{$p.value}">
 				{if !$p.option}{$p.option = [0 => 1, 1 => 0 ]}{/if}
-			<input {if $p.title}title="{$p.title}"{/if} onclick="{if $p.option}document.getElementById('{$p.name}').value = (this.checked)?'{$p.option[0]}':'{$p.option[1]}';{else}document.getElementById('id{md5($p.name)}ACTIVE').value = (this.checked)?1:-2;document.getElementById('{$p.name}').value = (this.checked)?1:0;{/if}{if $p.onclick}{$p.onclick}{/if}" type="checkbox" {if $p.value && $p.value > 0}checked{/if}>
+			<input class="form-check-input" {if $p.title}title="{$p.title}"{/if} 
+			onclick="{if $p.option}document.getElementById('{$p.name}').value = (this.checked)?'{$p.option[0]}':'{$p.option[1]}';{else}document.getElementById('id{md5($p.name)}ACTIVE').value = (this.checked)?1:-2;document.getElementById('{$p.name}').value = (this.checked)?1:0;{/if} 
+			
+			{if $p.onclick}{$p.onclick}{/if}" 
+			onchange="document.getElementById('{if $p.id}{$p.id}{else}{$p.name}{/if}').setAttribute('ischanged', (this.checked === this.defaultChecked ?0:1) );"
+			type="checkbox" {if $p.value && $p.value > 0}checked{/if}>
+			
 		{elseif $p.type ==  'number'}
 			<input type="number" ischanged="0" 
 			{if $p.title}title="{$p.title}"{/if}
@@ -286,8 +295,8 @@
 			{if $p.min}pattern="{$p.min}"{/if}
 			{if $p.required}required{/if}
 				{if !$p.readonly}
-			onmouseout="input_onmouseout(this,'{md5($p.value)}');{$p.onmouseout}" 
-			onfocusout="input_onmouseout(this,'{md5($p.value)}');{$p.onfocusout}" 
+			onmouseout="input_onmouseout(this);{$p.onmouseout}" 
+			onfocusout="input_onmouseout(this);{$p.onfocusout}" 
 			onchange="this.value = parseFloat(this.value.replace(/,/, '.'));{$p.onchange}"
 			{else}
 				readonly="readonly"
@@ -302,27 +311,35 @@
 		{elseif $p.type ==  'label'}
 			<label>{$p.value}</label>
 		{elseif $p.type ==  'hidden'}{*Change muss getriggert werden um ischanged zu prüfen: $('#').val('-2').trigger('change');*}
-			<input ischanged="{$p.ischanged}" type="hidden" onchange="input_onmouseout(this,'{md5($p.value)}');" id="{if $p.id}{$p.id}{else}{$p.name}{/if}" name="{$p.name}" value="{$p.value}">
+			<input ischanged="{$p.ischanged}" type="hidden" onchange="input_onmouseout(this);" id="{if $p.id}{$p.id}{else}{$p.name}{/if}" name="{$p.name}" value="{$p.value}">
+		{elseif $p.type == 'button' || $p.type == 'submit'}
+			{if $p.name}<input ischanged="{$p.ischanged}" type="hidden" onchange="input_onmouseout(this);" id="{if $p.id}{$p.id}{else}{$p.name}{/if}" name="{$p.name}" value="{$p.value}">{/if}
+			<button {if $p.class}class="btn {$p.class}"{/if} type="{$p.type}" 
+			{if $p.onclick}onclick="{$p.onclick} document.getElementById('{if $p.id}{$p.id}{else}{$p.name}{/if}').setAttribute('ischanged', '1');"{/if}
+			>{$p.label}</button>
 		{else}
-		{*$p.name = hash("crc32b", "{$p.name}{hrtime(1)}" )*}
-		
-			<input ischanged="{$p.ischanged}" 
-			{if $p.title}title="{$p.title}"{/if}
-			{if $p.onchange}onchange="{$p.onchange}"{/if} style="{if $p.ischanged}background-color:#fffedd;{/if}" list="{md5($p.name)}" 
-			{if !$p.readonly}
-				onmouseout="input_onmouseout(this,'{if $p.ischanged}{md5('')}{else}{md5($p.value)}{/if}');" 
-				onfocusout="input_onmouseout(this,'{if $p.ischanged}{md5('')}{else}{md5($p.value)}{/if}');" 
-			{else}
-				readonly="readonly"
-			{/if}
-			id="{if $p.id}{$p.id}{else}{$p.name}{/if}"
-			{if $p.class}
-				class="{$p.class} {if $p.required}border-danger{/if}"
-			{else}
-				class="form-control {if $p.required}border-danger{/if}"
-			{/if}
-		{if $p.required}required{/if}
-				style="{$p.style}" {if $p.maxlength}maxlength='{$p.maxlength}'{/if} placeholder="{$p.placeholder}" name="{$p.name}" {if isset($p.value)}value="{$p.value}"{/if}>
+			{*<div class="form-floating mb-2">*}
+
+				<input type="{$p.type}" ischanged="{$p.ischanged}" list="{md5($p.name)}"
+				{if $p.title}title="{$p.title}"{/if}
+				{if $p.minlength}minlength="{$p.minlength}"{/if}
+				{if !$p.readonly}
+					onchange="input_onmouseout(this);{if $p.onchange}{$p.onchange}{/if}"
+				{else}
+					readonly="readonly"
+				{/if}
+				id="{if $p.id}{$p.id}{else}{$p.name}{/if}"
+				
+				class="form-control{if $p.ischanged} bg-warning-subtle border-warning{/if}{if $p.class} {$p.class}{/if}{if $p.required} border-danger{/if}"
+				
+				{if $p.required} required{/if}
+				{if $p.style} style="{$p.style}"{/if}
+				{if $p.maxlength} maxlength='{$p.maxlength}'{/if} 
+				{if $p.placeholder} placeholder="{$p.placeholder}"{/if}
+				{if $p.name} name="{$p.name}"{/if}
+				{if isset($p.value)} value="{$p.value}"{/if}>
+				{*<label for="{if $p.id}{$p.id}{else}{$p.name}{/if}">{$p.placeholder}</label>
+			</div>*}
 			{*if $p.option}
 				<datalist id="{md5($p.name)}">
 					{foreach name=nVAL from=$p.option key="kVAL" item="VAL"}
@@ -344,25 +361,77 @@
 				</ul>
 			{/if}
 		{/if}
+		
+		
+	{if !$smarty.capture.js_input_initialized}
+		{capture name="js_input_initialized"}1{/capture}
+		<script>
+		input_onmouseout = function(el) 
+		{
+		 let unchanged = false;
 
-    <script>
-    input_onmouseout = function(el,old_Val_md5) 
-    {
-        if(old_Val_md5 == $.md5(el.value))
-        {
-            el.style.color = '';
-			el.style.backgroundColor = "";
-			el.setAttribute('ischanged', '0');
-        }
-        else
-        {
-            el.style.color = 'blue';
-			el.style.backgroundColor = "#fffedd";
-			el.setAttribute('ischanged', '1');
-        }
-	}
-	</script>
+		if (el.type === "checkbox") {
+			// Checkbox: checked vs. defaultChecked
+			unchanged = (el.checked === el.defaultChecked);
+		}
+		else if (el.tagName === "SELECT") {
+			// Select: aktueller Wert vs. ursprünglicher Wert
+			unchanged = (el.value === el.defaultValue);
+		}
+		else {
+			// Alle anderen: value vs. defaultValue
+			unchanged = (el.value === el.defaultValue);
+		}
+		
+			if (unchanged) {
+				el.classList.remove("bg-warning-subtle", "border-warning");
+				el.setAttribute('ischanged', '0');
+			}
+			else {
+				el.classList.add("bg-warning-subtle", "border-warning");
+				el.setAttribute('ischanged', '1');
+			}
+		}
+		
+		
 
+		window.addEventListener("load", () => {
+
+			// Alle Formulare auf der Seite
+			const forms = document.querySelectorAll("form");
+
+			forms.forEach(form => {
+				// Nur SELECTS innerhalb dieses Formulars
+				form.querySelectorAll("select").forEach(el => {
+					el.defaultValue = el.value;
+				});
+				form.addEventListener("submit", function () {
+
+					const inputs = form.querySelectorAll("input, select, textarea");
+					const disabledElements = [];
+
+					inputs.forEach(el => {
+						// Prüfen ob ischanged vorhanden und gleich "0"
+						if (el.getAttribute("ischanged") === "0" || el.getAttribute("ischanged") === "") {
+							disabledElements.push(el);
+							el.disabled = true;
+						}
+					});
+
+					// Nach dem Submit wieder aktivieren
+					/*
+					setTimeout(() => {
+						disabledElements.forEach(el => el.disabled = false);
+					}, 200);
+					*/
+				});
+
+			});
+
+		});
+		</script>
+	{/if}
+{/strip}
 {/function}
 
 
@@ -376,5 +445,38 @@
 	{else*}
 		#{$id}#
 	{*/if*}
+{/strip}
+{/function}
+
+{function name=table head=[] rows=[]}
+{strip}
+<table class="table">
+    <thead class="sticky-top">
+        <tr>
+            {foreach from=$head key="kH" item="H"}
+                <th>{$H.label}</th>
+            {/foreach}
+        </tr>
+    </thead>
+
+    <tbody>
+        {foreach $rows as $rowIndex => $row}
+            <tr>
+                {foreach $head as $colKey => $header}
+                    <td>
+						{if $row[$colKey].type != 'raw'}
+							{foreach from=$header item=fieldValue key=fieldName}
+								{if !$row[$colKey][$fieldName]}{$row[$colKey][$fieldName] = $fieldValue}{/if}
+							{/foreach}
+							{input p=$row[$colKey]}
+                        {else}
+                            {$row[$colKey].value}
+                        {/if}
+                    </td>
+                {/foreach}
+            </tr>
+        {/foreach}
+    </tbody>
+</table>
 {/strip}
 {/function}

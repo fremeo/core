@@ -6,8 +6,8 @@
 		<table class="table rounded-top">
 			<thead class="table-light">
 				<tr>
-				<th scope="col">Name</th>
-				<th scope="col">Value</th>
+					<th scope="col">Name</th>
+					<th scope="col">Value</th>
 				</tr>
 			</thead>
 			<tbody>

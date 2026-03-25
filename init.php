@@ -77,12 +77,12 @@ $Pattern['USER']['D']['GROUP'] = [
 			'Active'		=> ['Type' => 'checkbox'],
 ];
  
-$Pattern['USER_GROUP'] = [
+$Pattern['USER_GROUP'] = [ #Rechteverwaltung
 			'Active'		=> ['Type' => 'checkbox'],
 			'Name'			=> ['Type' => 'text'],
 ];
 		
-$Pattern['USER_GROUP']['D']['PAGE'] = [
+$Pattern['USER_GROUP']['D']['PAGE'] = [#Rechteverwaltung je Seite
 			'Active'		=> ['Type' => 'checkbox'],
 ];
  

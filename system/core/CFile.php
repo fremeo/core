@@ -1,5 +1,5 @@
 <?php
-#Version 1.0.0.15
+#Version 1.0.0.16
 class CFile
 {
 	/**$D['FILE'] = 'etc/php5/'
@@ -421,6 +421,9 @@ class CFile
 		$_TargetFile = !empty($D['TARGET_FILE'])
 			? ($D['TARGET_DIR'] ?? '') . $D['TARGET_FILE']
 			: null;
+		if(!empty($D['TARGET_DIR']) && !is_dir($D['TARGET_DIR'])) {
+			CFile::mkdir($D['TARGET_DIR']);
+		}
 
 		$QUALITY = $D['TARGET_QUALITY'] ?? -1;
 
