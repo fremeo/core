@@ -1,6 +1,6 @@
 <?php 
 if($D['ACTION']??null) {
-	$C['CData']->set_object($D);
+	$C['papp~phpapp']['CData']->set_object($D);
 }
 
 $F['USER']['GROUP']['W'][0]['Active'] = 1;

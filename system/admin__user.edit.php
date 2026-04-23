@@ -7,7 +7,7 @@ if($D['ACTION']??null) {
 	}
 	
 	
-	$C['CData']->set_object($D);
+	$C['papp~phpapp']['CData']->set_object($D);
 }
 
 $F['USER']['W'][0]['ID'] = ($R['Id']??null);

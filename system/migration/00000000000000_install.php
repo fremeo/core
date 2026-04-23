@@ -13,7 +13,7 @@ class install() {
 		$C['Link']->createOne('registration','frontend__user.register', 'papp/phpapp');
 		$C['Link']->createOne('login','index__login', 'papp/phpapp');
 		$C['Link']->createOne('logout','index__login', 'papp/phpapp', ['R' => ['ACTION' => 'logout']]);
-		$C['Link']->createOne('password/forgot','index__password_forgot', 'papp/phpapp');
+		#$C['Link']->createOne('password/forgot','frontend__password_forgot', 'papp/phpapp');
 
 		#Erstelle Gruppen
 		$D['USER_GROUP']['D']['admin']['Name'] = "admin";

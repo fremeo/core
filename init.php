@@ -9,10 +9,10 @@ require_once('system/vendor/papp/cdata/lib/CData.php'); #ToDo: Über autoloader 
 
 
 $C['CFile'] = new CFile();
-if(!is_dir(PROJECT_ROOT.'data_c/papp_phpapp/')) {
-	$C['CFile']->mkdir(PROJECT_ROOT.'data_c/papp_phpapp/');
+if(!is_dir(PROJECT_ROOT.'data_c/papp~phpapp/')) {
+	$C['CFile']->mkdir(PROJECT_ROOT.'data_c/papp~phpapp/');
 }
-$C['CCache'] = new \papp\CCache([ 'DB' => ['FILENAME' => PROJECT_ROOT.'data_c/papp_phpapp/cache.cache' ] ]);
+$C['CCache'] = new \papp\CCache([ 'DB' => ['FILENAME' => PROJECT_ROOT.'data_c/papp~phpapp/cache.cache' ] ]);
 
 
 
@@ -29,8 +29,8 @@ foreach (glob(PROJECT_ROOT . '/system/vendor/' . '/*/*', GLOB_ONLYDIR) as $modul
 		'ModulDir'		=> $moduleDir,
 		'VendorName'	=> $vendor,
 		'PackageName'	=> $package,
-		'CacheDir'		=> "data_c/{$vendor}_{$package}/",
-		'DataDir'		=> "data/{$vendor}_{$package}/",
+		'CacheDir'		=> "data_c/{$vendor}~{$package}/",
+		'DataDir'		=> "data/{$vendor}~{$package}/",
 	];
 }
 
@@ -39,15 +39,17 @@ foreach (glob(PROJECT_ROOT . '/system/vendor/' . '/*/*', GLOB_ONLYDIR) as $modul
 #$D['SESSION'] = $_SESSION['D'];
 
 $C['Smarty'] = new Smarty();
-$C['CData'] = new \papp\CData( [ 'DB' => ['FILENAME' => __DIR__.'/../../../../data/data.db' ] ] );
 
-$C['papp_phpapp']['Link'] = new \papp\phpapp\Link( $C['CData'] );
+#$C['CData'] = new \papp\CData( [ 'DB' => ['FILENAME' => __DIR__.'/../../../../data/data.db' ] ] );
+$C['papp~phpapp']['CData'] = new \papp\CData( [ 'DB' => ['FILENAME' => PROJECT_ROOT.'data/papp~phpapp/data.db', 'FILENAME_C' => PROJECT_ROOT.'data_c/papp~phpapp/data.db' ] ] );
+
+$C['papp~phpapp']['Link'] = new \papp\phpapp\Link( $C['papp~phpapp']['CData'] );
 
 #DB-----------------
 
 $Pattern = [];
  
-$C['CData']->registerPattern([ 
+$C['papp~phpapp']['CData']->registerPattern([ 
 	'SETTING'	=> [
 			'Active'		=> ['Type' => 'checkbox'],
 			'ParentId'		=> ['Type' => 'id', 'ForeignKey' => 1],
@@ -96,7 +98,7 @@ $Pattern['ACCOUNT'] = [ #Kunden Accounts
 ];
 
 
-$C['CData']->registerPattern($Pattern);
+$C['papp~phpapp']['CData']->registerPattern($Pattern);
 
 /*
 $frame = new papp\framework($ModulId);

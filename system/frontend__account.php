@@ -7,7 +7,7 @@ elseif (1 || !($_SESSION['AccountId']??null) ) {
 	
 	$f['USER']['W'][0]['ID'] = $_SESSION['UserId'];
 	$f['USER']['ACCOUNT'] = null;
-	$C['CData']->get_object($d,$f);
+	$C['papp~phpapp']['CData']->get_object($d,$f);
 
 	if( $d['USER']['D'][ $_SESSION['UserId'] ]['ACCOUNT']['COUNT'] > 0 ) {
 		$_AccId = array_key_first($d['USER']['D'][ $_SESSION['UserId'] ]['ACCOUNT']['D']);
@@ -21,7 +21,7 @@ elseif (1 || !($_SESSION['AccountId']??null) ) {
 		$_SESSION['AccountId'] = hash("crc32b",$_SESSION['UserId'].hrtime(true));
 		$d['USER']['D'][ $_SESSION['UserId'] ]['ACCOUNT']['D'][ $_SESSION['AccountId'] ]['Active'] = 1;
 		$d['ACCOUNT']['D'][ $_SESSION['AccountId'] ]['Active'] = 1;
-		$C['CData']->set_object($d);
+		$C['papp~phpapp']['CData']->set_object($d);
 	}
 } 
 else {

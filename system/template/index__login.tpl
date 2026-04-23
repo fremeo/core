@@ -34,6 +34,7 @@
 		</style>
 
 		<div class="vertical-center">
+			
 			<div class="login-card">
 
 				<h2 class="login-title">{i18n id="Login"}</h2>
@@ -67,6 +68,8 @@
 				</form>
 
 			</div>
+
+
 		</div>
 
 

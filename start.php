@@ -52,7 +52,7 @@ if( isset($D['SEO_URL']) ) {
 		
 		#$F['PLATFORM']['W'][0]['ID'] = [ $D['PLATFORM_ID'] ];
 		$f['LINK']['W'][0]['ID'] = $hURL;
-		$C['CData']->get_object($D,$f);
+		$C['papp~phpapp']['CData']->get_object($D,$f);
 		
 		if(isset($D['LINK']['D'][ $hURL ]) && ($D['LINK']['D'][ $hURL ]['Active']??false) &&  strpos($D['LINK']['D'][ $hURL ]['ToURL'], 'R[Page]') !== false ) {
 			
@@ -93,7 +93,7 @@ if( isset($D['SEO_URL']) ) {
 	foreach($_tpl['php'] AS $kFile) {
 		include_once ($kFile);
 	}
-	$C['CData']->get_object($D,$F); #Datenbank Abfrage
+	$C['papp~phpapp']['CData']->get_object($D,$F); #Datenbank Abfrage
 	#echo $_tpl['extends'];
 	/*
 	echo "<pre>";

@@ -28,7 +28,7 @@ if(($D['ACTION']??null) == 'save') {
 
 	// 3. Löschen 
 	if (!empty($deleteIds)) { 
-		$C['papp_phpapp']['Link']->deleteById($deleteIds); 
+		$C['papp~phpapp']['Link']->deleteById($deleteIds); 
 	}
 
 	$C['CData']->set_object($D);

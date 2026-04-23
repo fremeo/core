@@ -8,7 +8,7 @@ switch($D['ACTION']??null)
 			$f['USER']['W'][0]['Active'] = 1;
 			$f['USER']['W'][0]['Name'] = $R['UserName'];
 			$f['USER']['W'][1]['Mail'] = $R['UserName'];
-			$C['CData']->get_object($d,$f);
+			$C['papp~phpapp']['CData']->get_object($d,$f);
 			if( isset($d['USER']['D']) && password_verify($R['Password'], $d['USER']['D'][ array_key_first((array)($d['USER']['D']??[])) ]['Password']) ){
 				#$_SESSION['UserId'] = 'admin2';
 				$_SESSION['UserId'] = array_key_first($d['USER']['D']);

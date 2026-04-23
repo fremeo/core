@@ -26,7 +26,7 @@ function check_user_page_right($userId, $page, &$C)
 	$f['USER']['GROUP']['W'][0]['Active'] = 1; #deaktivierte Gruppen, nicht listen
 	$f['USER_GROUP']['PAGE'] = [];
 	$f['USER_GROUP']['W'][0]['Active'] = 1;
-	$C['CData']->get_object($d,$f);
+	$C['papp~phpapp']['CData']->get_object($d,$f);
 	
 	if(!isset($d['USER']['D'])) {
 		return false;
