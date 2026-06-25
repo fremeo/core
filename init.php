@@ -4,7 +4,7 @@ include_once(__dir__.'/system/core/CFile.php'); #ToDo: Über autoloader laden
 
 include_once(__dir__.'/system/core/Link.php'); #ToDo: Über autoloader laden
 
-require_once('system/vendor/papp/cdata/lib/CData.php'); #ToDo: Über autoloader laden
+require_once('system/vendor/phploader/cdata/lib/CData.php'); #ToDo: Über autoloader laden
 
 
 

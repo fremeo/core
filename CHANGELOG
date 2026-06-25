@@ -1,9 +1,10 @@
 #0.0.1
+~ Module Seite: Hinzugfügt: Modulgröße, Cachegröße, Data-Größe
 ~ User Login / Logout
 + User Verwaltung
 + User Gruppen Verwaltung
 + User-Gruppen Rechte Verwaltung
-#+ Account - User Verwaltung
++ Account - User Verwaltung
 + Modul Verwaltung
 + Backend UI
 #0.0.0
@@ -14,3 +15,8 @@
 - Entfernt
 ~ Überarbeitet
 ! Fehler
+
+
+ToDo:
+- Backup / Restore
+- Cronjob

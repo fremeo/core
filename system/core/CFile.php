@@ -729,4 +729,32 @@ class CFile
 		  echo 'doh!';
 		}
 	}
+
+	function getFolderSize(string $path): int {
+		$size = 0;
+
+		if (!is_dir($path) || !is_readable($path)) {
+			return $size;
+		}
+
+		foreach (new RecursiveIteratorIterator(new RecursiveDirectoryIterator($path)) as $file) {
+			if ($file->isFile()) {
+				$size += $file->getSize();
+			}
+		}
+
+		return $size;
+	}
+	
+	function formatSize(int $bytes): string {
+		$units = ['B','KB','MB','GB','TB'];
+		$i = 0;
+
+		while ($bytes >= 1024 && $i < count($units) - 1) {
+			$bytes /= 1024;
+			$i++;
+		}
+
+		return round($bytes, 2) . ' ' . $units[$i];
+	}
 }

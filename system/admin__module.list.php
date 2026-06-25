@@ -28,10 +28,18 @@ foreach( $D['R']['Module']['D'] AS $kMOD => $MOD) {
 		$D['R']['Module']['D'][$kMOD]['description'] = $package['description'];
 		$D['R']['Module']['D'][$kMOD]['url']  = $package['url'];
 		$D['R']['Module']['D'][$kMOD]['type'] = $package['type'];
+		#Speichergröße des module ordner ermitteln in byte
+		
+		$D['R']['Module']['D'][$kMOD]['size'] = $C['CFile']->getFolderSize("system/vendor/{$kMOD}");
+		$D['R']['Module']['D'][$kMOD]['size_cache'] = $C['CFile']->getFolderSize("data_c/".str_replace("/", "~", $kMOD));
+		$D['R']['Module']['D'][$kMOD]['size_data'] = $C['CFile']->getFolderSize("data/".str_replace("/", "~", $kMOD));
 		
 		$C['CCache']->set_cache([ $kMOD => [ 'Tag' => 'Package', 'Data' =>  serialize($D['R']['Module']['D'][$kMOD]) ] ]);
 	}
 	
 }
+
+
+
 
 

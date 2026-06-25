@@ -3,7 +3,7 @@
     "description": "Framework",
     "license": "proprietary",
     "type": "phpapp-framework",
-    "keywords": ["phpapp", "phpapp-framework", "framework"],
+    "keywords": ["phpapp", "phpapp-framework", "framework", "core"],
     "require": {
         "php": "^8.0",
         "smarty/smarty": "^v4.5",
