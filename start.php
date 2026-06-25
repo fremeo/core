@@ -21,7 +21,7 @@ foreach ($D['MODUL']['D'] as $moduleDir => $info) {
 
 	// Konfiguration (optional)
 	#$C['Smarty']->setTemplateDir(__DIR__ . '/system/template/');
-	$C['Smarty']->addTemplateDir(__DIR__ . '/system/template/', 'phpapp');
+	$C['Smarty']->addTemplateDir(__DIR__ . '/system/template/', 'core');
 	$C['Smarty']->setCompileDir("{$D['MY']['CacheDir']}template_c/");
 	$C['Smarty']->error_reporting = E_ALL & ~E_NOTICE & ~E_WARNING & ~E_DEPRECATED;
 
@@ -39,7 +39,7 @@ foreach ($D['MODUL']['D'] as $moduleDir => $info) {
 	$_tpl = null;
 	if($D['SEO_URL'] == 'admin') {
 		$_tpl = 'index.tpl';
-		$D['R']['ModuleId'] = 'papp/admin';
+		$D['R']['ModuleId'] = 'fremeo/admin';
 		##include(__DIR__."/system/index.php");
 	}
 
@@ -52,7 +52,7 @@ if( isset($D['SEO_URL']) ) {
 		
 		#$F['PLATFORM']['W'][0]['ID'] = [ $D['PLATFORM_ID'] ];
 		$f['LINK']['W'][0]['ID'] = $hURL;
-		$C['papp~phpapp']['CData']->get_object($D,$f);
+		$C['fremeo~core']['CData']->get_object($D,$f);
 		
 		if(isset($D['LINK']['D'][ $hURL ]) && ($D['LINK']['D'][ $hURL ]['Active']??false) &&  strpos($D['LINK']['D'][ $hURL ]['ToURL'], 'R[Page]') !== false ) {
 			
@@ -93,7 +93,7 @@ if( isset($D['SEO_URL']) ) {
 	foreach($_tpl['php'] AS $kFile) {
 		include_once ($kFile);
 	}
-	$C['papp~phpapp']['CData']->get_object($D,$F); #Datenbank Abfrage
+	$C['fremeo~core']['CData']->get_object($D,$F); #Datenbank Abfrage
 	#echo $_tpl['extends'];
 	/*
 	echo "<pre>";

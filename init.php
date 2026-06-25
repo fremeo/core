@@ -9,10 +9,10 @@ require_once('system/vendor/phploader/cdata/lib/CData.php'); #ToDo: Über autolo
 
 
 $C['CFile'] = new CFile();
-if(!is_dir(PROJECT_ROOT.'data_c/papp~phpapp/')) {
-	$C['CFile']->mkdir(PROJECT_ROOT.'data_c/papp~phpapp/');
+if(!is_dir(PROJECT_ROOT.'data_c/fremeo~core/')) {
+	$C['CFile']->mkdir(PROJECT_ROOT.'data_c/fremeo~core/');
 }
-$C['CCache'] = new \papp\CCache([ 'DB' => ['FILENAME' => PROJECT_ROOT.'data_c/papp~phpapp/cache.cache' ] ]);
+$C['CCache'] = new \papp\CCache([ 'DB' => ['FILENAME' => PROJECT_ROOT.'data_c/fremeo~core/cache.cache' ] ]);
 
 
 
@@ -41,15 +41,15 @@ foreach (glob(PROJECT_ROOT . '/system/vendor/' . '/*/*', GLOB_ONLYDIR) as $modul
 $C['Smarty'] = new Smarty();
 
 #$C['CData'] = new \papp\CData( [ 'DB' => ['FILENAME' => __DIR__.'/../../../../data/data.db' ] ] );
-$C['papp~phpapp']['CData'] = new \papp\CData( [ 'DB' => ['FILENAME' => PROJECT_ROOT.'data/papp~phpapp/data.db', 'FILENAME_C' => PROJECT_ROOT.'data_c/papp~phpapp/data.db' ] ] );
+$C['fremeo~core']['CData'] = new \papp\CData( [ 'DB' => ['FILENAME' => PROJECT_ROOT.'data/fremeo~core/data.db', 'FILENAME_C' => PROJECT_ROOT.'data_c/fremeo~core/data.db' ] ] );
 
-$C['papp~phpapp']['Link'] = new \papp\phpapp\Link( $C['papp~phpapp']['CData'] );
+$C['fremeo~core']['Link'] = new \papp\phpapp\Link( $C['fremeo~core']['CData'] );
 
 #DB-----------------
 
 $Pattern = [];
  
-$C['papp~phpapp']['CData']->registerPattern([ 
+$C['fremeo~core']['CData']->registerPattern([ 
 	'SETTING'	=> [
 			'Active'		=> ['Type' => 'checkbox'],
 			'ParentId'		=> ['Type' => 'id', 'ForeignKey' => 1],
@@ -98,7 +98,7 @@ $Pattern['ACCOUNT'] = [ #Kunden Accounts
 ];
 
 
-$C['papp~phpapp']['CData']->registerPattern($Pattern);
+$C['fremeo~core']['CData']->registerPattern($Pattern);
 
 /*
 $frame = new papp\framework($ModulId);

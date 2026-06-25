@@ -6,7 +6,7 @@
     "keywords": ["phpapp", "phpapp-core", "core"],
     "require": {
         "php": "^8.0",
-        "smarty/smarty": "^v4.5",
+        "phploader/smartylite": "^v4.5",
 		"phploader/cdata": "^v2.13"
     },
     "prefer-stable": true,
