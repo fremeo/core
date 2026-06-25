@@ -1,16 +1,16 @@
 {
-    "name": "papp/phpapp",
-    "description": "Framework",
+    "name": "fremeo/core",
+    "description": "core framework for phpapp",
     "license": "proprietary",
-    "type": "phpapp-framework",
-    "keywords": ["phpapp", "phpapp-framework", "framework", "core"],
+    "type": "phpapp-core",
+    "keywords": ["phpapp", "phpapp-core", "core"],
     "require": {
         "php": "^8.0",
         "smarty/smarty": "^v4.5",
-		"papp/cdata": "^v2.13"
+		"phploader/cdata": "^v2.13"
     },
     "prefer-stable": true,
 	"psr-4": {
-        "papp\\phpapp\\": "system/core/"
+        "fremeo\\core\\": "system/core/"
     }
 }
