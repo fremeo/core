@@ -92,7 +92,7 @@ if( isset($D['SEO_URL']) ) {
 
 
 	foreach($_tpl['php'] AS $kFile) {
-		##include_once ($kFile);
+		include_once ($kFile);
 	}
 	$C['fremeo~core']['CData']->get_object($D,$F); #Datenbank Abfrage
 	#echo $_tpl['extends'];
