@@ -6,10 +6,10 @@
 if(!check_user_page_right(['guest',(isset($D['SESSION']['UserId']))?'user':null,($D['SESSION']['UserId'])??null],$R['Page'], $C)) { #Prüfe ob die Guest Rechte und falls eingellogt auch User Rechte bereits ausreichen
 	#Rechte Reichen nicht aus
 	if( !isset($D['SESSION']['UserId']) ) { #Fals User nicht eingeloggt ist, dann zum Login
-		header("Location: ?R[Page]=index__login&R[ModuleId]=papp/phpapp&R[Return][Page]={$D['_PAGE']}&R[Return][ModuleId]={$R['ModuleId']}");
+		header("Location: ?R[Page]=index__login&R[ModuleId]=fremeo/core&R[Return][Page]={$D['_PAGE']}&R[Return][ModuleId]={$R['ModuleId']}");
 	}
 	else { #User ist eingeloggt aber Rechte nicht ausreichend.
-		header("Location: ?R[Page]=error.403&R[ModuleId]=papp/phpapp");
+		header("Location: ?R[Page]=error.403&R[ModuleId]=fremeo/core");
 	}
 	
 }
@@ -26,7 +26,7 @@ function check_user_page_right($userId, $page, &$C)
 	$f['USER']['GROUP']['W'][0]['Active'] = 1; #deaktivierte Gruppen, nicht listen
 	$f['USER_GROUP']['PAGE'] = [];
 	$f['USER_GROUP']['W'][0]['Active'] = 1;
-	$C['papp~phpapp']['CData']->get_object($d,$f);
+	$C['fremeo~core']['CData']->get_object($d,$f);
 	
 	if(!isset($d['USER']['D'])) {
 		return false;

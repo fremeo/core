@@ -1,11 +1,11 @@
 <?php
-namespace papp\phpapp;
+namespace fremeo\core;
 
 class User {
 
-    private \papp\CData $DB;
+    private \phploader\CData $DB;
 
-    public function __construct(\papp\CData $DB) {
+    public function __construct(\phploader\CData $DB) {
         $this->DB = $DB;
     }
 

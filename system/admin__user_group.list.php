@@ -1,6 +1,6 @@
 <?php 
 if($D['ACTION']??null) {
-	$C['papp~phpapp']['CData']->set_object($D);
+	$C['fremeo~core']['CData']->set_object($D);
 }
 
 $F['USER_GROUP']['PAGE'] = [];

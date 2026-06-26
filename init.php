@@ -12,7 +12,7 @@ $C['CFile'] = new CFile();
 if(!is_dir(PROJECT_ROOT.'data_c/fremeo~core/')) {
 	$C['CFile']->mkdir(PROJECT_ROOT.'data_c/fremeo~core/');
 }
-$C['CCache'] = new \papp\CCache([ 'DB' => ['FILENAME' => PROJECT_ROOT.'data_c/fremeo~core/cache.cache' ] ]);
+$C['CCache'] = new \phploader\CCache([ 'DB' => ['FILENAME' => PROJECT_ROOT.'data_c/fremeo~core/cache.cache' ] ]);
 
 
 
@@ -40,10 +40,10 @@ foreach (glob(PROJECT_ROOT . '/system/vendor/' . '/*/*', GLOB_ONLYDIR) as $modul
 
 $C['Smarty'] = new Smarty();
 
-#$C['CData'] = new \papp\CData( [ 'DB' => ['FILENAME' => __DIR__.'/../../../../data/data.db' ] ] );
-$C['fremeo~core']['CData'] = new \papp\CData( [ 'DB' => ['FILENAME' => PROJECT_ROOT.'data/fremeo~core/data.db', 'FILENAME_C' => PROJECT_ROOT.'data_c/fremeo~core/data.db' ] ] );
+#$C['CData'] = new \phploader\CData( [ 'DB' => ['FILENAME' => __DIR__.'/../../../../data/data.db' ] ] );
+$C['fremeo~core']['CData'] = new \phploader\CData( [ 'DB' => ['FILENAME' => PROJECT_ROOT.'data/fremeo~core/data.db', 'FILENAME_C' => PROJECT_ROOT.'data_c/fremeo~core/data.db' ] ] );
 
-$C['fremeo~core']['Link'] = new \papp\phpapp\Link( $C['fremeo~core']['CData'] );
+$C['fremeo~core']['Link'] = new \fremeo\core\Link( $C['fremeo~core']['CData'] );
 
 #DB-----------------
 
@@ -101,7 +101,7 @@ $Pattern['ACCOUNT'] = [ #Kunden Accounts
 $C['fremeo~core']['CData']->registerPattern($Pattern);
 
 /*
-$frame = new papp\framework($ModulId);
+$frame = new fremeo\framework($ModulId);
 $frame->getLink($F);
 $frame->setLink($active,$FromURL,$ToURL);
 */
@@ -109,7 +109,7 @@ $frame->setLink($active,$FromURL,$ToURL);
 
 // 2. Phase: alle init.php laden
 foreach ($D['MODUL']['D'] as $moduleDir => $info) {
-	if('papp/phpapp' != $moduleDir) {
+	if('fremeo/core' != $moduleDir) {
 		$D['MY'] = $info;
 		
 		$init = $info['ModulDir'] . '/init.php';

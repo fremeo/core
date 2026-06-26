@@ -36,6 +36,6 @@
 		
 		<button type="submit" class="btn btn-primary btn-sm">Save</button>
 		
-		<a class="btn btn-primary btn-sm" href="?R[Page]=admin__module.list&R[ModuleId]=papp/phpapp&R[ACTION]=regenerateAutoload">regenerateAutoload</a>
+		<a class="btn btn-primary btn-sm" href="?R[Page]=admin__module.list&R[ModuleId]=fremeo/core&R[ACTION]=regenerateAutoload">regenerateAutoload</a>
 	</form>
 {/block}

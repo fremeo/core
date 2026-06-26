@@ -57,7 +57,7 @@
 					</div>
 
 					<!-- Passwort vergessen -->
-					<a href="?R[Page]=index__password_forgot&R[ModuleId]=papp/phpapp" class="forgot-link">
+					<a href="?R[Page]=index__password_forgot&R[ModuleId]=fremeo/core" class="forgot-link">
 						{i18n id="PasswordForgot"}?
 					</a>
 

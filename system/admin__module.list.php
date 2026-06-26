@@ -1,7 +1,7 @@
 <?php
 
 if(($R['ACTION']??null) == 'save') {
-	$C['papp~phpapp']['CData']->set_object($D); 
+	$C['fremeo~core']['CData']->set_object($D); 
 }
 if(($R['ACTION']??null) == 'regenerateAutoload') { 
 	$C['ComposerManager']->regenerateAutoload();

@@ -1,16 +1,16 @@
 <?php
-namespace papp\phpapp;
+namespace fremeo\core;
 
 class Link {
 
-    private \papp\CData $DB;
+    private \phploader\CData $DB;
 
     /**
      * Konstruktor
      *
-     * @param \papp\CData $DB  Datenbank‑Objekt für set_object() / get_object()
+     * @param \phploader\CData $DB  Datenbank‑Objekt für set_object() / get_object()
      */
-    public function __construct(\papp\CData $DB) {
+    public function __construct(\phploader\CData $DB) {
         $this->DB = $DB;
     }
 

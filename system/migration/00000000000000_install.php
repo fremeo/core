@@ -1,19 +1,19 @@
 <?php 
-namespace papp\phpapp;
+namespace fremeo\core;
 class install() {
 
 	function up() {
 		#SEO Links anlegen
-		$C['Link']->createOne('admin','admin__admin', 'papp/phpapp');
-		$C['Link']->createOne('admin/user','admin__user.list', 'papp/phpapp');
-		$C['Link']->createOne('admin/user.edit','admin__user.edit', 'papp/phpapp');
-		$C['Link']->createOne('admin/user/group','admin__user_group.list', 'papp/phpapp');
+		$C['Link']->createOne('admin','admin__admin', 'fremeo/core');
+		$C['Link']->createOne('admin/user','admin__user.list', 'fremeo/core');
+		$C['Link']->createOne('admin/user.edit','admin__user.edit', 'fremeo/core');
+		$C['Link']->createOne('admin/user/group','admin__user_group.list', 'fremeo/core');
 		
 		#frontend
-		$C['Link']->createOne('registration','frontend__user.register', 'papp/phpapp');
-		$C['Link']->createOne('login','index__login', 'papp/phpapp');
-		$C['Link']->createOne('logout','index__login', 'papp/phpapp', ['R' => ['ACTION' => 'logout']]);
-		#$C['Link']->createOne('password/forgot','frontend__password_forgot', 'papp/phpapp');
+		$C['Link']->createOne('registration','frontend__user.register', 'fremeo/core');
+		$C['Link']->createOne('login','index__login', 'fremeo/core');
+		$C['Link']->createOne('logout','index__login', 'fremeo/core', ['R' => ['ACTION' => 'logout']]);
+		#$C['Link']->createOne('password/forgot','frontend__password_forgot', 'fremeo/core');
 
 		#Erstelle Gruppen
 		$D['USER_GROUP']['D']['admin']['Name'] = "admin";

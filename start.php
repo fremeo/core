@@ -1,5 +1,5 @@
 <?php 
-session_name('phpapp');
+session_name('fremeo');
 session_start();
 $D['SESSION'] = $_SESSION;
 
@@ -73,7 +73,7 @@ if( isset($D['SEO_URL']) ) {
 			header( "HTTP/1.1 404 Not Found" );
 			$D['_PAGE'] = 'error.404';
 			$D['R']['Page'] = 'error.404';
-			$D['R']['ModuleId'] = 'papp/phpapp';
+			$D['R']['ModuleId'] = 'fremeo/core';
 		}
 	}
 
@@ -81,7 +81,7 @@ if( isset($D['SEO_URL']) ) {
 		header( "HTTP/1.1 404 Not Found" );
 		$D['_PAGE'] = 'error.404';
 		$D['R']['Page'] = 'error.404';
-		$D['R']['ModuleId'] = 'papp/phpapp';
+		$D['R']['ModuleId'] = 'fremeo/core';
 	}
 	
 }
@@ -89,9 +89,10 @@ if( isset($D['SEO_URL']) ) {
 	#Template und php Verkettung
 
 	$_tpl = getExtends($D['MODUL']['D'], $D['R']['ModuleId'], $D['R']['Page']);
-	
+
+
 	foreach($_tpl['php'] AS $kFile) {
-		include_once ($kFile);
+		##include_once ($kFile);
 	}
 	$C['fremeo~core']['CData']->get_object($D,$F); #Datenbank Abfrage
 	#echo $_tpl['extends'];

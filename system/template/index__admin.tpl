@@ -95,7 +95,7 @@ margin-right:0.5rem;
 			{*<li><a class="dropdown-item" href="#">Profil</a></li>
 			<li><a class="dropdown-item" href="#">Einstellungen</a></li>*}
 			<li><hr class="dropdown-divider"></li>
-			<li><a class="dropdown-item" href="?R[Page]=index__login&R[ModuleId]=papp/phpapp&D[ACTION]=logout">Logout</a></li>
+			<li><a class="dropdown-item" href="?R[Page]=index__login&R[ModuleId]=fremeo/core&D[ACTION]=logout">Logout</a></li>
 		  </ul>
 		</div>
 	  </div>
@@ -118,13 +118,13 @@ margin-right:0.5rem;
 				<div class="collapse ps-3" id="submenu5">
 					<ul class="nav flex-column">
 						{block name="sidebar_system"}
-						<li class="nav-item"><a class="nav-link" href="?R[Page]=admin__user.list&R[ModuleId]=papp/phpapp#submenu5"><i class="fa-solid fa-puzzle-piece"></i> Benutzer</a></li>
-						<li class="nav-item"><a class="nav-link" href="?R[Page]=admin__user_group.list&R[ModuleId]=papp/phpapp#submenu5"><i class="fa-solid fa-puzzle-piece"></i> Gruppen</a></li>
+						<li class="nav-item"><a class="nav-link" href="?R[Page]=admin__user.list&R[ModuleId]=fremeo/core#submenu5"><i class="fa-solid fa-puzzle-piece"></i> Benutzer</a></li>
+						<li class="nav-item"><a class="nav-link" href="?R[Page]=admin__user_group.list&R[ModuleId]=fremeo/core#submenu5"><i class="fa-solid fa-puzzle-piece"></i> Gruppen</a></li>
 						
-						<li class="nav-item"><a class="nav-link" href="?R[Page]=admin__module.list&R[ModuleId]=papp/phpapp#submenu5"><i class="fa-solid fa-puzzle-piece"></i> Module</a></li>
-						<li class="nav-item"><a class="nav-link" href="?R[Page]=admin__link.list&R[ModuleId]=papp/phpapp#submenu5"><i class="fas fa-link"></i> Link</a></li>
-						<li class="nav-item"><a class="nav-link" href="?R[Page]=admin__file.list&R[ModuleId]=papp/phpapp#submenu5"><i class="fas fa-file-alt"></i> Dateien</a></li>
-						<li class="nav-item"><a class="nav-link" href="?R[Page]=admin__setting.list&R[ModuleId]=papp/phpapp#submenu5"><i class="fas fa-ellipsis-v"></i> Menu</a></li>	
+						<li class="nav-item"><a class="nav-link" href="?R[Page]=admin__module.list&R[ModuleId]=fremeo/core#submenu5"><i class="fa-solid fa-puzzle-piece"></i> Module</a></li>
+						<li class="nav-item"><a class="nav-link" href="?R[Page]=admin__link.list&R[ModuleId]=fremeo/core#submenu5"><i class="fas fa-link"></i> Link</a></li>
+						<li class="nav-item"><a class="nav-link" href="?R[Page]=admin__file.list&R[ModuleId]=fremeo/core#submenu5"><i class="fas fa-file-alt"></i> Dateien</a></li>
+						<li class="nav-item"><a class="nav-link" href="?R[Page]=admin__setting.list&R[ModuleId]=fremeo/core#submenu5"><i class="fas fa-ellipsis-v"></i> Menu</a></li>	
 						
 						<li class="nav-item"><a class="nav-link" href="?R[Page]=assistant#submenu5"><i class="fas fa-parachute-box"></i> Assistent</a></li>
 						<li class="nav-item"><a class="nav-link" href="?R[Page]=setting.list#submenu5"><i class="fas fa-cog"></i> Einstellungen</a></li>

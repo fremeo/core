@@ -1,9 +1,9 @@
 {
     "name": "fremeo/core",
-    "description": "core framework for phpapp",
+    "description": "core framework for fremeo",
     "license": "proprietary",
-    "type": "phpapp-core",
-    "keywords": ["phpapp", "phpapp-core", "core"],
+    "type": "fremeo-core",
+    "keywords": ["fremeo", "fremeo-core", "core"],
     "require": {
         "php": "^8.0",
         "phploader/smartylite": "^v4.5",
