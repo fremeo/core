@@ -44,11 +44,21 @@ $C['Smarty'] = new Smarty();
 $C['fremeo/core']['CData'] = new \phploader\CData( [ 'DB' => ['FILENAME' => PROJECT_ROOT.'data/fremeo~core/data.db', 'FILENAME_C' => PROJECT_ROOT.'data_c/fremeo~core/data.db' ] ] );
 
 #Globales Link Objekt für die gesamte Anwendung
-$C['fremeo/core']['Link'] = new \fremeo\core\Link( $C['fremeo/core']['CData'] );
+
+#$C['fremeo/core']['Link'] = new \fremeo\core\Link( $C['fremeo/core']['CData'] );
 
 #DB-----------------
 
 $Pattern = [];
+
+$globalPattern = [
+	'LINK'		=> [
+		'Active'		=> ['Type' => 'checkbox'],
+		'FromURL'		=> ['Type' => 'text'],
+		'ToURL'			=> ['Type' => 'text'],
+		#'ModuleId'		=> ['Type' => 'id', 'ForeignKey' => 1],
+	],
+];
  
 $C['fremeo/core']['CData']->registerPattern([ 
 	'SETTING'	=> [
@@ -56,12 +66,12 @@ $C['fremeo/core']['CData']->registerPattern([
 			'ParentId'		=> ['Type' => 'id', 'ForeignKey' => 1],
 			'Value'			=> ['Type' => 'text'],
 		],
-	'LINK'		=> [
+	/*'LINK'		=> [
 			'Active'		=> ['Type' => 'checkbox'],
 			'FromURL'		=> ['Type' => 'text'],
 			'ToURL'			=> ['Type' => 'text'],
 			'ModuleId'		=> ['Type' => 'id', 'ForeignKey' => 1],
-		],
+		],*/
 	'FILE' 		=> [
 			'Name'			=> ['Type' => 'text'],
 			'Size'			=> ['Type' => 'number'],
@@ -110,6 +120,7 @@ $frame->setLink($active,$FromURL,$ToURL);
 
 // 2. Phase: alle init.php laden
 foreach ($D['MODULE']['D'] as $moduleDir => $info) {
+
 	if('fremeo/core' != $moduleDir) {
 		$D['MY'] = $info;
 		
@@ -117,5 +128,8 @@ foreach ($D['MODULE']['D'] as $moduleDir => $info) {
 		if (is_file($init)) {
 			require_once $init;
 		}
+	}
+	if(isset($C[$moduleDir]['CData']) ) {
+		$C[$moduleDir]['CData']->registerPattern($globalPattern);
 	}
 }
