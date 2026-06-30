@@ -5,7 +5,7 @@ $D['SESSION'] = $_SESSION;
 
 
 // 3. Phase: alle start.php laden
-foreach ($D['MODUL']['D'] as $moduleDir => $info) {
+foreach ($D['MODULE']['D'] as $moduleDir => $info) {
     $D['MY'] = $info;
 	
 	$start = $info['ModulDir'] . '/start.php';
@@ -52,31 +52,41 @@ if( isset($D['SEO_URL']) ) {
 		
 		#$F['PLATFORM']['W'][0]['ID'] = [ $D['PLATFORM_ID'] ];
 		$f['LINK']['W'][0]['ID'] = $hURL;
-		$C['fremeo~core']['CData']->get_object($D,$f);
-		
-		if(isset($D['LINK']['D'][ $hURL ]) && ($D['LINK']['D'][ $hURL ]['Active']??false) &&  strpos($D['LINK']['D'][ $hURL ]['ToURL'], 'R[Page]') !== false ) {
+		$f['LINK']['W'][0]['Active'] = 1;
+
+        if(!empty($D['MODULE']['D'])) {
+            foreach((array)$D['MODULE']['D'] AS $kMOD => $MOD) {
+
+                $_id = str_replace('/', '~', $kMOD);
+                if(isset($C[$_id]['CData'])) {
+                    $C[$_id]['CData']->get_object($D['MODULE']['D'][$kMOD],$f);
+                } else {
+					continue;
+				}
+        
+		#$C['fremeo~core']['CData']->get_object($D,$f);
+
+                if(isset($D['MODULE']['D'][$kMOD]['LINK']['D'][ $hURL ]) && ($D['MODULE']['D'][$kMOD]['LINK']['D'][ $hURL ]['Active']??false) && strpos($D['MODULE']['D'][$kMOD]['LINK']['D'][ $hURL ]['ToURL'], 'R[Page]') !== false ) {
+               
+                    parse_str($D['MODULE']['D'][$kMOD]['LINK']['D'][ $hURL ]['ToURL'], $d);
+            
+                    $D = array_merge_recursive((array)($D??[]),(array)($d['D']??[]));
+                    if(isset($d['R'])) {
+                        $R = $D['R'] = array_replace_recursive((array)($d['R']),($R??[]) );#ToDo: 
+                    }
+
+                    #$_path = "{$base}/system/{$D['R']['ModuleId']}/system/";
+                    #$_tpl .= (($_tpl)?'|':'')."{$_path}template/{$D['_PAGE']}.tpl";
+
+                    header( "HTTP/1.1 200 OK" );
+					$D['R']['ModuleId'] = $kMOD;
+					break;
+                }
+            }
 			
-			parse_str($D['LINK']['D'][ $hURL ]['ToURL'], $d);
-	
-			$D = array_merge_recursive((array)($D??[]),(array)($d['D']??[]));
-			if(isset($d['R'])) {
-				$R = $D['R'] = array_replace_recursive((array)($d['R']),($R??[]) );#ToDo: 
-			}
-		
-
-			#$_path = "{$base}/system/{$D['R']['ModuleId']}/system/";
-			#$_tpl .= (($_tpl)?'|':'')."{$_path}template/{$D['_PAGE']}.tpl";
-
-			header( "HTTP/1.1 200 OK" );
-		}
-		else {#Link nicht vorhanden
-			header( "HTTP/1.1 404 Not Found" );
-			$D['_PAGE'] = 'error.404';
-			$D['R']['Page'] = 'error.404';
-			$D['R']['ModuleId'] = 'fremeo/core';
-		}
+        }
 	}
-
+	
 	if(!isset($D['R']['ModuleId'])) {
 		header( "HTTP/1.1 404 Not Found" );
 		$D['_PAGE'] = 'error.404';
@@ -88,7 +98,7 @@ if( isset($D['SEO_URL']) ) {
 
 	#Template und php Verkettung
 
-	$_tpl = getExtends($D['MODUL']['D'], $D['R']['ModuleId'], $D['R']['Page']);
+	$_tpl = getExtends($D['MODULE']['D'], $D['R']['ModuleId'], $D['R']['Page']);
 
 
 	foreach($_tpl['php'] AS $kFile) {

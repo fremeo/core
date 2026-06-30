@@ -31,10 +31,41 @@ if(($D['ACTION']??null) == 'save') {
 		$C['fremeo~core']['Link']->deleteById($deleteIds); 
 	}
 
-	$C['CData']->set_object($D);
+	$C['fremeo~core']['CData']->set_object($D);
 	unset($D['LINK']); 
 }
 
 #$F['PLATFORM']['PAGE']['W'][0]['ID'] = [$D['ID']];
-$F['LINK'] = [];
+###$F['LINK'] = [];
+
+/* # Test Eintrag
+$d1['LINK']['D']['4f166f26'] = [
+	'Active'	=> 1,
+	'FromURL'	=> 'widerrufsrecht',
+	'ToURL'		=> 'R[Page]=frontend__page&R[Id]=dd7e77fc&R[LanguageId]=DE',
+];
+$C['fremeo~page']['CData']->set_object($d1);
+*/
+
+#Todo: muss in die Link Klasse verschoben werden.
+#Durchlaufe alle Module und hole die Link Einträge
+$f['LINK'] = [];
+if(!empty($D['MODULE']['D'])) {
+	foreach((array)$D['MODULE']['D'] AS $kMOD => $MOD) {
+
+
+		$_id = str_replace('/', '~', $kMOD);
+		if(isset($C[$_id]['CData'])) {
+			$C[$_id]['CData']->get_object($D['MODULE']['D'][$kMOD],$f);
+		}
+	}
+}
+#print_r($D['MODULE']['D']['fremeo/page']);
+#$C['fremeo~page']['CData']->get_object($D,$F);
+/*
+$Dd['LINK']['D']['35ccf52f'] = [
+	'ToURL'		=> 'R[Page]=index__login&D[ACTION]=logout',
+];
+$C['fremeo~core']['CData']->set_object($Dd);
+*/
 
