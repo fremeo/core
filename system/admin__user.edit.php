@@ -7,7 +7,7 @@ if($D['ACTION']??null) {
 	}
 	
 	
-	$C['fremeo~core']['CData']->set_object($D);
+	$C['fremeo/core']['CData']->set_object($D);
 }
 
 $F['USER']['W'][0]['ID'] = ($R['Id']??null);

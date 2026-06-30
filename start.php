@@ -5,7 +5,7 @@ $D['SESSION'] = $_SESSION;
 
 
 // 3. Phase: alle start.php laden
-foreach ($D['MODUL']['D'] as $moduleDir => $info) {
+foreach ($D['MODULE']['D'] as $moduleDir => $info) {
     $D['MY'] = $info;
 	
 	$start = $info['ModulDir'] . '/start.php';
@@ -30,7 +30,7 @@ foreach ($D['MODUL']['D'] as $moduleDir => $info) {
 
 	#ToDo: file_get_contents ist keien Sichere Funktion da es Zugrif auf lokale Dateien erlaubt. Es muss eine abgespeckte Version der CFILE Klasse zur verfügung gestelt wertden.
 	#file_get_contents nur auf URLs erlauben nicht auf URIs
-	$my_security_policy->php_functions = ['round','hrtime','rtrim','dirname','mail','base64_encode','mb_convert_encoding','hash','header','json_decode','json_encode','serialize','COUNT','file_get_contents','substr','json_decode','array_key_exists','array_merge_recursive','array_diff_key','str_pad','strtotime','date','ceil','array_keys','current','count','strlen','strtolower','number_format','md5','in_array','is_array','time','nl2br','print_r','array_key_first','strpos','strrpos','str_replace','isset','empty','sizeof','trim','explode','implode'];
+	$my_security_policy->php_functions = ['max','round','hrtime','rtrim','dirname','mail','base64_encode','mb_convert_encoding','hash','header','json_decode','json_encode','serialize','COUNT','file_get_contents','substr','json_decode','array_key_exists','array_merge_recursive','array_diff_key','str_pad','strtotime','date','ceil','array_keys','current','count','strlen','strtolower','number_format','md5','in_array','is_array','time','nl2br','print_r','array_key_first','strpos','strrpos','str_replace','isset','empty','sizeof','trim','explode','implode'];
 	$my_security_policy->php_modifiers = ['in_array','strlen','strstr','array_keys','count','COUNT','number_format'];#Smarty PHP Erweiteurngen
 	$my_security_policy->streams = null;
 	$my_security_policy->secure_dir = ['system/'];
@@ -52,31 +52,40 @@ if( isset($D['SEO_URL']) ) {
 		
 		#$F['PLATFORM']['W'][0]['ID'] = [ $D['PLATFORM_ID'] ];
 		$f['LINK']['W'][0]['ID'] = $hURL;
-		$C['fremeo~core']['CData']->get_object($D,$f);
-		
-		if(isset($D['LINK']['D'][ $hURL ]) && ($D['LINK']['D'][ $hURL ]['Active']??false) &&  strpos($D['LINK']['D'][ $hURL ]['ToURL'], 'R[Page]') !== false ) {
+		$f['LINK']['W'][0]['Active'] = 1;
+
+        if(!empty($D['MODULE']['D'])) {
+            foreach((array)$D['MODULE']['D'] AS $kMOD => $MOD) {
+
+                if(isset($C[$kMOD]['CData'])) {
+                    $C[$kMOD]['CData']->get_object($D['MODULE']['D'][$kMOD],$f);
+                } else {
+					continue;
+				}
+        
+		#$C['fremeo/core']['CData']->get_object($D,$f);
+
+                if(isset($D['MODULE']['D'][$kMOD]['LINK']['D'][ $hURL ]) && ($D['MODULE']['D'][$kMOD]['LINK']['D'][ $hURL ]['Active']??false) && strpos($D['MODULE']['D'][$kMOD]['LINK']['D'][ $hURL ]['ToURL'], 'R[Page]') !== false ) {
+               
+                    parse_str($D['MODULE']['D'][$kMOD]['LINK']['D'][ $hURL ]['ToURL'], $d);
+            
+                    $D = array_merge_recursive((array)($D??[]),(array)($d['D']??[]));
+                    if(isset($d['R'])) {
+                        $R = $D['R'] = array_replace_recursive((array)($d['R']),($R??[]) );#ToDo: 
+                    }
+
+                    #$_path = "{$base}/system/{$D['R']['ModuleId']}/system/";
+                    #$_tpl .= (($_tpl)?'|':'')."{$_path}template/{$D['_PAGE']}.tpl";
+
+                    header( "HTTP/1.1 200 OK" );
+					$D['R']['ModuleId'] = $kMOD;
+					break;
+                }
+            }
 			
-			parse_str($D['LINK']['D'][ $hURL ]['ToURL'], $d);
-	
-			$D = array_merge_recursive((array)($D??[]),(array)($d['D']??[]));
-			if(isset($d['R'])) {
-				$R = $D['R'] = array_replace_recursive((array)($d['R']),($R??[]) );#ToDo: 
-			}
-		
-
-			#$_path = "{$base}/system/{$D['R']['ModuleId']}/system/";
-			#$_tpl .= (($_tpl)?'|':'')."{$_path}template/{$D['_PAGE']}.tpl";
-
-			header( "HTTP/1.1 200 OK" );
-		}
-		else {#Link nicht vorhanden
-			header( "HTTP/1.1 404 Not Found" );
-			$D['_PAGE'] = 'error.404';
-			$D['R']['Page'] = 'error.404';
-			$D['R']['ModuleId'] = 'fremeo/core';
-		}
+        }
 	}
-
+	
 	if(!isset($D['R']['ModuleId'])) {
 		header( "HTTP/1.1 404 Not Found" );
 		$D['_PAGE'] = 'error.404';
@@ -86,15 +95,21 @@ if( isset($D['SEO_URL']) ) {
 	
 }
 
+
+if($D['R']['ModuleId']) {
+	#Globales Link Objekt für die gesamte Anwendung
+	$C['Link'] = new \fremeo\core\Link( $C[ $D['R']['ModuleId'] ]['CData'] );
+}
+
 	#Template und php Verkettung
 
-	$_tpl = getExtends($D['MODUL']['D'], $D['R']['ModuleId'], $D['R']['Page']);
+	$_tpl = getExtends($D['MODULE']['D'], $D['R']['ModuleId'], $D['R']['Page']);
 
 
 	foreach($_tpl['php'] AS $kFile) {
 		include_once ($kFile);
 	}
-	$C['fremeo~core']['CData']->get_object($D,$F); #Datenbank Abfrage
+	$C['fremeo/core']['CData']->get_object($D,$F); #Datenbank Abfrage
 	#echo $_tpl['extends'];
 	/*
 	echo "<pre>";

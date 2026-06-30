@@ -2,7 +2,7 @@
 
 $F['FILE']['W'][0]['ID'] = $R['id'];
 
-$C['fremeo~core']['CData']->get_object($d,$F);
+$C['fremeo/core']['CData']->get_object($d,$F);
 
 if(isset($d['FILE']['D'])) {
 	$key = array_keys($d['FILE']['D']);

@@ -24,7 +24,7 @@ foreach (glob(PROJECT_ROOT . '/system/vendor/' . '/*/*', GLOB_ONLYDIR) as $modul
 	$package = $parts[count($parts)-1]; // yy
 	$Id = "{$vendor}/{$package}";
 	
-	$D['MODUL']['D'][ $Id ] = [
+	$D['MODULE']['D'][ $Id ] = [
 		'Id'			=> $Id,
 		'ModulDir'		=> $moduleDir,
 		'VendorName'	=> $vendor,
@@ -41,26 +41,37 @@ foreach (glob(PROJECT_ROOT . '/system/vendor/' . '/*/*', GLOB_ONLYDIR) as $modul
 $C['Smarty'] = new Smarty();
 
 #$C['CData'] = new \phploader\CData( [ 'DB' => ['FILENAME' => __DIR__.'/../../../../data/data.db' ] ] );
-$C['fremeo~core']['CData'] = new \phploader\CData( [ 'DB' => ['FILENAME' => PROJECT_ROOT.'data/fremeo~core/data.db', 'FILENAME_C' => PROJECT_ROOT.'data_c/fremeo~core/data.db' ] ] );
+$C['fremeo/core']['CData'] = new \phploader\CData( [ 'DB' => ['FILENAME' => PROJECT_ROOT.'data/fremeo~core/data.db', 'FILENAME_C' => PROJECT_ROOT.'data_c/fremeo~core/data.db' ] ] );
 
-$C['fremeo~core']['Link'] = new \fremeo\core\Link( $C['fremeo~core']['CData'] );
+#Globales Link Objekt für die gesamte Anwendung
+
+#$C['fremeo/core']['Link'] = new \fremeo\core\Link( $C['fremeo/core']['CData'] );
 
 #DB-----------------
 
 $Pattern = [];
+
+$globalPattern = [
+	'LINK'		=> [
+		'Active'		=> ['Type' => 'checkbox'],
+		'FromURL'		=> ['Type' => 'text'],
+		'ToURL'			=> ['Type' => 'text'],
+		#'ModuleId'		=> ['Type' => 'id', 'ForeignKey' => 1],
+	],
+];
  
-$C['fremeo~core']['CData']->registerPattern([ 
+$C['fremeo/core']['CData']->registerPattern([ 
 	'SETTING'	=> [
 			'Active'		=> ['Type' => 'checkbox'],
 			'ParentId'		=> ['Type' => 'id', 'ForeignKey' => 1],
 			'Value'			=> ['Type' => 'text'],
 		],
-	'LINK'		=> [
+	/*'LINK'		=> [
 			'Active'		=> ['Type' => 'checkbox'],
 			'FromURL'		=> ['Type' => 'text'],
 			'ToURL'			=> ['Type' => 'text'],
 			'ModuleId'		=> ['Type' => 'id', 'ForeignKey' => 1],
-		],
+		],*/
 	'FILE' 		=> [
 			'Name'			=> ['Type' => 'text'],
 			'Size'			=> ['Type' => 'number'],
@@ -98,7 +109,7 @@ $Pattern['ACCOUNT'] = [ #Kunden Accounts
 ];
 
 
-$C['fremeo~core']['CData']->registerPattern($Pattern);
+$C['fremeo/core']['CData']->registerPattern($Pattern);
 
 /*
 $frame = new fremeo\framework($ModulId);
@@ -108,7 +119,8 @@ $frame->setLink($active,$FromURL,$ToURL);
 
 
 // 2. Phase: alle init.php laden
-foreach ($D['MODUL']['D'] as $moduleDir => $info) {
+foreach ($D['MODULE']['D'] as $moduleDir => $info) {
+
 	if('fremeo/core' != $moduleDir) {
 		$D['MY'] = $info;
 		
@@ -116,5 +128,8 @@ foreach ($D['MODUL']['D'] as $moduleDir => $info) {
 		if (is_file($init)) {
 			require_once $init;
 		}
+	}
+	if(isset($C[$moduleDir]['CData']) ) {
+		$C[$moduleDir]['CData']->registerPattern($globalPattern);
 	}
 }

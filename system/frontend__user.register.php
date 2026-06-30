@@ -4,7 +4,7 @@ if(($R['Action']??null) == 'save') {
 	if(isset($R['Mail']) && isset($R['Password']) && $R['Password'] == $R['Password2']) {
 		
 		$f['USER']['W'][0]['Mail'] = $R['Mail'];
-		$C['fremeo~core']['CData']->get_object($d,$f); #Prüfe ob email bereits vorhanden ist
+		$C['fremeo/core']['CData']->get_object($d,$f); #Prüfe ob email bereits vorhanden ist
 		if(count(($d['USER']['D']??[])) == 0) { #Es gibt kein Ergebnis, keine Benutzer mit dieser E-Mail, dann kann Benutzer und Account erstellt werden
 			
 			$user_id = hash("crc32b", $R['Mail'] . microtime(true));
@@ -27,7 +27,7 @@ if(($R['Action']??null) == 'save') {
 				'Active' => 1,
 			];
 			
-			$C['fremeo~core']['CData']->set_object($d);
+			$C['fremeo/core']['CData']->set_object($d);
 			
 			
 			#ToDo: Sende E-Mail zum freischalten des Accounts
