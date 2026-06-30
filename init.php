@@ -133,3 +133,6 @@ foreach ($D['MODULE']['D'] as $moduleDir => $info) {
 		$C[$moduleDir]['CData']->registerPattern($globalPattern);
 	}
 }
+
+
+require_once "system/vendor/fremeo/core/start.php";

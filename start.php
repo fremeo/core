@@ -5,6 +5,7 @@ $D['SESSION'] = $_SESSION;
 
 
 // 3. Phase: alle start.php laden
+/*
 foreach ($D['MODULE']['D'] as $moduleDir => $info) {
     $D['MY'] = $info;
 	
@@ -13,7 +14,7 @@ foreach ($D['MODULE']['D'] as $moduleDir => $info) {
         require_once $start;
     }
 }
-
+*/
 	#Admin
 
 	// Smarty-Instanz erzeugen
