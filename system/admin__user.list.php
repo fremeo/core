@@ -1,6 +1,6 @@
 <?php 
 if($D['ACTION']??null) {
-	$C['fremeo~core']['CData']->set_object($D);
+	$C['fremeo/core']['CData']->set_object($D);
 }
 
 $F['USER']['GROUP']['W'][0]['Active'] = 1;

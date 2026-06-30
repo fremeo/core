@@ -57,14 +57,13 @@ if( isset($D['SEO_URL']) ) {
         if(!empty($D['MODULE']['D'])) {
             foreach((array)$D['MODULE']['D'] AS $kMOD => $MOD) {
 
-                $_id = str_replace('/', '~', $kMOD);
-                if(isset($C[$_id]['CData'])) {
-                    $C[$_id]['CData']->get_object($D['MODULE']['D'][$kMOD],$f);
+                if(isset($C[$kMOD]['CData'])) {
+                    $C[$kMOD]['CData']->get_object($D['MODULE']['D'][$kMOD],$f);
                 } else {
 					continue;
 				}
         
-		#$C['fremeo~core']['CData']->get_object($D,$f);
+		#$C['fremeo/core']['CData']->get_object($D,$f);
 
                 if(isset($D['MODULE']['D'][$kMOD]['LINK']['D'][ $hURL ]) && ($D['MODULE']['D'][$kMOD]['LINK']['D'][ $hURL ]['Active']??false) && strpos($D['MODULE']['D'][$kMOD]['LINK']['D'][ $hURL ]['ToURL'], 'R[Page]') !== false ) {
                
@@ -104,7 +103,7 @@ if( isset($D['SEO_URL']) ) {
 	foreach($_tpl['php'] AS $kFile) {
 		include_once ($kFile);
 	}
-	$C['fremeo~core']['CData']->get_object($D,$F); #Datenbank Abfrage
+	$C['fremeo/core']['CData']->get_object($D,$F); #Datenbank Abfrage
 	#echo $_tpl['extends'];
 	/*
 	echo "<pre>";

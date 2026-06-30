@@ -28,10 +28,10 @@ if(($D['ACTION']??null) == 'save') {
 
 	// 3. Löschen 
 	if (!empty($deleteIds)) { 
-		$C['fremeo~core']['Link']->deleteById($deleteIds); 
+		$C['fremeo/core']['Link']->deleteById($deleteIds); 
 	}
 
-	$C['fremeo~core']['CData']->set_object($D);
+	$C['fremeo/core']['CData']->set_object($D);
 	unset($D['LINK']); 
 }
 
@@ -44,7 +44,7 @@ $d1['LINK']['D']['4f166f26'] = [
 	'FromURL'	=> 'widerrufsrecht',
 	'ToURL'		=> 'R[Page]=frontend__page&R[Id]=dd7e77fc&R[LanguageId]=DE',
 ];
-$C['fremeo~page']['CData']->set_object($d1);
+$C['fremeo/page']['CData']->set_object($d1);
 */
 
 #Todo: muss in die Link Klasse verschoben werden.
@@ -54,18 +54,17 @@ if(!empty($D['MODULE']['D'])) {
 	foreach((array)$D['MODULE']['D'] AS $kMOD => $MOD) {
 
 
-		$_id = str_replace('/', '~', $kMOD);
-		if(isset($C[$_id]['CData'])) {
-			$C[$_id]['CData']->get_object($D['MODULE']['D'][$kMOD],$f);
+		if(isset($C[$kMOD]['CData'])) {
+			$C[$kMOD]['CData']->get_object($D['MODULE']['D'][$kMOD],$f);
 		}
 	}
 }
 #print_r($D['MODULE']['D']['fremeo/page']);
-#$C['fremeo~page']['CData']->get_object($D,$F);
+#$C['fremeo/page']['CData']->get_object($D,$F);
 /*
 $Dd['LINK']['D']['35ccf52f'] = [
 	'ToURL'		=> 'R[Page]=index__login&D[ACTION]=logout',
 ];
-$C['fremeo~core']['CData']->set_object($Dd);
+$C['fremeo/core']['CData']->set_object($Dd);
 */
 
