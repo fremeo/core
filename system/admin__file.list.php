@@ -22,4 +22,14 @@ if(($D['ACTION']??null) == 'upload') {
 	$C['fremeo/core']['CData']->set_object($d);
 }
 #$F['PLATFORM']['PAGE']['W'][0]['ID'] = [$D['ID']];
-$F['FILE'] = [];
+$f['FILE'] = [];
+
+if(!empty($D['MODULE']['D'])) {
+	foreach((array)$D['MODULE']['D'] AS $kMOD => $MOD) {
+
+
+		if(isset($C[$kMOD]['CData'])) {
+			$C[$kMOD]['CData']->get_object($D['MODULE']['D'][$kMOD],$f);
+		}
+	}
+}

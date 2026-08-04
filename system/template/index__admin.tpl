@@ -121,6 +121,7 @@ margin-right:0.5rem;
 						<li class="nav-item"><a class="nav-link" href="?R[Page]=admin__user.list&R[ModuleId]=fremeo/core#submenu5"><i class="fa-solid fa-puzzle-piece"></i> Benutzer</a></li>
 						<li class="nav-item"><a class="nav-link" href="?R[Page]=admin__user_group.list&R[ModuleId]=fremeo/core#submenu5"><i class="fa-solid fa-puzzle-piece"></i> Gruppen</a></li>
 						
+						<li class="nav-item"><a class="nav-link" href="?R[Page]=admin__module.store&R[ModuleId]=fremeo/core#submenu5"><i class="fa-solid fa-store"></i> Module Store</a></li>
 						<li class="nav-item"><a class="nav-link" href="?R[Page]=admin__module.list&R[ModuleId]=fremeo/core#submenu5"><i class="fa-solid fa-puzzle-piece"></i> Module</a></li>
 						<li class="nav-item"><a class="nav-link" href="?R[Page]=admin__link.list&R[ModuleId]=fremeo/core#submenu5"><i class="fas fa-link"></i> Link</a></li>
 						<li class="nav-item"><a class="nav-link" href="?R[Page]=admin__file.list&R[ModuleId]=fremeo/core#submenu5"><i class="fas fa-file-alt"></i> Dateien</a></li>

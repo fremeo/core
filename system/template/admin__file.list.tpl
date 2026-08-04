@@ -1,6 +1,21 @@
 {block name="inner_body"}
 
-	<form method="post" enctype="multipart/form-data">
+<form method="post" enctype="multipart/form-data">
+	<div class="sticky-top bg-white" style="z-index: 1000;">
+			<ul class="nav nav-tabs">
+			{foreach from=$D.MODULE.D key="kMOD" item="MOD"}
+				<li class="nav-item">
+					<a class="nav-link position-relative" href="#{$kMOD}" data-bs-toggle="tab">{$kMOD} 
+					{if $MOD.FILE.COUNT > 0}
+					<span class="badge rounded-pill bg-danger">
+						{$MOD.FILE.COUNT}
+					</span>
+					{/if}
+					</a>
+				</li>
+			{/foreach}
+			</ul>
+		</div>
 	<input type="hidden" name="D[ACTION]" value='upload'>
 		Send these files:<br />
 		<input name="file[]" type="file" /><br />
@@ -9,6 +24,10 @@
 	</form>
 	<form method="post">
 		<input type="hidden" name="D[ACTION]" value='save'>
+
+		<div class="tab-content">
+		{foreach from=$D.MODULE.D key="kMOD" item="MOD"}
+			<div class="tab-pane fade " id="{$kMOD}">
 		<table class="table">
 			<thead>
 				<tr>
@@ -21,7 +40,7 @@
 				</tr>
 			</thead>
 			<tbody>
-			{foreach from=$D.FILE.D key="kFIL" item="FIL"}
+			{foreach from=$MOD.FILE.D key="kFIL" item="FIL"}
 				<tr>
 					<td scope="row">{$kFIL}</td>
 					<td scope="row"><img src="./file/{$kFIL}_25x25.{$FIL.Extension}"></td>
@@ -33,6 +52,9 @@
 			{/foreach}
 			</tbody>
 		</table>
+			</div>
+			{/foreach}
+		</div>
 		<button type="submit" class="btn btn-primary btn-sm">Save</button>
 	</form>
 {/block}

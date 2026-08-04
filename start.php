@@ -22,8 +22,10 @@ foreach ($D['MODULE']['D'] as $moduleDir => $info) {
 
 	// Konfiguration (optional)
 	#$C['Smarty']->setTemplateDir(__DIR__ . '/system/template/');
+    
 	$C['Smarty']->addTemplateDir(__DIR__ . '/system/template/', 'core');
-	$C['Smarty']->setCompileDir("{$D['MY']['CacheDir']}template_c/");
+	#$C['Smarty']->setCompileDir("{$D['MY']['CacheDir']}template_c/");
+    $C['Smarty']->setCompileDir("{$D['MODULE']['D']['fremeo/core']['CacheDir']}template_c/");
 	$C['Smarty']->error_reporting = E_ALL & ~E_NOTICE & ~E_WARNING & ~E_DEPRECATED;
 
 
@@ -38,11 +40,13 @@ foreach ($D['MODULE']['D'] as $moduleDir => $info) {
 	
 	$C['Smarty']->enableSecurity($my_security_policy);
 	$_tpl = null;
+    /*
 	if($D['SEO_URL'] == 'admin') {
 		$_tpl = 'index.tpl';
 		$D['R']['ModuleId'] = 'fremeo/admin';
 		##include(__DIR__."/system/index.php");
 	}
+    */
 
 if( isset($D['SEO_URL']) ) {
 

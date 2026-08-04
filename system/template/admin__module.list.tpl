@@ -21,9 +21,14 @@
 			<td>{$MOD.description}
 			{if $MOD.url}<br>URL: {$MOD.url}{/if}
 			{if $MOD.require}<br>Require: {foreach from=$MOD.require key="kR" item="R"}{$kR}:{$R}{/foreach}{/if}
+				<div>
+				{if $MOD.version != $MOD.version_latest}<a class="btn btn-primary btn-sm" href="?R[Page]=admin__module.list&R[ModuleId]=fremeo/core&R[ACTION]=update-module&R[Module][Id]={$kMOD}">Update</a>{/if}
+				<a class="btn btn-primary btn-sm" href="?R[Page]=admin__module.list&R[ModuleId]=fremeo/core&R[ACTION]=reinstall-module&R[Module][Id]={$kMOD}">Reinstall</a>
+				{if strpos($MOD.type, "module") !== false}<a class="btn btn-danger btn-sm" href="?R[Page]=admin__module.list&R[ModuleId]=fremeo/core&R[ACTION]=uninstall-module&R[Module][Id]={$kMOD}">Uninstall</a>{/if}
+				</div>
 			</td>
 			<td>{$MOD.type}</td>
-			<td><span class="status-installed">{$MOD.version} ({$MOD.latest})</span></td>
+			<td><span class="status-installed {if $MOD.version != $MOD.version_latest}text-danger{/if}">{$MOD.version} ({$MOD.version_latest})</span></td>
 			<td class="text-end">{round($MOD.size/1024/1024, 2)} MB</td>
 			<td class="text-end">{round($MOD.size_cache/1024/1024, 2)} MB</td>
 			<td class="text-end">{round($MOD.size_data/1024/1024, 2)} MB</td>
@@ -34,8 +39,9 @@
         </table>
 		
 		
-		<button type="submit" class="btn btn-primary btn-sm">Save</button>
+		{*<button type="submit" class="btn btn-primary btn-sm">Save</button>*}
 		
-		<a class="btn btn-primary btn-sm" href="?R[Page]=admin__module.list&R[ModuleId]=fremeo/core&R[ACTION]=regenerateAutoload">regenerateAutoload</a>
+		<a class="btn btn-primary btn-sm" href="?R[Page]=admin__module.list&R[ModuleId]=fremeo/core&R[ACTION]=update-all">Alle aktualisieren</a>
+		<a class="btn btn-primary btn-sm" href="?R[Page]=admin__module.list&R[ModuleId]=fremeo/core&R[ACTION]=migration-run">Migrationen ausführen</a>
 	</form>
 {/block}
