@@ -1,5 +1,7 @@
 #0.0.1
-~ Module Seite: Hinzugfügt: Modulgröße, Cachegröße, Data-Größe
++ Migration System: Hinzugefügt: Migrationen für Module
++ Update, Rerinstall und Uninstall von Modulen hinzugefügt
+~ Modul Seite: Hinzugfügt: Modulgröße, Cachegröße, Data-Größe
 ~ User Login / Logout
 + User Verwaltung
 + User Gruppen Verwaltung
