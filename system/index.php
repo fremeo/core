@@ -1,5 +1,6 @@
 <?php
 
+##Middleware Prüfung ob der User die Rechte für die Seite hat.
 #ToDo: Gast und User Gruppe soll zur Standard Gruppe werden, so dass es Gast und User User nicht merh benötigt wird!
 ##if(check_user_page_right(['guest','admin2l'],$D['_PAGE'], $C)) echo "OK"; else echo "nein";
 

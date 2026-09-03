@@ -27,15 +27,15 @@ return new class($D) {
 
 
 		#Erstelle Gruppen
-		$D['USER_GROUP']['D']['admin']['Name'] = "admin";
+		$D['USER_GROUP']['D']['admin'] = ['Name' => "admin", 'Active' => 1];
 		$D['USER_GROUP']['D']['admin']['PAGE']['D']['admin__']['Active'] = 1;
 		$D['USER_GROUP']['D']['admin']['PAGE']['D']['account__']['Active'] = 1;
 		
-		$D['USER_GROUP']['D']['guest']['Name'] = "guest";
+		$D['USER_GROUP']['D']['guest'] = ['Name' => "guest", 'Active' => 1];
 		$D['USER_GROUP']['D']['guest']['PAGE']['D']['frontend__']['Active'] = 1;
 		$D['USER_GROUP']['D']['guest']['PAGE']['D']['index__']['Active'] = 1;
 		
-		$D['USER_GROUP']['D']['user']['Name'] = "user";
+		$D['USER_GROUP']['D']['user'] = ['Name' => "user", 'Active' => 1];
 		$D['USER_GROUP']['D']['user']['PAGE']['D']['frontend__']['Active'] = 1;
 		$D['USER_GROUP']['D']['user']['PAGE']['D']['index__']['Active'] = 1;
 		$D['USER_GROUP']['D']['user']['PAGE']['D']['account__']['Active'] = 1;
@@ -50,6 +50,8 @@ return new class($D) {
 		#std. Admin User anlegen mit Rechten von Admin
 		$D['USER']['D']['admin'] = ['Active' => 1,'Name' => 'admin', 'Password' => password_hash(date('dmY'),PASSWORD_DEFAULT)]; #Admin Standard Passwort ddmmYYYY
 		$D['USER']['D']['admin']['GROUP']['D']['admin']['Active'] = 1;
+		
+		echo "<div class='text-warning'>========Admin Zugang=========\n Benutzer: admin \n Passwort: ".date('dmY')."\n=============================</div>\n";
 		
 		# Hinterlege die Migrationen die mit dieser Migration umfasst wurden. 
 		# Dies ist nur beim Install Migration notwendig, um veraltete Migrationen zu kennzeichnen, die nicht mehr ausgeführt werden müssen.
