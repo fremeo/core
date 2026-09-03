@@ -56,4 +56,34 @@ if ($befehl === 'migration') {
     }
     echo "----------------------------------------\n";
 }
-
+else if ($befehl === 'uninstall') {
+    # 2. Prüfen, ob der Befehl 'uninstall' lautet
+    echo "----------------------------------------\n";
+    echo " MODUL DEINSTALLATION GESTARTET\n";
+    echo "----------------------------------------\n";
+    
+    # ToDo: Prüfe alle Ordner in data_c und vergleiche mit ordnern aus system/vendor. Wenn ein Modul nicht mehr existiert, dann lösche den Ordner in data_c reqursive.
+    
+	#1. gehe alle Ordner in data_c durch. Ersetze ~ durch / um richtigen Pfad zu erhalten. 
+	#2. Prüfe ob der Ordner in system/vendor exsistiert. Wenn nicht, dann lösche den Ordner in data_c reqursive.
+	$data_c_path =  PROJECT_ROOT . '/data_c/';
+	$vendor_path = __DIR__ . '/system/vendor/';
+	
+	$data_c_dirs = scandir($data_c_path);
+	foreach ($data_c_dirs as $dir) {
+		if ($dir === '.' || $dir === '..' || !is_dir($data_c_path . $dir)) {
+			continue;
+		}
+		
+		$module_dir = str_replace('~', '/', $dir);
+		if (!is_dir($vendor_path . $module_dir)) {
+			echo "-> Modul [" . $module_dir . "] existiert nicht mehr. Lösche Temp Ordner '{$data_c_path}{$dir}'\n";
+			// Lösche den Ordner in data_c rekursiv
+			$C['CFile']::remove($data_c_path .'*');
+			echo "-> Ordner [" . $dir . "] erfolgreich gelöscht.\n";
+		}
+	}
+	
+	echo "----------------------------------------\n";
+	
+}
