@@ -1,3 +1,6 @@
+# Changelog
+#0.0.2
+~ migration/00000000000000_install.php: Überarbeitet: Admin Zugang wird nach der Installation angezeigt. 
 #0.0.1
 + Migration System: Hinzugefügt: Migrationen für Module
 + Update, Rerinstall und Uninstall von Modulen hinzugefügt
