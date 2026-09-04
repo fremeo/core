@@ -2,7 +2,7 @@
     "name": "fremeo/core",
     "description": "core framework for fremeo",
     "license": "proprietary",
-    "type": "fremeo-core",
+    "type": "core",
     "keywords": ["fremeo", "fremeo-module",  "fremeo-core", "core"],
     "require": {
         "php": "^8.0",
