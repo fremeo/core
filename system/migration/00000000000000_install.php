@@ -20,7 +20,7 @@ return new class($D) {
 		$D['LINK']['D'][hash("crc32b", 'admin/file')] = ['Active' => 1, 'FromURL' => 'admin/file', 'ToURL' => 'R[Page]=admin__file.list'];
 
 		#frontend
-		$D['LINK']['D'][hash("crc32b", 'account')] = ['Active' => 1, 'FromURL' => 'account', 'ToURL' => 'R[Page]=account__start'];
+		##$D['LINK']['D'][hash("crc32b", 'account')] = ['Active' => 1, 'FromURL' => 'account', 'ToURL' => 'R[Page]=account__start'];
 		$D['LINK']['D'][hash("crc32b", 'registration')] = ['Active' => 1, 'FromURL' => 'registration', 'ToURL' => 'R[Page]=frontend__user.register'];
 		$D['LINK']['D'][hash("crc32b", 'login')] = ['Active' => 1, 'FromURL' => 'login', 'ToURL' => 'R[Page]=index__login'];
 		$D['LINK']['D'][hash("crc32b", 'logout')] =	['Active' => 1, 'FromURL' => 'logout', 'ToURL' => 'R[Page]=index__login', 'R' => ['ACTION' => 'logout']];
