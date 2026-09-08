@@ -1,13 +1,17 @@
 {
     "name": "fremeo/core",
     "description": "core framework for fremeo",
-    "license": "proprietary",
+    "license": "MIT",
     "type": "core",
     "keywords": ["fremeo",  "fremeo-core", "core"],
     "require": {
         "php": "^8.0",
         "phploader/smarty4life": "^v4.0",
-		"phploader/cdata": "^v2.0"
+		"phploader/cdata": "^v2.0",
+        "symfony/filesystem": "^v8.1.0",
+        "symfony/finder": "^v8.1.0",
+        "intervention/image": "^4.3.0"
+
     },
     "prefer-stable": true,
 	"psr-4": {
