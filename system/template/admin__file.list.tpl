@@ -4,8 +4,8 @@
 	<div class="sticky-top bg-white" style="z-index: 1000;">
 			<ul class="nav nav-tabs">
 			{foreach from=$D.MODULE.D key="kMOD" item="MOD"}
-				<li class="nav-item">
-					<a class="nav-link position-relative" href="#{$kMOD}" data-bs-toggle="tab">{$kMOD} 
+				<li class="nav-item" onclick="$('#gallery_upload').removeClass('invisible'); $('input[name=\'R[activeModuleId]\']').val('{$kMOD}');">
+					<a class="nav-link position-relative" href="#{$kMOD}"  data-bs-toggle="tab">{$kMOD} 
 					{if $MOD.FILE.COUNT > 0}
 					<span class="badge rounded-pill bg-danger">
 						{$MOD.FILE.COUNT}
@@ -16,14 +16,17 @@
 			{/foreach}
 			</ul>
 		</div>
-	<input type="hidden" name="D[ACTION]" value='upload'>
-		Send these files:<br />
-		<input name="file[]" type="file" /><br />
-		<input name="file[]" type="file" /><br />
-		<input type="submit" value="Send files" />
+			<div id="gallery_upload" class="tab-content p-3 border border-top-0 invisible" >
+			<input type="hidden" name="D[ACTION]" value='upload'>
+			<input type="hidden" name="R[activeModuleId]" value=''>
+			Send these files:<br />
+			<input name="file[]" type="file" multiple />
+			<input type="submit" value="Send files" />
+		</div>
 	</form>
 	<form method="post">
 		<input type="hidden" name="D[ACTION]" value='save'>
+		<input type="hidden" name="R[activeModuleId]" value=''>
 
 		<div class="tab-content">
 		{foreach from=$D.MODULE.D key="kMOD" item="MOD"}

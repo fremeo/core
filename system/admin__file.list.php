@@ -1,9 +1,9 @@
 <?php
 
-if(($D['ACTION']??null) == 'save') {
-	$C['fremeo/core']['CData']->set_object($D);
+if(($D['ACTION']??null) == 'save' && $R['activeModuleId']??null) {
+	$C[ $R['activeModuleId']??null ]['CData']->set_object($D);
 }
-if(($D['ACTION']??null) == 'upload') {
+if(($D['ACTION']??null) == 'upload' && $R['activeModuleId']??null) {
 	foreach((array) $_FILES['file']['tmp_name'] AS $kFile => $File) {
 		if($File) {
 		#$platform_id = 'shop';
@@ -19,7 +19,8 @@ if(($D['ACTION']??null) == 'upload') {
 		$d['FILE']['D'][$md5_File]['Extension'] = $ext;
 		}
 	}
-	$C['fremeo/core']['CData']->set_object($d);
+	##$C['fremeo/core']['CData']->set_object($d);
+	$C[ $R['activeModuleId'] ]['CData']->set_object($d);
 }
 #$F['PLATFORM']['PAGE']['W'][0]['ID'] = [$D['ID']];
 $f['FILE'] = [];
