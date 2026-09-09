@@ -1,4 +1,9 @@
 <?php
+use Intervention\Image\ImageManager;
+use Intervention\Image\Drivers\Gd\Driver;
+use Symfony\Component\Filesystem\Filesystem;
+use Symfony\Component\Finder\Finder;
+
 define('SCRIPT_NAME',rtrim(dirname($_SERVER['SCRIPT_NAME']), '/').'/');
 
 
@@ -10,7 +15,8 @@ $C = null;
 $D['C'] = &$C; //Klassen Instanz Array
 $D['SESSION'] = null; 
 
-include('system/vendor/autoload.php');
+require_once('system/vendor/autoload.php');
+
 
 include_once(__dir__.'/system/core/Packagist.php'); #ToDo: Über autoloader laden
 include_once(__dir__.'/system/core/ComposerManager.php'); #ToDo: Über autoloader laden > ToDo: veraltet
@@ -21,6 +27,11 @@ $C['ComposerManager'] = new ComposerManager(__DIR__.'/system/core/composer.phar'
 
 $C['Composer'] = new Composer(__DIR__.'/system/core/composer.phar','C:\\xampp\\php\\php.exe');
 
+$C['Filesystem'] = new Filesystem();
+$C['ImageManager'] = new ImageManager( Driver::class );
+$C['Finder'] = new Finder();
+
+
 
 
 include_once(__dir__.'/system/core/CFile.php'); #ToDo: Über autoloader laden
@@ -29,8 +40,6 @@ include_once(__dir__.'/system/core/Link.php'); #ToDo: Über autoloader laden
 
 #require_once('system/vendor/phploader/cdata/lib/CData.php'); #ToDo: Über autoloader laden
 #require_once('system/vendor/phploader/cdata/lib/CCache.php'); #ToDo: Über autoloader laden
-
-
 
 
 
