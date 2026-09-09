@@ -1,24 +1,72 @@
 <?php
-
 $F['FILE']['W'][0]['ID'] = $R['id'];
 
-$C['fremeo/core']['CData']->get_object($d,$F);
+foreach ($D['MODULE']['D'] as $moduleDir => $info) {
+	if(isset($C[$moduleDir]['CData']) ) {
+		$C[ $moduleDir ]['CData']->get_object($d, $F);
+		if($d['FILE']['D'][ $F['FILE']['W'][0]['ID'] ]??null) {
+			break;
+		}
+	}
+}
 
-if(isset($d['FILE']['D'])) {
-	$key = array_keys($d['FILE']['D']);
-	$File_id = $key[0];
+if (isset($d['FILE']['D'])) {
+    $key = array_keys($d['FILE']['D']);
+    
+	$_ModId = str_replace('/','~',$moduleDir);
+    // --- KORREKTUR HIER: [0] wieder hinzufügen, da array_keys() ein Array liefert ---
+    $File_id = $key[0]; 
 
-	$D['IMAGE'] = [
-		'SOURCE_FILE'	=> "data/fremeo~core/file/{$File_id}.{$d['FILE']['D'][$File_id]['Extension']}",
-		'TARGET_DIR'	=> "data_c/fremeo~core/file/",
-		'TARGET_FILE'	=> "{$File_id}_{$R['x']}x{$R['y']}.{$R['extension']}",
-		'X'				=> $R['x'],
-		'Y'				=> $R['y'],
-		'SHOW'			=> true, #gibt das Bild sofort aus
-		#'TARGET_QUALITY'=> 90,
-		'BACKGROUND'	=> 'FFF',
-		'SCALE'			=> 'absolute-relative',
-	];
+    $fs = $C['Filesystem'];
+    // Pfade und Parameter definieren
+    $sourceFile = "data/{$_ModId}/file/{$File_id}.{$d['FILE']['D'][$File_id]['Extension']}";
+    $targetDir  = "data_c/fremeo~core/file/"; #Speichert extra in core Ordner, als zentraler temp Ordner
+    $targetFile = $targetDir . "{$File_id}_{$R['x']}x{$R['y']}.{$R['extension']}";
+    
+    $width      = (int)$R['x'];
+    $height     = (int)$R['y'];
+    $extension  = strtolower($R['extension']);
 
-	$C['CFile']->image($D['IMAGE']);
+
+    if ($fs->exists($sourceFile)) {
+        
+        $fs->mkdir($targetDir);
+
+       # $manager = ImageManager::usingDriver(Driver::class);
+		$manager = $C['ImageManager'];
+        $image = $manager->decodePath($sourceFile);
+
+        $image->contain(
+            width: $width, 
+            height: $height, 
+            background: 'ffffff'
+        );
+
+        // 4. Format-spezifische Encodierung für V4 (Nutzt Enums)
+        switch ($extension) {
+            case 'avif':
+                $encoded = $image->encodeUsingFormat(\Intervention\Image\Format::AVIF, quality: 80);
+                break;
+            case 'webp':
+                $encoded = $image->encodeUsingFormat(\Intervention\Image\Format::WEBP, quality: 90);
+                break;
+            case 'png':
+                $encoded = $image->encodeUsingFormat(\Intervention\Image\Format::PNG);
+                break;
+            case 'gif':
+                $encoded = $image->encodeUsingFormat(\Intervention\Image\Format::GIF);
+                break;
+            case 'jpg':
+            case 'jpeg':
+            default:
+                $encoded = $image->encodeUsingFormat(\Intervention\Image\Format::JPEG, quality: 90);
+                break;
+        }
+
+        $fs->dumpFile($targetFile, (string)$encoded);
+
+        header("Content-Type: image/{$extension}");
+        echo $encoded;
+        exit;
+    }
 }
