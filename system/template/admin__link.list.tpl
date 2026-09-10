@@ -4,6 +4,7 @@
 		<div class="sticky-top bg-white" style="z-index: 1000;">
 			<ul class="nav nav-tabs">
 				{foreach from=$D.MODULE.D key="kMOD" item="MOD"}
+					
 					<li class="nav-item">
 						<a class="nav-link position-relative" href="#{$kMOD}" data-bs-toggle="tab">{$kMOD}
 							{if $MOD.LINK.COUNT > 0}
@@ -13,6 +14,7 @@
 							{/if}
 						</a>
 					</li>
+						
 				{/foreach}
 			</ul>
 		</div>
@@ -20,9 +22,9 @@
 			{foreach from=$D.MODULE.D key="kMOD" item="MOD"}
 				<div class="tab-pane fade " id="{$kMOD}">
 					<table class="table">
-						<thead class="bg-light position-sticky top-0" style="z-index: 5;">
+						<thead class="bg-light position-sticky top-0 " style="z-index: 5;">
 							<tr>
-								<th scope="col">Del <input type="checkbox" id="checkAllDelete"></th>
+								<th scope="col"><input type="checkbox" id="checkAllDelete"></th>
 								<th scope="col">Id</th>
 								<th scope="col">Active</th>
 								{*<th scope="col">ModuleId</th>*}
