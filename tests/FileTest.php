@@ -47,6 +47,55 @@ class FileTest extends TestCase {
 		$this->assertDirectoryDoesNotExist("{$this->tmp}/data/fremeo~test/file");
 	}
 
+	/** File mit Upload-Check für normale Dateien (is_uploaded_file ist in Tests immer false). */
+	private function fileWithUploads(): File {
+		return new class($this->C, 'fremeo/test') extends File {
+			protected function isUpload(string $tmp): bool {
+				return is_file($tmp);
+			}
+		};
+	}
+
+	private function upload(string $name, string $content): array {
+		$tmp = "{$this->tmp}/" . md5($name);
+		file_put_contents($tmp, $content);
+		return ['name' => $name, 'tmp_name' => $tmp];
+	}
+
+	public function testAddSavesFileAndDatabaseEntry(): void {
+		$u = $this->upload('Bild.JPG', 'content');
+		$id = md5('content');
+
+		$result = $this->fileWithUploads()->add(['name' => [$u['name']], 'tmp_name' => [$u['tmp_name']]]);
+
+		$this->assertSame(['Name' => 'Bild', 'Size' => 7, 'Extension' => 'jpg'], $result[$id]);
+		$this->assertFileExists("{$this->tmp}/data/fremeo~test/file/{$id}.jpg");
+		$F['FILE']['W'][0]['ID'] = [$id];
+		$this->C['fremeo/test']['CData']->get_object($D, $F);
+		$this->assertSame('Bild', $D['FILE']['D'][$id]['Name']);
+	}
+
+	public function testAddAcceptsSingleFileFormat(): void {
+		$u = $this->upload('einzeln.png', 'single');
+
+		$result = $this->fileWithUploads()->add($u); // $_FILES-Format ohne []: name/tmp_name sind Strings
+
+		$this->assertArrayHasKey(md5('single'), $result);
+	}
+
+	public function testAddSkipsBlockedAndNotAllowedExtensions(): void {
+		$a = $this->upload('code.php', 'a');
+		$b = $this->upload('text.txt', 'b');
+		$c = $this->upload('foto.png', 'c');
+		$upload = ['name' => [$a['name'], $b['name'], $c['name']], 'tmp_name' => [$a['tmp_name'], $b['tmp_name'], $c['tmp_name']]];
+
+		$all = $this->fileWithUploads()->add($upload);
+		$this->assertSame([md5('b'), md5('c')], array_keys($all)); // php ist immer gesperrt
+
+		$images = $this->fileWithUploads()->add($upload, ['png', 'jpg']);
+		$this->assertSame([md5('c')], array_keys($images));
+	}
+
 	public function testDeleteRemovesFileDatabaseEntryAndCachedVariants(): void {
 		$id = md5('image');
 		mkdir("{$this->tmp}/data/fremeo~test/file", 0777, true);

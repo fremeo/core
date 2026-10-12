@@ -91,6 +91,127 @@
 
 					
 			</script>
+		{elseif $p.type == 'fileinput'}
+			{*
+				Natives Datei-Feld (Bootstrap 5 form-control). Parameter: name, multiple, accept (z.B. 'image/*'), help, required, readonly.
+				Der name muss ein Top-Level-Name sein (kein D[...]), damit $_FILES['name'] direkt an $C['modul']['File']->add() übergeben werden kann.
+				Das Formular braucht enctype="multipart/form-data".
+			*}
+			{* in einer Zeile, da {strip} Zeilenumbrüche zwischen Attributen entfernt *}
+			<input type="file" class="form-control" id="file_{md5($p.name)}" name="{$p.name}{if $p.multiple}[]{/if}" {if $p.multiple}multiple {/if}{if $p.accept}accept="{$p.accept|escape}" {/if}{if $p.required}required {/if}{if $p.readonly}disabled {/if}>
+			{if $p.help}<div class="form-text">{$p.help}</div>{/if}
+		{elseif $p.type == 'image'}
+			{*
+				Bilder-Feld: kompakte Kacheln mit Löschen, Drag&Drop-Sortierung, Titelbild und "+" zum Hinzufügen. Alles per Parameter schaltbar.
+				name       Pfad der Bild-Datensätze, z.B. "D[ALBUM][D][{$id}][IMAGE][D]". Je Bild werden Felder darunter gepostet:
+				             {name}[{key}][{sortfield}] = Position (nur bei sortable), {name}[{key}][__DELETE__] = 1 (nur bei gelöschten, deletable)
+				             Ohne name werden keine Felder pro Bild gepostet (Einzelbild-Feld, siehe mainname).
+				value      Array key => [FileId, Sort ...] in Anzeigereihenfolge (FileId fehlt: key wird als Datei-ID genommen)
+				filefield  Feldname der Datei-ID (Standard FileId)          sortfield  Feldname der Position (Standard Sort)
+				sortable   1 = per Drag&Drop sortierbar                      deletable  1 = Papierkorb unten rechts am Bild
+				max        maximale Anzahl Bilder (ohne max: unbegrenzt)    upload     Feldname für neue Dateien, z.B. "images" (=> $_FILES['images']); aktiviert die "+"-Kachel
+				accept     Dateityp der Auswahl (Standard image/*)          size       Kachelgröße in px (Standard 64)
+				mainname   Feldname für die gewählte Datei-ID (hidden). Bei max=1 ist das Einzelbild-Feld für ein Feld wie "FileId": Papierkorb leert den Wert,
+				             ein neu hochgeladenes Bild (upload) setzt der Server. Bei max>1 aktiviert mainname zusätzlich den Stern (Titelbild) je Kachel.
+				main       aktuelle Datei-ID
+				help       Hilfetext
+				Bilder werden als file/{id}_{res}x{res}.webp geladen (res = 2 x size). Das Formular braucht enctype="multipart/form-data".
+				Gelöschte Bilder trägt nur der Server aus: __DELETE__ ist nur ein Flag, Dateien selbst löscht z.B. $C['modul']['File']->delete().
+			*}
+			{$h = md5($p.name|cat:$p.mainname|cat:$p.upload)}
+			{$size = $p.size}{if !$size}{$size = 64}{/if}
+			{$res = $p.res}{if !$res}{$res = $size * 2}{/if}
+			{$ff = $p.filefield}{if !$ff}{$ff = 'FileId'}{/if}
+			{$sf = $p.sortfield}{if !$sf}{$sf = 'Sort'}{/if}
+			{$count = 0}{if $p.value}{$count = count($p.value)}{/if}
+			<div id="img_{$h}" class="img-input d-flex flex-wrap gap-1" data-max="{if $p.max}{$p.max}{else}0{/if}">
+				{foreach $p.value as $id => $item}
+					{$fid = $item[$ff]}{if !$fid}{$fid = $id}{/if}
+					<div class="img-tile position-relative border rounded overflow-hidden bg-light" data-fid="{$fid|escape}" style="width:{$size}px;height:{$size}px;{if $p.sortable}cursor:move;{/if}"{if $p.sortable} draggable="true"{/if}{if $item.Title} title="{$item.Title|escape}"{/if}>
+						<img src="file/{$fid|escape}_{$res}x{$res}.webp" width="{$size}" height="{$size}" class="w-100 h-100 object-fit-cover" alt="" loading="lazy" draggable="false">
+						{if $p.sortable && $p.name}<input type="hidden" class="img-sort" name="{$p.name|escape}[{$id|escape}][{$sf}]" value="{if isset($item[$sf])}{$item[$sf]}{else}{$id@index}{/if}">{/if}
+						{if $p.deletable}
+							{if $p.name}<input type="hidden" class="img-delflag" name="{$p.name|escape}[{$id|escape}][__DELETE__]" value="1" disabled>{/if}
+							<button type="button" class="img-del btn btn-danger position-absolute bottom-0 end-0 p-0 lh-1 rounded-0 rounded-top-start" style="width:22px;height:22px;" title="Entfernen"><i class="fa-solid fa-trash-can" style="font-size:11px;"></i></button>
+						{/if}
+						{if $p.mainname && $p.max != 1}
+							<button type="button" class="img-main btn btn-dark bg-opacity-50 border-0 position-absolute top-0 start-0 p-0 lh-1 rounded-0 rounded-bottom-end" style="width:22px;height:22px;" title="Als Titelbild"><i class="fa-star {if $p.main == $fid}fa-solid text-warning{else}fa-regular text-white{/if}" style="font-size:11px;"></i></button>
+						{/if}
+					</div>
+				{/foreach}
+				{if $p.upload}
+					<label class="img-add btn btn-outline-secondary position-relative d-flex align-items-center justify-content-center p-0{if $p.max && $count >= $p.max} d-none{/if}" style="width:{$size}px;height:{$size}px;border-style:dashed;" title="Bilder hinzufügen">
+						<i class="fa-solid fa-plus"></i>
+						<input type="file" class="img-file d-none" name="{$p.upload|escape}[]" multiple accept="{if $p.accept}{$p.accept|escape}{else}image/*{/if}">
+						<span class="img-addcount badge text-bg-primary position-absolute top-0 end-0 d-none"></span>
+					</label>
+				{/if}
+				{if $p.mainname}<input type="hidden" class="img-mainval" name="{$p.mainname|escape}" value="{$p.main|escape}">{/if}
+			</div>
+			<div class="form-text"><span class="img-n">{$count}</span>{if $p.max} / {$p.max}{/if} Bilder{if $p.help} &ndash; {$p.help}{/if}</div>
+			{literal}
+			<script>
+			$(function() {
+				$('.img-input').each(function() {
+					if (this.dataset.init) return;
+					this.dataset.init = 1;
+					var $w = $(this), max = parseInt(this.dataset.max) || 0, drag = null;
+					var tiles = function() { return $w.children('.img-tile:not(.d-none)'); };
+					var refresh = function() {
+						var n = tiles().length;
+						tiles().each(function(i) { $(this).find('.img-sort').val(i); });
+						$w.find('.img-add').toggleClass('d-none', max > 0 && n >= max);
+						$w.find('.img-file').prop('multiple', !max || max - n > 1);
+						$w.next('.form-text').find('.img-n').text(n);
+					};
+					$w.on('click', '.img-del', function() {
+						var t = $(this).closest('.img-tile'), m = $w.find('.img-mainval');
+						t.find('.img-delflag').prop('disabled', false);
+						t.addClass('d-none');
+						if (m.val() == t.data('fid')) {
+							m.val('');
+							$w.find('.img-main i').removeClass('fa-solid text-warning').addClass('fa-regular text-white');
+						}
+						refresh();
+					});
+					$w.on('click', '.img-main', function() {
+						$w.find('.img-mainval').val($(this).closest('.img-tile').data('fid'));
+						$w.find('.img-main i').removeClass('fa-solid text-warning').addClass('fa-regular text-white');
+						$(this).find('i').removeClass('fa-regular text-white').addClass('fa-solid text-warning');
+					});
+					$w.on('change', '.img-file', function() {
+						var k = this.files.length, n = tiles().length;
+						if (max && n + k > max) {
+							alert('Maximal ' + max + ' Bilder erlaubt (noch ' + (max - n) + ' frei).');
+							this.value = '';
+							k = 0;
+						}
+						$w.find('.img-addcount').text(k).toggleClass('d-none', !k);
+					});
+					// Sortierung per Drag&Drop
+					$w.on('dragstart', '.img-tile', function(e) {
+						drag = this;
+						e.originalEvent.dataTransfer.effectAllowed = 'move';
+						e.originalEvent.dataTransfer.setData('text/plain', '');
+						$(this).addClass('opacity-50');
+					});
+					$w.on('dragover', function(e) { if (drag) e.preventDefault(); });
+					$w.on('dragover', '.img-tile', function(e) {
+						if (!drag || drag === this) return;
+						e.preventDefault();
+						var r = this.getBoundingClientRect();
+						if (e.originalEvent.clientX - r.left > r.width / 2) $(this).after(drag); else $(this).before(drag);
+					});
+					$w.on('dragend', '.img-tile', function() {
+						$(this).removeClass('opacity-50');
+						drag = null;
+						refresh();
+					});
+					refresh();
+				});
+			});
+			</script>
+			{/literal}
 		{elseif $p.type == 'radio'}
 		<section class="section-preview">
 			{foreach name=nVAL from=$p.option key="kVAL" item="VAL"}
@@ -274,8 +395,8 @@
 				<input id="{$p.name}" type="hidden" name="{$p.name}" value="{$p.value}">
 				<input type="datetime-local" ischanged="0" 
 				{if $p.required}required{/if}
-				onchange="document.getElementById('{$p.name}').value = (Date.parse(this.value)/ 1000);{$p.onchange}"
-				onmouseout="input_onmouseout(this);" onfocusout="input_onmouseout(this);" class="form-control" style="text-align:right;" placeholder="{$p.placeholder}" value="{date("Y-m-d\TH:i",(int)$p.value)}">
+				onchange="document.getElementById('{$p.name}').value = (this.value ? Date.parse(this.value)/ 1000 : '');{$p.onchange}"
+				onmouseout="input_onmouseout(this);" onfocusout="input_onmouseout(this);" class="form-control" style="text-align:right;" placeholder="{$p.placeholder}" value="{if $p.value}{date("Y-m-d\TH:i",(int)$p.value)}{/if}">
 		{elseif $p.type ==  'checkbox'}{*ToDo: Active Box muss gesetzt werden, auch nicht bewust ob 0/1 oder 1/-2 sein soll*}
 			<input id="{$p.name}" type="hidden" name="{$p.name}" value="{$p.value}">
 				{if !$p.option}{$p.option = [0 => 1, 1 => 0 ]}{/if}

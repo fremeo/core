@@ -2,6 +2,7 @@
 namespace fremeo\core\tests;
 
 use fremeo\core\Link;
+use PHPUnit\Framework\Attributes\DataProvider;
 use PHPUnit\Framework\TestCase;
 use phploader\CData;
 
@@ -95,5 +96,23 @@ class LinkTest extends TestCase {
 		$link = new Link($this->db('a'));
 
 		$this->assertSame($link->id('blog'), $link->createOne('blog', 'test__page', 'fremeo/test'));
+	}
+
+	#[DataProvider('seoProvider')]
+	public function testNormalize(string $in, string $out): void {
+		$this->assertSame($out, (new Link($this->db('a')))->normalize($in));
+	}
+
+	public static function seoProvider(): array {
+		return [
+			'Umlaute und ss'     => ['Schöne Grüße aus Köln', 'schone_grusse_aus_koln'],
+			'Prefix bleibt'      => ['Gallery/Mein Urlaub 2026!', 'gallery/mein_urlaub_2026'],
+			'Großbuchstaben'     => ['Ärger & Öl', 'arger_ol'],
+			'Akzente'            => ['Café Crème', 'cafe_creme'],
+			'Leerzeichen'        => ['  Foo   Bar  ', 'foo_bar'],
+			'Doppelte Slashes'   => ['a//b/', 'a/b'],
+			'Punkt und Bindestr' => ['admin/user.edit', 'admin/user.edit'],
+			'nur Sonderzeichen'  => ['!!!', ''],
+		];
 	}
 }

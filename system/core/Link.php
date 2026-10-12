@@ -28,6 +28,29 @@ class Link {
 		return hash('crc32b', $SeoURL);
 	}
 
+	/** Umlaute und Akzente => einfache Buchstaben (der Text wird vorher in Kleinbuchstaben gewandelt). */
+	private const TRANSLIT = [
+		'ä' => 'a', 'ö' => 'o', 'ü' => 'u', 'ß' => 'ss',
+		'á' => 'a', 'à' => 'a', 'â' => 'a', 'ã' => 'a', 'å' => 'a', 'æ' => 'ae',
+		'é' => 'e', 'è' => 'e', 'ê' => 'e', 'ë' => 'e',
+		'í' => 'i', 'ì' => 'i', 'î' => 'i', 'ï' => 'i',
+		'ó' => 'o', 'ò' => 'o', 'ô' => 'o', 'õ' => 'o', 'ø' => 'o', 'œ' => 'oe',
+		'ú' => 'u', 'ù' => 'u', 'û' => 'u',
+		'ç' => 'c', 'ñ' => 'n', 'ý' => 'y', 'ÿ' => 'y',
+	];
+
+	/**
+	 * Macht aus beliebigem Text eine saubere SEO-URL: Kleinbuchstaben, Umlaute/Akzente als einfache Buchstaben (ä => a, ß => ss),
+	 * Leer- und Sonderzeichen => _, erlaubt sind a-z 0-9 . _ - und / als Trenner. Z.B. "Gallery/Schöner Urlaub 2026!" => "gallery/schoner_urlaub_2026".
+	 * Wird nicht automatisch in create()/rename() angewendet (bestehende URLs wie "admin/user.edit" bleiben unverändert).
+	 */
+	public function normalize(string $text): string {
+		$seo = strtr(mb_strtolower($text), self::TRANSLIT);
+		$seo = preg_replace('~[^a-z0-9/._-]+~', '_', $seo);
+		$seo = preg_replace(['~_+~', '~_*/+_*~'], ['_', '/'], $seo);
+		return trim($seo, '/_.-');
+	}
+
 	/** Alle vorhandenen SEO-URLs (in allen Datenbanken), die mit einer der Basis-URLs beginnen, z.B. ["blog", "blog_1", "blog_3"]. */
 	private function fetchExisting(array $baseSeo): array {
 		foreach (array_filter($baseSeo, 'strlen') as $seo) {

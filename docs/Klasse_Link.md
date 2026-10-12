@@ -8,6 +8,7 @@
 | **Instanz** | `$C['Link']`, angelegt in `start.php` für das **aktive Modul** (`$D['R']['ModuleId']`). Geschrieben wird nur in dessen DB. Im CLI-Modus wird `start.php` nicht geladen, dort muss `Link` selbst angelegt werden. |
 | **Modulübergreifende Prüfung** | Konstruktor: `new Link($DB, $allDB = [])`. `$allDB` = `CData`-Objekte aller Module (in `start.php` automatisch aus `$C`). Vergebene URLs werden in **allen** diesen DBs geprüft, damit keine URL doppelt vergeben wird. Ohne `$allDB` nur die eigene DB. |
 | **Link-ID** | `id($seo)` = `hash('crc32b', $seo)` – gleiche ID wie in Migrationen (`hash("crc32b", 'admin')`). |
+| **Normalisieren** | `normalize($text)`: Kleinbuchstaben, Umlaute/Akzente als einfache Buchstaben (`ä`→`a`, `ß`→`ss`), Leer-/Sonderzeichen → `_`, erlaubt `a-z 0-9 . _ - /`. `normalize('Gallery/Schöner Urlaub!')` → `gallery/schoner_urlaub`. Wird **nicht** automatisch in `create()`/`rename()` angewendet (bestehende URLs wie `admin/user.edit` bleiben), sondern vom Aufrufer, wenn die URL aus Benutzereingaben stammt. |
 | **Datensatz** | `LINK.D[{id}] = ['Active' => 1, 'FromURL' => seo, 'ToURL' => 'R[Page]=..&R[ModuleId]=..&param', 'ModuleId' => ..]` |
 
 ## Verwendung
@@ -35,6 +36,7 @@ $C['Link']->getById($id);               $C['Link']->getBySeo(['blog/a', 'blog/b'
 ```
 
 ## Wichtig
+* **Link-ID im Datensatz:** Hat ein Modul ein Feld `LinkId` (z.B. `ALBUM.LinkId`, Pattern `['Type' => 'id']`), muss es nach `create()`/`rename()` aktualisiert werden: `create()` liefert `LinkId`, `rename()` liefert `NewId` (die ID ändert sich, weil sie aus der URL gebildet wird). Beispiel: Modul `fremeo/gallery`, `admin__gallery.edit.php`.
 * `Param` ist ein Array (wird mit `http_build_query` angehängt) oder ein fertiger String.
 * Mehrfach gleiche `SeoURL` in **einem** `create()`/`rename()`-Aufruf ergeben `blog`, `blog_1`, …
 * Eine leere SEO-URL (`''`, Startseite) wird nicht auf Konflikte geprüft.

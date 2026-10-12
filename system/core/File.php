@@ -31,18 +31,19 @@ class File {
 	/**
 	 * Speichert hochgeladene Dateien im Ordner des eigenen Moduls.
 	 *
-	 * @param array $upload $_FILES['feldname'] (einzeln oder mehrfach)
+	 * @param array $upload  $_FILES['feldname'] (einzeln oder mehrfach)
+	 * @param array $allowed optional: erlaubte Endungen (klein, ohne Punkt), z.B. ['jpg', 'png']. Leer = alle ausser ausführbarem Code.
 	 * @return array ID => ['Name' => string, 'Size' => int, 'Extension' => string]
 	 */
-	public function add(array $upload): array {
+	public function add(array $upload, array $allowed = []): array {
 		$saved = [];
 		$names = (array)$upload['name'];
 
 		foreach ((array)$upload['tmp_name'] as $k => $tmp) {
-			if (!is_uploaded_file($tmp)) continue;
+			if (!$this->isUpload($tmp)) continue;
 
 			$ext = strtolower(pathinfo($names[$k], PATHINFO_EXTENSION));
-			if (in_array($ext, self::BLOCKED, true)) continue;
+			if (in_array($ext, self::BLOCKED, true) || ($allowed && !in_array($ext, $allowed, true))) continue;
 
 			$id = md5_file($tmp);
 			$this->C['Filesystem']->copy($tmp, "{$this->dir}{$id}.{$ext}", true);
@@ -55,9 +56,15 @@ class File {
 		}
 
 		if ($saved) {
-			$this->C[$this->moduleId]['CData']->set_object(['FILE' => ['D' => $saved]]);
+			$D = ['FILE' => ['D' => $saved]]; // set_object erwartet eine Variable (Referenz)
+			$this->C[$this->moduleId]['CData']->set_object($D);
 		}
 		return $saved;
+	}
+
+	/** Nur echte HTTP-Uploads (in Tests überschreibbar). */
+	protected function isUpload(string $tmp): bool {
+		return is_uploaded_file($tmp);
 	}
 
 	/**

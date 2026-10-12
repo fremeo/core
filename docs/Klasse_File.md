@@ -16,6 +16,9 @@
 $files = $C['fremeo/blog']['File']->add($_FILES['images']);
 // ['<md5>' => ['Name' => 'bild', 'Size' => 1234, 'Extension' => 'jpg'], ...]
 
+// nur bestimmte Dateitypen erlauben (serverseitig, accept im Formular ist nur ein Hinweis)
+$files = $C['fremeo/blog']['File']->add($_FILES['images'], ['jpg', 'jpeg', 'png', 'webp']);
+
 // Löschen: eine ID oder Array von IDs
 $C['fremeo/blog']['File']->delete($id);
 $C['fremeo/blog']['File']->delete([$id1, $id2]);
@@ -23,10 +26,11 @@ $C['fremeo/blog']['File']->delete([$id1, $id2]);
 
 | Methode | Rückgabe | Verhalten |
 |---------|----------|-----------|
-| `add(array $upload)` | `ID => [Name, Size, Extension]` | Speichert nur echte Uploads (`is_uploaded_file`). Endungen wie `php`, `phtml`, `phar`, `htaccess` werden übersprungen. Ein einziger `set_object`-Aufruf für alle Dateien. |
+| `add(array $upload, array $allowed = [])` | `ID => [Name, Size, Extension]` | Speichert nur echte Uploads (`is_uploaded_file`). Endungen wie `php`, `phtml`, `phar`, `htaccess` werden immer übersprungen, mit `$allowed` zusätzlich alle nicht gelisteten. Ein einziger `set_object`-Aufruf für alle Dateien. |
 | `delete(string\|array $ids)` | `void` | Löscht nur IDs, die in der **eigenen** Modul-DB stehen: Datei, `FILE`-Eintrag und alle Varianten `{id}_*` in `data_c/fremeo~core/file/`. Unbekannte IDs werden ignoriert. |
 
 ## Wichtig
+* **Eingabefeld:** Im Formular liefert `{input p=['type'=>'image', 'upload'=>'images', ...]}` (siehe `input.tpl`) die Dateien als `$_FILES['images']`; die Datei-IDs werden danach vom Modul gespeichert (z.B. `Album.FileId`, `IMAGE.D[id]`).
 * **Nur eigener Ordner:** Technisch erzwungen wird es nicht (`$C` ist global), es ist eine Konvention. Nie in `data/` anderer Module schreiben.
 * **Verweise** auf die Datei-ID in eigenen Tabellen (z. B. `FileId` in der Galerie) muss das Modul selbst entfernen.
 * **Bildausgabe:** Skalierte Bilder liefert `get_file.php` über `/file/{id}_{x}x{y}.{ext}`; erzeugte Varianten liegen zentral in `data_c/fremeo~core/file/` (Apache liefert vorhandene Dateien direkt aus).
