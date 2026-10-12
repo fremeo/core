@@ -12,8 +12,18 @@
         "symfony/finder": "^v8.1.0",
         "intervention/image": "^4.3.0"
     },
+    "require-dev": {
+        "phpunit/phpunit": "^11.5"
+    },
     "prefer-stable": true,
-	"psr-4": {
-        "fremeo\\core\\": "system/core/"
+	"autoload": {
+        "psr-4": {
+            "fremeo\\core\\": "system/core/"
+        }
+    },
+    "autoload-dev": {
+        "psr-4": {
+            "fremeo\\core\\tests\\": "tests/"
+        }
     }
 }

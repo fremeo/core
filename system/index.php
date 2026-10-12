@@ -8,9 +8,11 @@ if(!check_user_page_right(['guest',(isset($D['SESSION']['UserId']))?'user':null,
 	#Rechte Reichen nicht aus
 	if( !isset($D['SESSION']['UserId']) ) { #Fals User nicht eingeloggt ist, dann zum Login
 		header("Location: ?R[Page]=index__login&R[ModuleId]=fremeo/core&R[Return][Page]={$D['_PAGE']}&R[Return][ModuleId]={$R['ModuleId']}");
-	}
+        exit;
+    }
 	else { #User ist eingeloggt aber Rechte nicht ausreichend.
 		header("Location: ?R[Page]=error.403&R[ModuleId]=fremeo/core");
+        exit;
 	}
 	
 }

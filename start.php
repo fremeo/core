@@ -102,8 +102,11 @@ if( isset($D['SEO_URL']) ) {
 
 
 if($D['R']['ModuleId']) {
-	#Globales Link Objekt für die gesamte Anwendung
-	$C['Link'] = new \fremeo\core\Link( $C[ $D['R']['ModuleId'] ]['CData'] );
+	#Globales Link Objekt für die gesamte Anwendung. Geschrieben wird in das aktive Modul, vergebene SEO-URLs werden in allen Modulen geprüft.
+	$C['Link'] = new \fremeo\core\Link(
+		$C[ $D['R']['ModuleId'] ]['CData'],
+		array_column(array_filter($C, 'is_array'), 'CData')
+	);
 }
 
 	#Template und php Verkettung

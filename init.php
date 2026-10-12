@@ -34,19 +34,13 @@ $C['Finder'] = new Finder();
 
 
 
-include_once(__dir__.'/system/core/CFile.php'); #ToDo: Über autoloader laden
-
-include_once(__dir__.'/system/core/Link.php'); #ToDo: Über autoloader laden
 
 #require_once('system/vendor/phploader/cdata/lib/CData.php'); #ToDo: Über autoloader laden
 #require_once('system/vendor/phploader/cdata/lib/CCache.php'); #ToDo: Über autoloader laden
 
 
 
-$C['CFile'] = new CFile();
-if(!is_dir(PROJECT_ROOT.'data_c/fremeo~core/')) { # ToDo: ins CCAche verschieben
-	$C['CFile']->mkdir(PROJECT_ROOT.'data_c/fremeo~core/');
-}
+$C['Filesystem']->mkdir(PROJECT_ROOT.'data_c/fremeo~core/'); # ToDo: ins CCAche verschieben
 $C['CCache'] = new \phploader\CCache([ 'DB' => ['FILENAME' => PROJECT_ROOT.'data_c/fremeo~core/cache.cache' ] ]); # Gemeinsamer Cache für alle Module, die CCache nutzen.
 
 
@@ -174,6 +168,7 @@ foreach ($D['MODULE']['D'] as $moduleDir => $info) {
 	# Datenbank für je Modul registrieren, falls das Modul CData nutzt.
 	if(isset($C[$moduleDir]['CData']) ) {
 		$C[$moduleDir]['CData']->registerPattern($globalPattern);
+		$C[$moduleDir]['File'] = new \fremeo\core\File($C, $moduleDir); #Datei Upload/Löschen, gebunden an das eigene Modul: $C['fremeo/blog']['File']->add($_FILES['x']);
 	}
 }
 

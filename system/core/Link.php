@@ -1,415 +1,161 @@
 <?php
 namespace fremeo\core;
 
+/**
+ * SEO-Links eines Moduls anlegen, umbenennen, löschen und lesen.
+ * Ist eine SEO-URL schon vergeben, wird automatisch _1, _2, ... angehängt (Lücken werden aufgefüllt).
+ * Die Prüfung auf vergebene URLs läuft über alle übergebenen Modul-Datenbanken, geschrieben wird nur in die eigene.
+ *
+ * Verwendung: $C['Link']->create([...]) bzw. $C['Link']->createOne('blog/post', 'blog__post', 'fremeo/blog');
+ */
 class Link {
 
-    private \phploader\CData $DB;
-
-    /**
-     * Konstruktor
-     *
-     * @param \phploader\CData $DB  Datenbank‑Objekt für set_object() / get_object()
-     */
-    public function __construct(\phploader\CData $DB) {
-        $this->DB = $DB;
-    }
-
-    /**
-     * Erzeugt eine eindeutige Link‑ID aus einer SEO‑URL.
-     * Die ID wird über einen CRC32b‑Hash generiert.
-     *
-     * @param string $SeoURL
-     * @return string Hash‑ID
-     */
-    public function id(string $SeoURL): string {
-        return hash("crc32b", $SeoURL);
-    }
-
-    /**
-     * Holt alle vorhandenen SEO‑URLs, die mit einer bestimmten Basis‑URL beginnen.
-     * Beispiel: Basis "blog" → liefert ["blog", "blog_1", "blog_3"]
-     *
-     * @param string $baseSeo
-     * @return array Liste aller vorhandenen FromURL‑Werte
-     */
-    private function fetchExisting(string|array $baseSeo): array {
-		if(is_array($baseSeo)) {
-			foreach($baseSeo AS $k => $v) {
-				if($v != '') {
-				$F['LINK']['W'][]['FromURL']['LIKE%'] = $v;
-				} else { $F['LINK']['W'][]['ID'] = '00000000';}
-			}
-		} else{
-			if($baseSeo != '') {
-				$F['LINK']['W'][0]['FromURL']['LIKE%'] = $baseSeo;
-			} else { $F['LINK']['W'][0]['ID'] = '00000000';}
-		}
-        $this->DB->get_object($D, $F);
-
-        $urls = [];
-        if (!empty($D['LINK']['D'])) {
-            foreach ($D['LINK']['D'] as $row) {
-                $urls[] = $row['FromURL'];
-            }
-        }
-        return $urls;
-    }
-
-    /**
-     * Findet die nächste freie SEO‑URL.
-     *
-     * Regeln:
-     * - Wenn Basis‑URL frei ist → Basis verwenden
-     * - Wenn Basis existiert → "_1" testen
-     * - Wenn "_1" existiert → "_2" testen
-     * - Lücken werden berücksichtigt:
-     *   Beispiel: existiert ["blog", "blog_1", "blog_3"] → Ergebnis = "blog_2"
-     *
-     * @param string $baseSeo
-     * @param array $existing Liste vorhandener URLs
-     * @return string freie SEO‑URL
-     */
-    private function findFreeSeo(string $baseSeo, array $existing): string {
-        if (!in_array($baseSeo, $existing, true)) {
-            return $baseSeo;
-        }
-
-        $counter = 1;
-        while (in_array($baseSeo . '_' . $counter, $existing, true)) {
-            $counter++;
-        }
-
-        return $baseSeo . '_' . $counter;
-    }
-
-	function createOne(string $SeoURL, string $Page, string $ModuelId, array|string $Param=null): string {
-		$_newLink[] = [
-						'Page' => $Page,
-						'ModuleId' => $ModuelId,
-						'Param' => $Param,
-						'SeoURL' => $SeoURL,
-					];
-		$ret = $this->create($_newLink);
-		return $ret['LinkId'];
-	}
-
-
-
-    /**
-	 * Legt neue SEO‑Links an.
-	 *
-	 * Unterstützte Eingabeformate:
-	 *
-	 * 1) Einzelner Link:
-	 *    $d = [
-	 *        'Page'     => int|string,
-	 *        'ModuleId' => int|string,
-	 *        'SeoURL'   => string,
-	 *        'Param'    => array|string (optional)
-	 *    ];
-	 *
-	 * 2) Mehrere Links:
-	 *    $d = [
-	 *        'key1' => [
-	 *            'Page'     => int|string,
-	 *            'ModuleId' => int|string,
-	 *            'SeoURL'   => string,
-	 *            'Param'    => array|string (optional)
-	 *        ],
-	 *        'key2' => [...],
-	 *        ...
-	 *    ];
-	 *
-	 * Rückgabeformat:
-	 * [
-	 *     'keyX' => [
-	 *         'Page'     => int|string,
-	 *         'ModuleId' => int|string,
-	 *         'SeoUrl'   => string (final, inkl. _n),
-	 *         'LinkId'   => string (Hash),
-	 *         'Param'    => array|string,
-	 *     ],
-	 *     ...
-	 * ]
-	 *
-	 * Funktionen:
-	 * - prüft, ob die gewünschte SEO‑URL bereits existiert
-	 * - findet automatisch die nächste freie Variante (inkl. Lückenerkennung)
-	 * - erzeugt die Link‑ID über Hash
-	 * - speichert alle neuen Links in einem einzigen set_object()‑Aufruf
-	 *
-	 * @param array $d
-	 * @return array
-	 */
-    public function create(array $d): array {
-		// Einzelnen Link in Mehrfach‑Array umwandeln 
-		if (isset($d['SeoURL']) && !isset($d[0])) { 
-			$d = [0 => $d]; 
-		}
-        $D = ['LINK' => ['D' => []]];
-		$result = [];
-
-		#Erzeugt vorher eine Liste von allen exsistierenden SEO Links
-		foreach ($d as $k => $vEntry) {
-			$SeoUrl[]   = $vEntry['SeoURL'];
-		}
-		$existing = $this->fetchExisting($SeoUrl);// vorhandene URLs holen
-
-        foreach ($d as $k => $vEntry) {
-            $Page     = $vEntry['Page'];
-            $ModuleId = $vEntry['ModuleId'];
-            $SeoUrl   = $vEntry['SeoURL'];
-            $Param    = $vEntry['Param'] ?? [];
-
-            ##$existing = $this->fetchExisting($SeoUrl);// vorhandene URLs holen
-            $finalSeo = $this->findFreeSeo($SeoUrl, $existing);// freie URL finden (inkl. Lückenerkennung)
-
-            $ID       = $this->id($finalSeo);// ID erzeugen
-
-			$_toURL_Param = is_string($Param) ? $Param : http_build_query($Param);
-            $D['LINK']['D'][$ID] = [
-                'Active'   => 1,
-                'FromURL'  => $finalSeo,
-                'ModuleId' => $ModuleId,
-                'ToURL'    => "R[Page]=$Page&R[ModuleId]=$ModuleId" . ($_toURL_Param !== '' ? '&'.$_toURL_Param : '' ),
-            ];
-
-			$result[$k] = [ 'LinkId' => $ID, 'Page' => $Page, 'ModuleId' => $ModuleId, 'SeoUrl' => $finalSeo, 'LinkId' => $ID, 'Param' => $Param ];
-        }
-
-        $this->DB->set_object($D);// speichern
-
-		return $result;
-    }
-
-    /**
-     * Bennent eine bestehende SEO‑URL um.
-     *
-     * Verhalten:
-     * - alte SEO‑URL wird gelöscht
-     * - neue SEO‑URL wird angelegt
-     * - falls neue URL bereits existiert → automatische Vergabe der nächsten freien Variante
-     *
-     * @param string $oldSeo bisherige SEO‑URL
-     * @param string $newSeo gewünschte neue SEO‑URL
-     * @return bool
-     */
-    public function renameById(string $oldSeoId, string $newSeo): bool {
-        $existing = $this->fetchExisting($newSeo);
-        $finalSeo = $this->findFreeSeo($newSeo, $existing);
-
-        $newId = $this->id($finalSeo);
-
-        $F['LINK']['W'][0]['ID'] = [$oldSeoId];
-        $this->DB->get_object($D, $F);
-
-        if (empty($D['LINK']['D'][$oldSeoId])) {
-            return false;
-        }
-
-        $row = $D['LINK']['D'][$oldSeoId];
-
-        $U['LINK']['D'][$newId] = [
-            'Active'   => 1,
-            'FromURL'  => $finalSeo,
-            'ModuleId' => $row['ModuleId'],
-            'ToURL'    => $row['ToURL'],
-        ];
-
-        $U['LINK']['D'][$oldSeoId] = '__DELETE__';
-
-        $this->DB->set_object($U);
-		return true;
-    }
-
-	public function renameBySeo(string $oldSeo, string $newSeo): bool {
-		$oldId = $this->id($oldSeo);
-		return $this->renameById($oldId, $newSeo);
-    }
+	/** @var \phploader\CData[] Alle Datenbanken, in denen vergebene SEO-URLs geprüft werden (inkl. der eigenen). */
+	private array $allDB;
 
 	/**
-	 * Bennent einen oder mehrere SEO‑Links um.
-	 *
-	 * Unterstützte Eingabeformate:
-	 *
-	 * 1) Einzelner Eintrag:
-	 *    $d = [
-	 *        'OldSeo'   => string,   // oder
-	 *        'OldSeoId' => string,
-	 *        'NewSeo'   => string
-	 *    ];
-	 *
-	 * 2) Mehrere Einträge:
-	 *    $d = [
-	 *        ['OldSeo' => 'blog', 'NewSeo' => 'artikel'],
-	 *        ['OldSeoId' => 'a1b2c3d4', 'NewSeo' => 'demo'],
-	 *        ...
-	 *    ];
-	 *
-	 * Rückgabeformat:
-	 * [
-	 *     [
-	 *         'OldSeo'  => string|null,
-	 *         'NewSeo'  => string (final, inkl. _n),
-	 *         'OldId'   => string,
-	 *         'NewId'   => string,
-	 *         'Success' => bool
-	 *     ],
-	 *     ...
-	 * ]
+	 * @param \phploader\CData $DB    Datenbank des Moduls, in die geschrieben wird
+	 * @param array            $allDB optional: weitere CData-Objekte (z.B. aller Module) für die Prüfung auf vergebene URLs
 	 */
-	public function rename(array $d): array
-	{
-		// Einzelnen Eintrag in Array umwandeln
-		if ((isset($d['OldSeo']) || isset($d['OldSeoId'])) && isset($d['NewSeo'])) {
-			$d = [0 => $d];
+	public function __construct(private \phploader\CData $DB, array $allDB = []) {
+		foreach ([$DB, ...$allDB] as $db) {
+			$this->allDB[spl_object_id($db)] = $db;
 		}
+	}
 
-		$result = [];
-		$U = ['LINK' => ['D' => []]];
-		$F = ['LINK' => ['W' => []]];
+	/** Link-ID einer SEO-URL (CRC32b-Hash). */
+	public function id(string $SeoURL): string {
+		return hash('crc32b', $SeoURL);
+	}
 
-		// 1. Alle benötigten IDs sammeln
-		foreach ($d as $k => $entry) {
-
-			if (isset($entry['OldSeoId'])) {
-				$oldId = $entry['OldSeoId'];
-			} elseif (isset($entry['OldSeo'])) {
-				$oldId = $this->id($entry['OldSeo']);
-			} else {
-				$result[$k] = [
-					'OldSeo'  => $entry['OldSeo'] ?? null,
-					'NewSeo'  => $entry['NewSeo'] ?? null,
-					'OldId'   => null,
-					'NewId'   => null,
-					'Success' => false
-				];
-				continue;
-			}
-
-			$d[$k]['_OldId'] = $oldId;
-			$F['LINK']['W'][]['ID'] = [$oldId];
+	/** Alle vorhandenen SEO-URLs (in allen Datenbanken), die mit einer der Basis-URLs beginnen, z.B. ["blog", "blog_1", "blog_3"]. */
+	private function fetchExisting(array $baseSeo): array {
+		foreach (array_filter($baseSeo, 'strlen') as $seo) {
+			$F['LINK']['W'][]['FromURL']['LIKE%'] = $seo;
 		}
+		if (empty($F)) return [];
 
-		// 2. Alle alten Datensätze in einem Rutsch holen
-		$this->DB->get_object($existing, $F);
+		$urls = [];
+		foreach ($this->allDB as $DB) {
+			$D = [];
+			$DB->get_object($D, $F);
+			$urls = [...$urls, ...array_column($D['LINK']['D'] ?? [], 'FromURL')];
+		}
+		return $urls;
+	}
 
-		// 3. Verarbeitung aller Einträge
-		foreach ($d as $k => $entry) {
+	/** Nächste freie SEO-URL: "blog" -> "blog_1" -> "blog_2" ... und merkt sie sich in $existing. */
+	private function freeSeo(string $seo, array &$existing): string {
+		$free = $seo;
+		for ($i = 1; in_array($free, $existing, true); $i++) {
+			$free = "{$seo}_{$i}";
+		}
+		$existing[] = $free;
+		return $free;
+	}
 
-			$oldId = $entry['_OldId'];
-			$newSeo = $entry['NewSeo'];
+	/** Legt einen Link an und gibt die Link-ID zurück. */
+	public function createOne(string $SeoURL, string $Page, string $ModuleId, array|string|null $Param = null): string {
+		return $this->create(['SeoURL' => $SeoURL, 'Page' => $Page, 'ModuleId' => $ModuleId, 'Param' => $Param])[0]['LinkId'];
+	}
 
-			if (empty($existing['LINK']['D'][$oldId])) {
-				$result[$k] = [
-					'OldSeo'  => $entry['OldSeo'] ?? null,
-					'NewSeo'  => $newSeo,
-					'OldId'   => $oldId,
-					'NewId'   => null,
-					'Success' => false
-				];
-				continue;
-			}
+	/**
+	 * Legt einen oder mehrere SEO-Links an.
+	 *
+	 * Eingabe: ['SeoURL' => string, 'Page' => string, 'ModuleId' => string, 'Param' => array|string (optional)]
+	 *          oder eine Liste davon (beliebige Keys).
+	 * Rückgabe: je Key ['LinkId', 'Page', 'ModuleId', 'SeoUrl' (final, inkl. _n), 'Param']
+	 */
+	public function create(array $d): array {
+		if (isset($d['SeoURL'])) $d = [$d];
 
-			$row = $existing['LINK']['D'][$oldId];
-			$oldSeo = $row['FromURL'];
+		$existing = $this->fetchExisting(array_column($d, 'SeoURL'));
+		$D = $result = [];
 
-			// freie neue SEO finden
-			$existingNew = $this->fetchExisting($newSeo);
-			$finalSeo = $this->findFreeSeo($newSeo, $existingNew);
-			$newId = $this->id($finalSeo);
+		foreach ($d as $k => $e) {
+			$Param = $e['Param'] ?? [];
+			$param = is_string($Param) ? $Param : http_build_query($Param);
+			$seo   = $this->freeSeo($e['SeoURL'], $existing);
+			$id    = $this->id($seo);
 
-			// neuen Datensatz anlegen
-			$U['LINK']['D'][$newId] = [
+			$D['LINK']['D'][$id] = [
 				'Active'   => 1,
-				'FromURL'  => $finalSeo,
-				'ModuleId' => $row['ModuleId'],
-				'ToURL'    => $row['ToURL'],
+				'FromURL'  => $seo,
+				'ModuleId' => $e['ModuleId'],
+				'ToURL'    => "R[Page]={$e['Page']}&R[ModuleId]={$e['ModuleId']}" . ($param !== '' ? "&$param" : ''),
 			];
-
-			// alten löschen
-			$U['LINK']['D'][$oldId] = '__DELETE__';
-
-			// Rückgabe
-			$result[$k] = [
-				'OldSeo'  => $oldSeo,
-				'NewSeo'  => $finalSeo,
-				'OldId'   => $oldId,
-				'NewId'   => $newId,
-				'Success' => true
-			];
+			$result[$k] = ['LinkId' => $id, 'Page' => $e['Page'], 'ModuleId' => $e['ModuleId'], 'SeoUrl' => $seo, 'Param' => $Param];
 		}
 
-		// 4. Alles in einem Rutsch speichern
-		$this->DB->set_object($U);
-
+		if ($D) $this->DB->set_object($D);
 		return $result;
 	}
 
+	/**
+	 * Benennt einen oder mehrere SEO-Links um (alter Eintrag wird gelöscht, neuer angelegt, ggf. mit _n).
+	 *
+	 * Eingabe: ['OldSeo' => string | 'OldSeoId' => string, 'NewSeo' => string] oder eine Liste davon.
+	 * Rückgabe: je Key ['OldSeo', 'NewSeo' (final), 'OldId', 'NewId', 'Success']
+	 */
+	public function rename(array $d): array {
+		if (isset($d['NewSeo'])) $d = [$d];
 
+		foreach ($d as $k => $e) {
+			$d[$k]['OldId'] = $e['OldSeoId'] ?? (isset($e['OldSeo']) ? $this->id($e['OldSeo']) : null);
+		}
+		$ids = array_filter(array_column($d, 'OldId'));
+		$old = $ids ? ($this->getById($ids)['LINK']['D'] ?? []) : [];
+		$existing = $this->fetchExisting(array_column($d, 'NewSeo'));
+		$U = $result = [];
 
-    /**
-     * Löscht SEO‑Links anhand ihrer IDs.
-     *
-     * @param string|array $ids
-     * @return void
-     */
-    public function deleteById(string|array $ids): void {
-        $ids = is_array($ids) ? $ids : [$ids];
+		foreach ($d as $k => $e) {
+			$row = $old[$e['OldId']] ?? null;
+			$result[$k] = ['OldSeo' => $row['FromURL'] ?? $e['OldSeo'] ?? null, 'NewSeo' => $e['NewSeo'], 'OldId' => $e['OldId'], 'NewId' => null, 'Success' => false];
+			if (!$row) continue;
 
-        $D = ['LINK' => ['D' => []]];
-        foreach ($ids as $id) {
+			$seo   = $this->freeSeo($e['NewSeo'], $existing);
+			$newId = $this->id($seo);
+
+			$U['LINK']['D'][$newId] = ['Active' => 1, 'FromURL' => $seo, 'ModuleId' => $row['ModuleId'] ?? null, 'ToURL' => $row['ToURL']];
+			$U['LINK']['D'][$e['OldId']] = '__DELETE__';
+			$result[$k] = array_replace($result[$k], ['NewSeo' => $seo, 'NewId' => $newId, 'Success' => true]);
+		}
+
+		if ($U) $this->DB->set_object($U);
+		return $result;
+	}
+
+	public function renameById(string $oldSeoId, string $newSeo): bool {
+		return $this->rename(['OldSeoId' => $oldSeoId, 'NewSeo' => $newSeo])[0]['Success'];
+	}
+
+	public function renameBySeo(string $oldSeo, string $newSeo): bool {
+		return $this->renameById($this->id($oldSeo), $newSeo);
+	}
+
+	/** Löscht SEO-Links anhand ihrer ID(s). */
+	public function deleteById(string|array $ids): void {
+		$D = [];
+		foreach ((array)$ids as $id) {
 			$D['LINK']['D'][$id] = '__DELETE__';
-        }
-        $this->DB->set_object($D);
-    }
+		}
+		if ($D) $this->DB->set_object($D);
+	}
 
-    /**
-     * Löscht SEO‑Links anhand ihrer SEO‑URLs.
-     *
-     * @param string|array $seo
-     * @return void
-     */
-    public function deleteBySeo(string|array $seo): void {
-        $seo = is_array($seo) ? $seo : [$seo];
+	/** Löscht SEO-Links anhand ihrer SEO-URL(s). */
+	public function deleteBySeo(string|array $seo): void {
+		$this->deleteById(array_map([$this, 'id'], (array)$seo));
+	}
 
-        $ids = [];
-        foreach ($seo as $s) {
-            $ids[] = $this->id($s);
-        }
+	/** Holt SEO-Links anhand ihrer ID(s). */
+	public function getById(string|array $ids): array|null {
+		$F['LINK']['W'][0]['ID'] = (array)$ids;
+		$this->DB->get_object($D, $F);
+		return $D ?: null;
+	}
 
-        $this->deleteById($ids);
-    }
-
-    /**
-     * Holt SEO‑Links anhand ihrer IDs.
-     *
-     * @param string|array $ids
-     * @return array|null
-     */
-    public function getById(string|array $ids): array|null {
-        $ids = is_array($ids) ? $ids : [$ids];
-
-        $F['LINK']['W'][0]['ID'] = $ids;
-        $this->DB->get_object($D, $F);
-
-        return $D ?: null;
-    }
-
-    /**
-     * Holt SEO‑Links anhand ihrer SEO‑URLs.
-     *
-     * @param string|array $seo
-     * @return array|null
-     */
-    public function getBySeo(string|array $seo): array|null {
-        $seo = is_array($seo) ? $seo : [$seo];
-
-        $ids = [];
-        foreach ($seo as $s) {
-            $ids[] = $this->id($s);
-        }
-
-        return $this->getById($ids);
-    }
+	/** Holt SEO-Links anhand ihrer SEO-URL(s). */
+	public function getBySeo(string|array $seo): array|null {
+		return $this->getById(array_map([$this, 'id'], (array)$seo));
+	}
 }

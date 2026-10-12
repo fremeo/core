@@ -18,6 +18,7 @@ switch($D['ACTION']??null)
 				}
 				else {
 					header("Location: ./");
+					exit;
 				}
 			}
 		}
@@ -25,6 +26,7 @@ switch($D['ACTION']??null)
 	case 'logout':
 		session_destroy(); #Alle Session löschen beim ausloggen.
 		header("Location: ./");
+		exit;
 		break;
 	case 'password_forgotten':
 		#1. ToDo: user nick und sicherheitscode prüfen

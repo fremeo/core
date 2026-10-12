@@ -27,6 +27,16 @@ $F['SETTING'] = [];
 
 $D['R']['Module']['D'] = $C['ComposerManager']->getInstalledPackages(); #Todo: ComposerManager in Composer verschieben und diese klasse entfernen
 
+$folderSize = function(string $dir): int {
+	$size = 0;
+	if(is_dir($dir)) {
+		foreach((new \Symfony\Component\Finder\Finder())->files()->ignoreDotFiles(false)->ignoreVCS(false)->in($dir) as $file) {
+			$size += $file->getSize();
+		}
+	}
+	return $size;
+};
+
 foreach( $D['R']['Module']['D'] AS $kMOD => $MOD) {
 	
 	$cache = $C['CCache']->get_cache($kMOD);//Todo: Cache in Packagist Klasse übertragen.
@@ -47,9 +57,9 @@ foreach( $D['R']['Module']['D'] AS $kMOD => $MOD) {
 		$D['R']['Module']['D'][$kMOD]['version_latest'] = $package['version_latest'];
 		#Speichergröße des module ordner ermitteln in byte
 		
-		$D['R']['Module']['D'][$kMOD]['size'] = $C['CFile']->getFolderSize("system/vendor/{$kMOD}");
-		$D['R']['Module']['D'][$kMOD]['size_cache'] = $C['CFile']->getFolderSize("data_c/".str_replace("/", "~", $kMOD));
-		$D['R']['Module']['D'][$kMOD]['size_data'] = $C['CFile']->getFolderSize("data/".str_replace("/", "~", $kMOD));
+		$D['R']['Module']['D'][$kMOD]['size'] = $folderSize("system/vendor/{$kMOD}");
+		$D['R']['Module']['D'][$kMOD]['size_cache'] = $folderSize("data_c/".str_replace("/", "~", $kMOD));
+		$D['R']['Module']['D'][$kMOD]['size_data'] = $folderSize("data/".str_replace("/", "~", $kMOD));
 		
 		$C['CCache']->set_cache([ $kMOD => [ 'Tag' => 'Package', 'Data' =>  serialize($D['R']['Module']['D'][$kMOD]) ] ]);
 	}

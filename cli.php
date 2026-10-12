@@ -79,7 +79,7 @@ else if ($befehl === 'uninstall') {
 		if (!is_dir($vendor_path . $module_dir)) {
 			echo "-> Modul [" . $module_dir . "] existiert nicht mehr. Lösche Temp Ordner '{$data_c_path}{$dir}'\n";
 			// Lösche den Ordner in data_c rekursiv
-			$C['CFile']::remove($data_c_path .'*');
+			$C['Filesystem']->remove($data_c_path . $dir);
 			echo "-> Ordner [" . $dir . "] erfolgreich gelöscht.\n";
 		}
 	}
