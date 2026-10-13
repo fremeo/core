@@ -1,6 +1,6 @@
 <?php
 // 1. Sicherheits-Check: Darf NUR über die Kommandozeile ausgeführt werden
-if (PHP_SAPI !== 'cli' && !defined('FREMEO_CLI')) {
+if (PHP_SAPI !== 'cli') {
     die("Fehler: Dieses Skript darf nur über das Terminal ausgeführt werden.\n");
 }
 
@@ -66,8 +66,8 @@ else if ($befehl === 'uninstall') {
     
 	#1. gehe alle Ordner in data_c durch. Ersetze ~ durch / um richtigen Pfad zu erhalten. 
 	#2. Prüfe ob der Ordner in system/vendor exsistiert. Wenn nicht, dann lösche den Ordner in data_c reqursive.
-	$data_c_path =  PROJECT_ROOT . '/data_c/';
-	$vendor_path = __DIR__ . '/system/vendor/';
+	$data_c_path =  PROJECT_ROOT . 'data_c/';
+	$vendor_path = PROJECT_ROOT . 'system/vendor/'; # vendor-dir aus der composer.json des Projekts (nicht relativ zum Core-Ordner!)
 	
 	$data_c_dirs = scandir($data_c_path);
 	foreach ($data_c_dirs as $dir) {
@@ -79,8 +79,12 @@ else if ($befehl === 'uninstall') {
 		if (!is_dir($vendor_path . $module_dir)) {
 			echo "-> Modul [" . $module_dir . "] existiert nicht mehr. Lösche Temp Ordner '{$data_c_path}{$dir}'\n";
 			// Lösche den Ordner in data_c rekursiv
-			$C['Filesystem']->remove($data_c_path . $dir);
-			echo "-> Ordner [" . $dir . "] erfolgreich gelöscht.\n";
+			try {
+				$C['Filesystem']->remove($data_c_path . $dir);
+				echo "-> Ordner [" . $dir . "] erfolgreich gelöscht.\n";
+			} catch (\Throwable $e) {
+				echo "-> Ordner [" . $dir . "] konnte nicht gelöscht werden: " . $e->getMessage() . "\n";
+			}
 		}
 	}
 	

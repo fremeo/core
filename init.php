@@ -177,7 +177,7 @@ foreach ($D['MODULE']['D'] as $moduleDir => $info) {
 }
 
 # 3. Phase: alle cli.php laden, wenn CLI Modus
-if (PHP_SAPI === 'cli' || defined('FREMEO_CLI')) { # FREMEO_CLI setzt nur setup/migrate.php (Verzeichnisschutz), für Server ohne proc_open
+if (PHP_SAPI === 'cli') {
 	foreach ($D['MODULE']['D'] as $moduleDir => $info) {
 		$init = $info['ModulDir'] . '/cli.php';
 		if (is_file($init)) {
