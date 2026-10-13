@@ -27,15 +27,17 @@ if ($source && $x > 0 && $y > 0) {
 	#Zentraler Temp Ordner im Core. Bereits vorhandene Dateien liefert die .htaccess direkt aus, ohne PHP.
 	$target = "data_c/fremeo~core/file/{$id}_{$x}x{$y}.{$ext}";
 
-	$image = $C['ImageManager']->decodePath($source);
+	// Intervention Image 4 (PHP >= 8.3): decodePath() / encodeUsingFormat(). Version 3 (l\u00e4uft ab PHP 8.1): read() / toAvif() usw.
+	$v4    = method_exists($C['ImageManager'], 'decodePath');
+	$image = $v4 ? $C['ImageManager']->decodePath($source) : $C['ImageManager']->read($source);
 	$image->contain(width: $x, height: $y, background: 'ffffff');
 
 	$encoded = match ($ext) {
-		'avif'  => $image->encodeUsingFormat(Format::AVIF, quality: 80),
-		'webp'  => $image->encodeUsingFormat(Format::WEBP, quality: 90),
-		'png'   => $image->encodeUsingFormat(Format::PNG),
-		'gif'   => $image->encodeUsingFormat(Format::GIF),
-		default => $image->encodeUsingFormat(Format::JPEG, quality: 90),
+		'avif'  => $v4 ? $image->encodeUsingFormat(Format::AVIF, quality: 80) : $image->toAvif(80),
+		'webp'  => $v4 ? $image->encodeUsingFormat(Format::WEBP, quality: 90) : $image->toWebp(90),
+		'png'   => $v4 ? $image->encodeUsingFormat(Format::PNG) : $image->toPng(),
+		'gif'   => $v4 ? $image->encodeUsingFormat(Format::GIF) : $image->toGif(),
+		default => $v4 ? $image->encodeUsingFormat(Format::JPEG, quality: 90) : $image->toJpeg(90),
 	};
 	$fs->dumpFile($target, (string)$encoded);
 
