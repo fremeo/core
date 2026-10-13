@@ -17,7 +17,7 @@ use Symfony\Component\Finder\Finder;
 class File {
 
 	/** Endungen, die nie gespeichert werden (ausführbarer Code). */
-	private const BLOCKED = ['php', 'phtml', 'phar', 'php3', 'php4', 'php5', 'php7', 'php8', 'phps', 'htaccess'];
+	private const BLOCKED = ['php', 'phtml', 'pht', 'phar', 'php3', 'php4', 'php5', 'php7', 'php8', 'phps', 'shtml', 'cgi', 'pl', 'py', 'htaccess'];
 
 	private array $C;
 	private string $dir;
@@ -43,7 +43,7 @@ class File {
 			if (!$this->isUpload($tmp)) continue;
 
 			$ext = strtolower(pathinfo($names[$k], PATHINFO_EXTENSION));
-			if (in_array($ext, self::BLOCKED, true) || ($allowed && !in_array($ext, $allowed, true))) continue;
+			if (!$this->extAllowed($ext, $allowed)) continue;
 
 			$id = md5_file($tmp);
 			$this->C['Filesystem']->copy($tmp, "{$this->dir}{$id}.{$ext}", true);
@@ -74,7 +74,7 @@ class File {
 
 		$name = $name !== '' ? basename($name) : basename($source);
 		$ext  = strtolower(pathinfo($name, PATHINFO_EXTENSION));
-		if (in_array($ext, self::BLOCKED, true) || ($allowed && !in_array($ext, $allowed, true))) return null;
+		if (!$this->extAllowed($ext, $allowed)) return null;
 
 		$id   = md5_file($source);
 		$info = ['Name' => pathinfo($name, PATHINFO_FILENAME), 'Size' => filesize($source), 'Extension' => $ext];
@@ -117,7 +117,7 @@ class File {
 
 			$base = basename(str_replace('\\', '/', $entry)); // verhindert Pfade wie ../
 			$ext  = strtolower(pathinfo($base, PATHINFO_EXTENSION));
-			if ($base === '' || $base[0] === '.' || in_array($ext, self::BLOCKED, true) || ($allowed && !in_array($ext, $allowed, true))) continue;
+			if ($base === '' || $base[0] === '.' || !$this->extAllowed($ext, $allowed)) continue;
 
 			$stream = $za->getStream($entry);
 			if (!$stream) continue;
@@ -136,6 +136,15 @@ class File {
 	/** Nur echte HTTP-Uploads (in Tests überschreibbar). */
 	protected function isUpload(string $tmp): bool {
 		return is_uploaded_file($tmp);
+	}
+
+	/**
+	 * Prüft eine Endung: nur einfache Endungen (a-z, 0-9; blockt z.B. "php::$DATA" unter NTFS), nicht gesperrt, und in der Whitelist falls eine übergeben wurde.
+	 */
+	private function extAllowed(string $ext, array $allowed): bool {
+		return (bool)preg_match('/^[a-z0-9]{1,10}$/', $ext)
+			&& !in_array($ext, self::BLOCKED, true)
+			&& (!$allowed || in_array($ext, $allowed, true));
 	}
 
 	/**

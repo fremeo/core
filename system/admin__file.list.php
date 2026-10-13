@@ -1,40 +1,34 @@
 <?php
 
-if(($D['ACTION']??null) == 'save' && $R['activeModuleId']??null) {
-	$C[ $R['activeModuleId']??null ]['CData']->set_object($D);
-}
-if(($D['ACTION']??null) == 'upload' && $R['activeModuleId']??null) {
-	foreach((array) $_FILES['file']['tmp_name'] AS $kFile => $File) {
-		if(is_uploaded_file($File)) {
-			#$platform_id = 'shop';
-			#$CFile->copy($File,"data_c/PLATFORM/{$platform_id}/file/");
-			
-			$md5_File = md5_file($File);
-			$basename = pathinfo($_FILES['file']['name'][$kFile], PATHINFO_FILENAME);
-			$ext = strtolower(pathinfo($_FILES['file']['name'][$kFile], PATHINFO_EXTENSION));
-			$fileSize = filesize($File);
-			#$C['CFile']->move($File,"data/fremeo~core/file/{$md5_File}.{$ext}");
-			
-			$_ModId = str_replace('/','~',$R['activeModuleId']);
-			$C['Filesystem']->copy($File,"data/{$_ModId}/file/{$md5_File}.{$ext}", true);
+// Nur Module mit eigener Datenbank und File-Dienst (keine Bibliotheken, type "library"). Das Zielmodul kommt nie als Pfad in den Dateinamen,
+// sondern über seinen File-Dienst, der nur in den eigenen Ordner schreibt und ausführbare Endungen ablehnt.
+$modId = $R['activeModuleId'] ?? null;
+$valid = $modId && isset($C[$modId]['CData'], $C[$modId]['File']);
 
-			$d['FILE']['D'][$md5_File]['Name'] = $basename;
-			$d['FILE']['D'][$md5_File]['Size'] = $fileSize;
-			$d['FILE']['D'][$md5_File]['Extension'] = $ext;
-		}
-	}
-	##$C['fremeo/core']['CData']->set_object($d);
-	$C[ $R['activeModuleId'] ]['CData']->set_object($d);
+if($valid && ($D['ACTION']??null) == 'save') {
+	$C[$modId]['CData']->set_object($D);
 }
-#$F['PLATFORM']['PAGE']['W'][0]['ID'] = [$D['ID']];
+
+// Zu löschende Dateien je Modul: R[delete][<ModulId>][] = Datei-ID. Die Datei und ihr Datenbankeintrag werden über den File-Dienst des Moduls entfernt.
+if(($D['ACTION']??null) == 'save') {
+	foreach((array)($R['delete'] ?? []) AS $kMOD => $ids) {
+		if(!isset($C[$kMOD]['File'])) continue;
+
+		$ids = array_filter((array)$ids, fn($id) => is_string($id) && preg_match('/^[A-Za-z0-9_-]+$/', $id));
+		if($ids) $C[$kMOD]['File']->delete(array_values($ids));
+	}
+}
+
+if($valid && ($D['ACTION']??null) == 'upload' && isset($_FILES['file'])) {
+	$C[$modId]['File']->add($_FILES['file']);
+}
+
+// $D enthält nur die Datenbankstruktur (je Modul MODULE.D.<Id>.FILE), die Liste der anzuzeigenden Module geht über $R an das Template ($D.R.FileModules).
 $f['FILE'] = [];
+$R['FileModules'] = [];
+foreach((array)($D['MODULE']['D'] ?? []) AS $kMOD => $MOD) {
+	if(($MOD['Type'] ?? 'module') === 'library' || !isset($C[$kMOD]['CData'], $C[$kMOD]['File'])) continue;
 
-if(!empty($D['MODULE']['D'])) {
-	foreach((array)$D['MODULE']['D'] AS $kMOD => $MOD) {
-
-
-		if(isset($C[$kMOD]['CData'])) {
-			$C[$kMOD]['CData']->get_object($D['MODULE']['D'][$kMOD],$f);
-		}
-	}
+	$C[$kMOD]['CData']->get_object($D['MODULE']['D'][$kMOD], $f);
+	$R['FileModules'][] = $kMOD;
 }
