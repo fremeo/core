@@ -3,28 +3,7 @@ session_name('fremeo');
 session_start();
 $D['SESSION'] = $_SESSION;
 
-
-// 3. Phase: alle start.php laden
-/*
-foreach ($D['MODULE']['D'] as $moduleDir => $info) {
-    $D['MY'] = $info;
-	
-	$start = $info['ModulDir'] . '/start.php';
-    if (is_file($start)) {
-        require_once $start;
-    }
-}
-*/
-	#Admin
-
-	// Smarty-Instanz erzeugen
-	#$C['Smarty'] = new Smarty();
-
-	// Konfiguration (optional)
-	#$C['Smarty']->setTemplateDir(__DIR__ . '/system/template/');
-    
 	$C['Smarty']->addTemplateDir(__DIR__ . '/system/template/', 'core');
-	#$C['Smarty']->setCompileDir("{$D['MY']['CacheDir']}template_c/");
     $C['Smarty']->setCompileDir("{$D['MODULE']['D']['fremeo/core']['CacheDir']}template_c/");
 	$C['Smarty']->error_reporting = E_ALL & ~E_NOTICE & ~E_WARNING & ~E_DEPRECATED;
 
@@ -39,56 +18,36 @@ foreach ($D['MODULE']['D'] as $moduleDir => $info) {
 	$my_security_policy->secure_dir = ['system/'];
 	
 	$C['Smarty']->enableSecurity($my_security_policy);
-	$_tpl = null;
-    /*
-	if($D['SEO_URL'] == 'admin') {
-		$_tpl = 'index.tpl';
-		$D['R']['ModuleId'] = 'fremeo/admin';
-		##include(__DIR__."/system/index.php");
-	}
-    */
 
 if( isset($D['SEO_URL']) ) {
-
 
 	if(!isset($R['Page'])) { #Mit SEO Link darf kein Page übergeben werden
 	
 		$hURL = hash("crc32b", rtrim($D['SEO_URL'],'/'));
 		
-		#$F['PLATFORM']['W'][0]['ID'] = [ $D['PLATFORM_ID'] ];
 		$f['LINK']['W'][0]['ID'] = $hURL;
 		$f['LINK']['W'][0]['Active'] = 1;
 
-        if(!empty($D['MODULE']['D'])) {
-            foreach((array)$D['MODULE']['D'] AS $kMOD => $MOD) {
+		foreach((array)($D['MODULE']['D'] ?? []) AS $kMOD => $MOD) {
 
-                if(isset($C[$kMOD]['CData'])) {
-                    $C[$kMOD]['CData']->get_object($D['MODULE']['D'][$kMOD],$f);
-                } else {
-					continue;
+			if(!isset($C[$kMOD]['CData'])) continue;
+			$C[$kMOD]['CData']->get_object($D['MODULE']['D'][$kMOD],$f);
+
+			$link = $D['MODULE']['D'][$kMOD]['LINK']['D'][ $hURL ] ?? null;
+			if($link && ($link['Active']??false) && strpos($link['ToURL'], 'R[Page]') !== false ) {
+
+				parse_str($link['ToURL'], $d);
+
+				$D = array_merge_recursive((array)($D??[]),(array)($d['D']??[]));
+				if(isset($d['R'])) {
+					$R = $D['R'] = array_replace_recursive((array)($d['R']),($R??[]) );#ToDo: 
 				}
-        
-		#$C['fremeo/core']['CData']->get_object($D,$f);
 
-                if(isset($D['MODULE']['D'][$kMOD]['LINK']['D'][ $hURL ]) && ($D['MODULE']['D'][$kMOD]['LINK']['D'][ $hURL ]['Active']??false) && strpos($D['MODULE']['D'][$kMOD]['LINK']['D'][ $hURL ]['ToURL'], 'R[Page]') !== false ) {
-               
-                    parse_str($D['MODULE']['D'][$kMOD]['LINK']['D'][ $hURL ]['ToURL'], $d);
-            
-                    $D = array_merge_recursive((array)($D??[]),(array)($d['D']??[]));
-                    if(isset($d['R'])) {
-                        $R = $D['R'] = array_replace_recursive((array)($d['R']),($R??[]) );#ToDo: 
-                    }
-
-                    #$_path = "{$base}/system/{$D['R']['ModuleId']}/system/";
-                    #$_tpl .= (($_tpl)?'|':'')."{$_path}template/{$D['_PAGE']}.tpl";
-
-                    header( "HTTP/1.1 200 OK" );
-					$D['R']['ModuleId'] = $kMOD;
-					break;
-                }
-            }
-			
-        }
+				header( "HTTP/1.1 200 OK" );
+				$D['R']['ModuleId'] = $kMOD;
+				break;
+			}
+		}
 	}
 	
 	if(!isset($D['R']['ModuleId'])) {
@@ -118,8 +77,8 @@ if($D['R']['ModuleId']) {
 		include_once ($kFile);
 	}
 	$C['fremeo/core']['CData']->get_object($D,$F); #Datenbank Abfrage
-	#echo $_tpl['extends'];
-	/*
+	
+	/* # Diesen Code nicht löschen, dient zur Debugging-Ausgabe der Template-Kette
 	echo "<pre>";
 	print_R($_tpl['tpl']);
 	print_r($_tpl['php']);
@@ -132,35 +91,42 @@ if($D['R']['ModuleId']) {
 #-------------
 function getExtends(array $modules, string $activeModuleId, string $page): array
 {
+    // Bibliotheken (type "library", z.B. phploader/cdata, symfony/*) enthalten keine Templates und werden nicht durchsucht
+    $modules = array_filter($modules, fn($m) => ($m['Type'] ?? 'module') !== 'library');
+
     // Modul muss existieren
     if (!isset($modules[$activeModuleId])) {
-        return [
-            'extends' => '',
-            'tpl'     => [],
-            'php'     => []
-        ];
+        return ['extends' => '', 'tpl' => [], 'php' => []];
     }
 
     $tplChain = [];
     $phpChain = [];
 
+    // Rangfolge der Modul-Typen für die Template-Kette (Typ aus der composer.json). Unbekannte Typen zählen als 'module'.
+    // Die Kette wird am Ende umgedreht, dadurch ergibt sich core -> template -> module.
+    $rank = ['core' => 0, 'template' => 1, 'module' => 2];
+    $typeOf = fn(array $m): string => $m['Type'] ?? 'module';
+
+    // Alle Module: Module vor Template vor Core. Gleicher Rang behält die bisherige Reihenfolge (uasort ist ab PHP 8 stabil).
+    uasort($modules, fn($a, $b) => ($rank[$typeOf($b)] ?? 2) <=> ($rank[$typeOf($a)] ?? 2));
+
+    // Dateien, bei denen nur EIN Modul verwendet wird (z.B. index.tpl): Template vor Core vor Modulen
+    $firstOrder = ['template' => 0, 'core' => 1, 'module' => 2];
+    $first = $modules;
+    uasort($first, fn($a, $b) => ($firstOrder[$typeOf($a)] ?? 2) <=> ($firstOrder[$typeOf($b)] ?? 2));
+
     // Hilfsfunktion: TPL existiert?
-    $exists = function($moduleDir, $tpl) {
-        return file_exists($moduleDir['ModulDir'] . '/system/template/' . $tpl);
-    };
+    $exists = fn(array $module, string $tpl): bool => file_exists($module['ModulDir'] . '/system/template/' . $tpl);
 
     // Hilfsfunktion: TPL → PHP Pfad
-    $toPhp = function(string $tplPath): string {
-        return str_replace(
-            ['/system/template/', '.tpl'],
-            ['/system/', '.php'],
-            $tplPath
-        );
-    };
+    $toPhp = fn(string $tplPath): string => str_replace(['/system/template/', '.tpl'], ['/system/', '.php'], $tplPath);
 
-    // Hilfsfunktion: PHP existiert?
-    $phpExists = function(string $phpPath): bool {
-        return file_exists($phpPath);
+    // Hilfsfunktion: TPL in die Kette aufnehmen, dazu die passende PHP-Datei (falls vorhanden)
+    $add = function(string $tplPath) use (&$tplChain, &$phpChain, $toPhp) {
+        $tplChain[] = $tplPath;
+        if (file_exists($php = $toPhp($tplPath))) {
+            $phpChain[] = $php;
+        }
     };
 
     // ---------------------------------------------------------
@@ -174,7 +140,7 @@ function getExtends(array $modules, string $activeModuleId, string $page): array
         return [
             'extends' => 'extends:' . $tpl,
             'tpl'     => [$tpl],
-            'php'     => $phpExists($php) ? [$php] : []
+            'php'     => file_exists($php) ? [$php] : []
         ];
     }
 
@@ -183,70 +149,39 @@ function getExtends(array $modules, string $activeModuleId, string $page): array
     // ---------------------------------------------------------
     [$base, $sub] = explode('__', $page);
 
-// ---------------------------------------------------------
-// 2b. sub__sub.tpl (z.B. user.register__user.register.tpl) – ALLE Module
-//      → bewusst VOR der eigentlichen Kette einsortieren
-// ---------------------------------------------------------
-$subBase = "{$sub}__{$sub}.tpl";
+    // ---------------------------------------------------------
+    // 2b. sub__sub.tpl (z.B. user.register__user.register.tpl) – erstes Modul, kommt als ERSTES in die Chain
+    // ---------------------------------------------------------
+    $subBase = "{$sub}__{$sub}.tpl";
 
-foreach ($modules as $moduleId => $moduleDir) {
-    if ($exists($moduleDir, $subBase)) {
-        $tplPath = $moduleDir['ModulDir'] . '/system/template/' . $subBase;
-        $tplChain[] = $tplPath;              // kommt als ERSTES in die Chain
-
-        $phpPath = $toPhp($tplPath);
-        if ($phpExists($phpPath)) {
-            $phpChain[] = $phpPath;
+    foreach ($first as $moduleDir) {
+        if ($exists($moduleDir, $subBase)) {
+            $add($moduleDir['ModulDir'] . '/system/template/' . $subBase);
+            break; // nur das erste gefundene Modul verwenden
         }
-
-        break; // nur das erste gefundene Modul verwenden
     }
-}
 
     // ---------------------------------------------------------
     // 3. konkrete Seite (nur aktives Modul) → unterstes Element
     // ---------------------------------------------------------
-    $pageTpl = $page . '.tpl';
-    if ($exists($modules[$activeModuleId], $pageTpl)) {
-        $tplPath = $modules[$activeModuleId]['ModulDir'] . '/system/template/' . $pageTpl;
-        $tplChain[] = $tplPath;
+    if ($exists($modules[$activeModuleId], $page . '.tpl')) {
+        $add($modules[$activeModuleId]['ModulDir'] . '/system/template/' . $page . '.tpl');
+    }
 
-        $phpPath = $toPhp($tplPath);
-        if ($phpExists($phpPath)) {
-            $phpChain[] = $phpPath;
+    // ---------------------------------------------------------
+    // 4. base__base.tpl (admin__admin.tpl) – ALLE Module sammeln
+    // ---------------------------------------------------------
+    $baseBase = "{$base}__{$base}.tpl";
+
+    foreach ($modules as $moduleDir) {
+        $tplPath = $moduleDir['ModulDir'] . '/system/template/' . $baseBase;
+
+        if ($exists($moduleDir, $baseBase)) {
+            $add($tplPath);                                   // TPL + PHP (falls vorhanden)
+        } elseif (file_exists($php = $toPhp($tplPath))) {
+            $phpChain[] = $php;                               // TPL fehlt, aber PHP existiert → nur PHP
         }
     }
-
-
-// 4. base__base.tpl (admin__admin.tpl) – ALLE Module sammeln
-$baseBase = "{$base}__{$base}.tpl";
-
-foreach ($modules as $moduleId => $moduleDir) {
-
-
-    // hypothetischer TPL-Pfad
-    $tplPath = $moduleDir['ModulDir'] . '/system/template/' . $baseBase;
-
-    // korrekter PHP-Pfad über toPhp() – auch wenn TPL fehlt
-    $phpPath = $toPhp($tplPath); // ergibt .../system/admin__admin.php
-
-    // 1. Wenn TPL existiert → TPL + PHP (falls vorhanden)
-    if ($exists($moduleDir, $baseBase)) {
-
-        $tplChain[] = $tplPath;
-
-        if ($phpExists($phpPath)) {
-            $phpChain[] = $phpPath;
-        }
-
-        continue;
-    }
-
-    // 2. Wenn TPL fehlt, aber PHP existiert → nur PHP aufnehmen
-    if ($phpExists($phpPath)) {
-        $phpChain[] = $phpPath;
-    }
-}
 
 
 
@@ -260,21 +195,17 @@ foreach ($modules as $moduleId => $moduleDir) {
     while (true) {
         $candidates = [];
 
-        foreach ($modules as $moduleId => $moduleDir) {
-            foreach (glob($moduleDir['ModulDir'] . "/system/template/*__{$currentBase}.tpl",) as $file) {
-
-                $name = basename($file);
+        foreach ($modules as $moduleDir) {
+            foreach (glob($moduleDir['ModulDir'] . "/system/template/*__{$currentBase}.tpl") as $file) {
 
                 // base__base.tpl überspringen (haben wir in Schritt 4 schon)
-                if ($name === $baseBase) {
+                if (basename($file) === $baseBase) {
                     continue;
                 }
 
-                [$newBase] = explode('__', $name, 2);
-
                 $candidates[] = [
                     'tpl'     => $file,
-                    'newBase' => $newBase,
+                    'newBase' => explode('__', basename($file), 2)[0],
                 ];
             }
         }
@@ -287,29 +218,12 @@ foreach ($modules as $moduleId => $moduleDir) {
         //  - zuerst Templates, deren newBase == currentBase (z.B. frontend__frontend)
         //  - danach Templates, deren newBase != currentBase (z.B. index__frontend)
         //  (weil wir am Ende die Kette umdrehen!)
-        usort($candidates, function ($a, $b) use ($currentBase) {
-            $aSelf = ($a['newBase'] === $currentBase);
-            $bSelf = ($b['newBase'] === $currentBase);
-
-            if ($aSelf === $bSelf) {
-                return 0;
-            }
-
-            // self zuerst
-            return $aSelf ? -1 : 1;
-        });
+        usort($candidates, fn($a, $b) => ($b['newBase'] === $currentBase) <=> ($a['newBase'] === $currentBase));
 
         // Alle Kandidaten in Chain aufnehmen (ohne Duplikate)
         foreach ($candidates as $cand) {
-            $tplPath = $cand['tpl'];
-
-            if (!in_array($tplPath, $tplChain, true)) {
-                $tplChain[] = $tplPath;
-
-                $phpPath = $toPhp($tplPath);
-                if ($phpExists($phpPath) && !in_array($phpPath, $phpChain, true)) {
-                    $phpChain[] = $phpPath;
-                }
+            if (!in_array($cand['tpl'], $tplChain, true)) {
+                $add($cand['tpl']);
             }
         }
 
@@ -333,39 +247,24 @@ foreach ($modules as $moduleId => $moduleDir) {
 
     // 6. root.tpl = currentBase.tpl (oberstes Template, z.B. index.tpl)
 	$rootTplName = $currentBase . '.tpl';
-	$rootPhpPath = null;
 
 	// 6a. root__root.php zuerst einfügen (z.B. index__index.php)
 	$rootBaseBasePhp = $currentBase . '__' . $currentBase . '.php';
 
-	foreach ($modules as $moduleId => $moduleDir) {
-		$phpPath = $moduleDir['ModulDir'] . '/system/' . $rootBaseBasePhp;
-
-		if ($phpExists($phpPath)) {
+	foreach ($first as $moduleDir) {
+		if (file_exists($phpPath = $moduleDir['ModulDir'] . '/system/' . $rootBaseBasePhp)) {
 			$phpChain[] = $phpPath;   // index__index.php
 			break;
 		}
 	}
 
-	// 6b. root.php danach einfügen (z.B. index.php)
-	foreach ($modules as $moduleId => $moduleDir) {
+	// 6b. root.tpl + root.php danach einfügen (z.B. index.tpl, index.php)
+	foreach ($first as $moduleDir) {
 		if ($exists($moduleDir, $rootTplName)) {
-
-			$tplPath = $moduleDir['ModulDir'] . '/system/template/' . $rootTplName;
-			$tplChain[] = $tplPath;
-
-			$phpPath = $toPhp($tplPath);
-			if ($phpExists($phpPath)) {
-				$phpChain[] = $phpPath;   // index.php
-			}
-
+			$add($moduleDir['ModulDir'] . '/system/template/' . $rootTplName);
 			break;
 		}
 	}
-
-	
-	
-	
 
     // ---------------------------------------------------------
     // 7. Kette umdrehen: von root → Seite

@@ -62,6 +62,77 @@ class File {
 		return $saved;
 	}
 
+	/**
+	 * Registriert eine vorhandene Datei im Modul: wird in den Modulordner verschoben und in FILE eingetragen.
+	 *
+	 * @param string $source Quelldatei (wird verschoben)
+	 * @param string $name   Originalname inkl. Endung; leer = Name der Quelldatei
+	 * @return array|null ['Id' => string, 'Name' => string, 'Size' => int, 'Extension' => string] oder null (nicht erlaubt / nicht vorhanden)
+	 */
+	public function addFile(string $source, string $name = '', array $allowed = []): ?array {
+		if (!is_file($source)) return null;
+
+		$name = $name !== '' ? basename($name) : basename($source);
+		$ext  = strtolower(pathinfo($name, PATHINFO_EXTENSION));
+		if (in_array($ext, self::BLOCKED, true) || ($allowed && !in_array($ext, $allowed, true))) return null;
+
+		$id   = md5_file($source);
+		$info = ['Name' => pathinfo($name, PATHINFO_FILENAME), 'Size' => filesize($source), 'Extension' => $ext];
+
+		// copy statt rename: die Datei erbt die Rechte des Zielordners (rename behält unter Windows die Rechte des Temp-Ordners)
+		$this->C['Filesystem']->copy($source, "{$this->dir}{$id}.{$ext}", true);
+		$this->C['Filesystem']->remove($source);
+
+		$D = ['FILE' => ['D' => [$id => $info]]];
+		$this->C[$this->moduleId]['CData']->set_object($D);
+		return ['Id' => $id] + $info;
+	}
+
+	/** Pfad einer gespeicherten Datei des eigenen Moduls. */
+	public function path(string $id, string $ext): string {
+		return "{$this->dir}{$id}.{$ext}";
+	}
+
+	/**
+	 * Entpackt eine ZIP-Datei flach (ohne Unterordner) in einen Zielordner.
+	 * Nur Dateien mit erlaubter Endung werden entpackt, alle anderen übersprungen.
+	 * Unabhängig von add()/delete(): es wird nichts in die Datenbank geschrieben.
+	 *
+	 * @param string $zip       Pfad der ZIP-Datei
+	 * @param string $targetDir Zielordner (wird angelegt)
+	 * @param array  $allowed   erlaubte Endungen (klein, ohne Punkt). Leer = alle ausser ausführbarem Code.
+	 * @return string[] Pfade der entpackten Dateien
+	 */
+	public function unzip(string $zip, string $targetDir, array $allowed = []): array {
+		$za = new \ZipArchive();
+		if (!is_file($zip) || $za->open($zip) !== true) return [];
+
+		$targetDir = rtrim($targetDir, '/\\') . '/';
+		$this->C['Filesystem']->mkdir($targetDir);
+
+		$out = [];
+		for ($i = 0; $i < $za->numFiles; $i++) {
+			$entry = $za->getNameIndex($i);
+			if ($entry === false || str_ends_with($entry, '/')) continue;
+
+			$base = basename(str_replace('\\', '/', $entry)); // verhindert Pfade wie ../
+			$ext  = strtolower(pathinfo($base, PATHINFO_EXTENSION));
+			if ($base === '' || $base[0] === '.' || in_array($ext, self::BLOCKED, true) || ($allowed && !in_array($ext, $allowed, true))) continue;
+
+			$stream = $za->getStream($entry);
+			if (!$stream) continue;
+
+			$target = $targetDir . $i . '_' . $base; // Index vermeidet gleiche Namen aus verschiedenen Ordnern
+			$fh = fopen($target, 'wb');
+			stream_copy_to_stream($stream, $fh);
+			fclose($fh);
+			fclose($stream);
+			$out[] = $target;
+		}
+		$za->close();
+		return $out;
+	}
+
 	/** Nur echte HTTP-Uploads (in Tests überschreibbar). */
 	protected function isUpload(string $tmp): bool {
 		return is_uploaded_file($tmp);

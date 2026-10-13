@@ -53,8 +53,12 @@ foreach (glob(PROJECT_ROOT . '/system/vendor/' . '/*/*', GLOB_ONLYDIR) as $modul
 	$package = $parts[count($parts)-1]; // yy
 	$Id = "{$vendor}/{$package}";
 	
+	# Typ aus der composer.json des Moduls (core | template | module)
+	$type = (string)(json_decode((string)@file_get_contents("{$moduleDir}/composer.json"), true)['type'] ?? 'module');
+	
 	$D['MODULE']['D'][ $Id ] = [
 		'Id'			=> $Id,
+		'Type'			=> $type,
 		'ModulDir'		=> $moduleDir,
 		'VendorName'	=> $vendor,
 		'PackageName'	=> $package,

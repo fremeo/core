@@ -30,6 +30,7 @@
 								{*<th scope="col">ModuleId</th>*}
 								<th scope="col">FromURL</th>
 								<th scope="col">ToURL</th>
+								<th scope="col"></th>
 							</tr>
 						</thead>
 						<tbody>
@@ -37,7 +38,7 @@
 
 							{foreach from=$MOD.LINK.D key="kLIN" item="LIN"}
 								<tr>
-									<td> <input type="checkbox" name="R[delete][]" value="{$kLIN}" class="deleteBox"> </td>
+									<td> <input type="checkbox" name="R[delete][{$kMOD}][]" value="{$kLIN}" class="deleteBox"> </td>
 									<th scope="row">{$kLIN}</th>
 									<th scope="row">{input p=['name' => "D[MODULE][D][{$kMOD}][LINK][D][{$kLIN}][Active]", 'type' =>
 										'checkbox', 'value'=>$LIN.Active]}</th>
@@ -50,6 +51,7 @@
 										{else}
 											{input p=['name' => "D[MODULE][D][{$kMOD}][LINK][D][{$kLIN}][ToURL]",
 										'value'=>$LIN.ToURL]}{/if}</td>
+									<td class="text-end"><button type="button" class="btn btn-outline-danger btn-sm link-delete" title="Löschen (erst beim Speichern)"><i class="fa-solid fa-trash"></i></button></td>
 								</tr>
 							{/foreach}
 						</tbody>
@@ -65,6 +67,20 @@
 	<script>
 		$('#checkAllDelete').on('change', function() {
 			$('.deleteBox').prop('checked', this.checked);
+		});
+
+		// Delete-Button: Zeile ausblenden und zum Löschen markieren, entfernt wird erst beim Speichern
+		$('.link-delete').on('click', function() {
+			var row = $(this).closest('tr');
+			row.find('.deleteBox').prop('checked', true);
+			row.addClass('d-none');
+		});
+
+		// Delete-Button: Zeile ausblenden und zum Löschen markieren, entfernt wird erst beim Speichern
+		$('.link-delete').on('click', function() {
+			var row = $(this).closest('tr');
+			row.find('.deleteBox').prop('checked', true);
+			row.addClass('d-none');
 		});
 	</script>
 
