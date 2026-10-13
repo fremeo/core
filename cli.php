@@ -1,6 +1,6 @@
 <?php
 // 1. Sicherheits-Check: Darf NUR über die Kommandozeile ausgeführt werden
-if (PHP_SAPI !== 'cli') {
+if (PHP_SAPI !== 'cli' && !defined('FREMEO_CLI')) {
     die("Fehler: Dieses Skript darf nur über das Terminal ausgeführt werden.\n");
 }
 

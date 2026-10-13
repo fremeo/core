@@ -49,4 +49,26 @@ class SetupComposerTest extends TestCase {
 
 		$this->assertStringContainsString('gibtesnicht', $composer->out);
 	}
+
+	public function testInstallSkipsScriptsAndPointsToMigrationCommand(): void {
+		// Projekt mit einem Skript, das einen Prozess bräuchte; ohne proc_open darf es nicht laufen
+		$tmp = sys_get_temp_dir() . '/setup_composer_' . uniqid();
+		mkdir("$tmp/setup", 0777, true);
+		file_put_contents("$tmp/composer.json", json_encode([
+			'name' => 'test/test', 'require' => new \stdClass(),
+			'scripts' => ['post-install-cmd' => ['@php -r "file_put_contents(\'script_ran.txt\', 1);"'], 'post-update-cmd' => ['@php -r "file_put_contents(\'script_ran.txt\', 1);"']],
+		]));
+		$_SERVER['SCRIPT_FILENAME'] = "$tmp/setup/console.php";
+		$composer = $this->inProcessComposer();
+		$cwd = getcwd();
+
+		$yielded = iterator_to_array($composer->stream('install'), false);
+		chdir($cwd);
+
+		$this->assertSame([], $yielded, implode(' | ', $yielded));
+		$this->assertFileDoesNotExist("$tmp/script_ran.txt");
+		$this->assertStringContainsString("Befehl 'migration'", $composer->out);
+
+		(new \Symfony\Component\Filesystem\Filesystem())->remove($tmp);
+	}
 }
