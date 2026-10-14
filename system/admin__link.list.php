@@ -28,13 +28,14 @@ $C['fremeo/page']['CData']->set_object($d1);
 #Todo: muss in die Link Klasse verschoben werden.
 #Durchlaufe alle Module und hole die Link Einträge
 $f['LINK'] = [];
+# Nur Module mit eigener Datenbank (keine Bibliotheken, type "library"); die Liste der anzuzeigenden Module geht über $R an das Template ($D.R.LinkModules)
+$R['LinkModules'] = [];
 if(!empty($D['MODULE']['D'])) {
 	foreach((array)$D['MODULE']['D'] AS $kMOD => $MOD) {
+		if(($MOD['Type'] ?? 'module') === 'library' || !isset($C[$kMOD]['CData'])) continue;
 
-
-		if(isset($C[$kMOD]['CData'])) {
-			$C[$kMOD]['CData']->get_object($D['MODULE']['D'][$kMOD],$f);
-		}
+		$C[$kMOD]['CData']->get_object($D['MODULE']['D'][$kMOD],$f);
+		$R['LinkModules'][] = $kMOD;
 	}
 }
 #print_r($D['MODULE']['D']['fremeo/page']);

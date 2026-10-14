@@ -5,27 +5,58 @@ if(($R['ACTION']??null) == 'save') {
 }
 */
 
-if(($R['ACTION']??null) == 'update-module') {
-	$C['Composer']->run("update {$R['Module']['Id']}"); # --with-dependencies : Dieses Flag erlaubt Composer, auch die Pakete zu aktualisieren, von denen Ihr gewähltes Modul direkt abhängt.
+$_action = $R['ACTION'] ?? null;
+$_id     = (string)($R['Module']['Id'] ?? '');
+$_idOk   = (bool)preg_match('#^[a-z0-9_.-]+/[a-z0-9_.-]+$#i', $_id); # nur gültige Paketnamen, der Wert landet in einer Composer-Kommandozeile
+$_result = null;
+
+# Aktionen ändern das System: nur per POST (nicht per Link/GET). Migrationen laufen nach install/update/remove automatisch (Composer-Skripte der composer.json)
+if($_SERVER['REQUEST_METHOD'] !== 'POST') {
+	$_action = null;
+}
+
+if($_action == 'update-module' && $_idOk) {
+	$_result = $C['Composer']->run("update {$_id} --with-dependencies"); # --with-dependencies : Dieses Flag erlaubt Composer, auch die Pakete zu aktualisieren, von denen Ihr gewähltes Modul direkt abhängt.
 	#--dry-run : Simulation des Updates, ohne dass tatsächlich Änderungen vorgenommen werden. Dies ist nützlich, um zu sehen, welche Pakete aktualisiert werden würden, bevor Sie die eigentliche Aktualisierung durchführen.
 }
-else if(($R['ACTION']??null) == 'update-all') {
-	$C['Composer']->run("update");
+else if($_action == 'update-all') {
+	$_result = $C['Composer']->run("update");
 }
-else if(($R['ACTION']??null) == 'reinstall-module') {
-	$C['Composer']->run("require {$R['Module']['Id']}");
+else if($_action == 'reinstall-module' && $_idOk) {
+	$_result = $C['Composer']->run("reinstall {$_id}"); # Paket löschen und neu installieren (Version laut composer.lock)
 }
-else if(($R['ACTION']??null) == 'remove-module') {
-	$C['Composer']->run("remove {$R['Module']['Id']}");
+else if(in_array($_action, ['remove-module', 'uninstall-module'], true) && $_idOk) { # das Template sendet uninstall-module
+	$_result = $C['Composer']->run("remove {$_id}");
 }
-else if(($R['ACTION']??null) == 'migration-run') {
-	$_a= $C['Composer']->run('run-script post-update-cmd');
-	echo '<pre>'; print_r($_a['output']); echo '</pre>';
+else if($_action == 'migration-run') {
+	# Nur die Migrationsdateien der Module durchgehen (ohne Composer): ausgegeben werden die Migrationen, die wirklich ausgeführt wurden
+	include_once __DIR__ . '/core/Migrations.php';
+	$_lines = [];
+	try {
+		foreach($D['MODULE']['D'] as $_kModule => $_info) {
+			if(!isset($C[$_kModule]['CData'])) continue;
+			$_migrations = new \fremeo\core\Migrations($_kModule, $D);
+			foreach($_migrations->getMigrations() as $_file) {
+				if($_migrations->runMigrationUp($_file)) {
+					$_lines[] = "Migration [{$_file}] ({$_kModule}) ausgeführt.";
+				}
+			}
+		}
+		$R['ComposerOutput'] = ['success' => true, 'output' => $_lines ? implode("\n", $_lines) : 'Keine neuen Migrationen.'];
+	}
+	catch(\Throwable $e) {
+		$R['ComposerOutput'] = ['success' => false, 'output' => implode("\n", $_lines) . "\nFehler: " . $e->getMessage()];
+	}
+}
+
+if($_result !== null) {
+	$R['ComposerOutput'] = $_result; # Ausgabe im Template
+	$C['CCache']->flush(['Tag' => 'Package']); # Versionen und Größen neu ermitteln
 }
 #$F['PLATFORM']['PAGE']['W'][0]['ID'] = [$D['ID']];
 $F['SETTING'] = [];
 
-$D['R']['Module']['D'] = $C['ComposerManager']->getInstalledPackages(); #Todo: ComposerManager in Composer verschieben und diese klasse entfernen
+$D['R']['Module']['D'] = $C['Composer']->getInstalledPackages();
 
 $folderSize = function(string $dir): int {
 	$size = 0;
@@ -51,10 +82,10 @@ foreach( $D['R']['Module']['D'] AS $kMOD => $MOD) {
 			$D['R']['Module']['D'][$kMOD]['require'] = $package['versions'][ $D['R']['Module']['D'][$kMOD]['version'] ]['require'];
 		}
 
-		$D['R']['Module']['D'][$kMOD]['description'] = $package['description'];
+		$D['R']['Module']['D'][$kMOD]['description'] = $package['description'] ?: $MOD['description'];
 		$D['R']['Module']['D'][$kMOD]['url']  = $package['url'];
-		$D['R']['Module']['D'][$kMOD]['type'] = $package['type'];
-		$D['R']['Module']['D'][$kMOD]['version_latest'] = $package['version_latest'];
+		$D['R']['Module']['D'][$kMOD]['type'] = $package['type'] ?: $MOD['type']; # nicht auf Packagist gelistete Pakete behalten die lokalen Angaben
+		$D['R']['Module']['D'][$kMOD]['version_latest'] = $package['version_latest'] ?? $MOD['version'];
 		#Speichergröße des module ordner ermitteln in byte
 		
 		$D['R']['Module']['D'][$kMOD]['size'] = $folderSize("system/vendor/{$kMOD}");

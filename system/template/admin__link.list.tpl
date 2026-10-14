@@ -3,8 +3,8 @@
 		<input type="hidden" name="D[ACTION]" value='save'>
 		<div class="sticky-top bg-white" style="z-index: 1000;">
 			<ul class="nav nav-tabs">
-				{foreach from=$D.MODULE.D key="kMOD" item="MOD"}
-					
+				{foreach from=$D.R.LinkModules item="kMOD"}
+					{$MOD = $D.MODULE.D[$kMOD]}
 					<li class="nav-item">
 						<a class="nav-link position-relative" href="#{$kMOD}" data-bs-toggle="tab">{$kMOD}
 							{if $MOD.LINK.COUNT > 0}
@@ -19,7 +19,8 @@
 			</ul>
 		</div>
 		<div class="tab-content">
-			{foreach from=$D.MODULE.D key="kMOD" item="MOD"}
+			{foreach from=$D.R.LinkModules item="kMOD"}
+				{$MOD = $D.MODULE.D[$kMOD]}
 				<div class="tab-pane fade " id="{$kMOD}">
 					<table class="table">
 						<thead class="bg-light position-sticky top-0 " style="z-index: 5;">
@@ -67,13 +68,6 @@
 	<script>
 		$('#checkAllDelete').on('change', function() {
 			$('.deleteBox').prop('checked', this.checked);
-		});
-
-		// Delete-Button: Zeile ausblenden und zum Löschen markieren, entfernt wird erst beim Speichern
-		$('.link-delete').on('click', function() {
-			var row = $(this).closest('tr');
-			row.find('.deleteBox').prop('checked', true);
-			row.addClass('d-none');
 		});
 
 		// Delete-Button: Zeile ausblenden und zum Löschen markieren, entfernt wird erst beim Speichern

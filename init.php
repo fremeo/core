@@ -19,13 +19,11 @@ require_once('system/vendor/autoload.php');
 
 
 include_once(__dir__.'/system/core/Packagist.php'); #ToDo: Über autoloader laden
-include_once(__dir__.'/system/core/ComposerManager.php'); #ToDo: Über autoloader laden > ToDo: veraltet
-include_once(__dir__.'/system/core/Composer.php');
+include_once(__dir__.'/system/core/Composer.php'); # identisch mit setup/Composer.php (Setup kann den Core bei der Installation noch nicht laden), beide synchron halten
 
 $C['Packagist'] = new Packagist();
-$C['ComposerManager'] = new ComposerManager(__DIR__.'/system/core/composer.phar', 'data_c/composer_log.txt'); #ToDo: veraltet
 
-$C['Composer'] = new Composer(__DIR__.'/system/core/composer.phar','C:\\xampp\\php\\php.exe');
+$C['Composer'] = new Composer(__DIR__.'/system/core/composer.phar', PROJECT_ROOT); # PHP-CLI wird automatisch gesucht, ohne proc_open läuft Composer im selben Prozess
 
 $C['Filesystem'] = new Filesystem();
 $C['ImageManager'] = new ImageManager( Driver::class );

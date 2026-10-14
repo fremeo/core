@@ -1,7 +1,13 @@
 {block name="inner_body"}
 
-	<form method="post">
+	<form method="post" id="modForm">
 		<input type="hidden" name="R[ACTION]" value='save'>
+		<input type="hidden" name="R[Module][Id]" value=''>
+		{if $D.R.ComposerOutput}
+			<div class="alert {if $D.R.ComposerOutput.success}alert-success{else}alert-danger{/if}">
+				<pre class="mb-0" style="white-space:pre-wrap;">{$D.R.ComposerOutput.output|escape}</pre>
+			</div>
+		{/if}
 		
 
 		<table class="table table-hover align-middle">
@@ -31,11 +37,11 @@
 			| Version {$MOD.version} {if $MOD.version != $MOD.version_latest} <b>neu {$MOD.version_latest}</b>{/if} {if $MOD.url}| By <a class="pkg-link" target="_blank" href="{$MOD.url}">{$_MOD[0]}</a>{/if} | <a class="pkg-link" target="_blank" href="https://packagist.org/packages/{$kMOD}">deteils</a>
 				{*if $MOD.url} | <a class="pkg-link" target="_blank" href="{$MOD.url}">repo</a>{/if*}
 				{*if $MOD.require}<br>Require: {foreach from=$MOD.require key="kR" item="R"}{$kR}:{$R}{/foreach}{/if*}
-					{if in_array($MOD.type, ['core','module'])}
+					{if in_array($MOD.type, ['core','module','template'])}
 					<div>
-						{if $MOD.version != $MOD.version_latest}<a class="btn btn-primary btn-sm" href="?R[Page]=admin__module.list&R[ModuleId]=fremeo/core&R[ACTION]=update-module&R[Module][Id]={$kMOD}">Update</a>{/if}
-						<a class="btn btn-primary btn-sm" href="?R[Page]=admin__module.list&R[ModuleId]=fremeo/core&R[ACTION]=reinstall-module&R[Module][Id]={$kMOD}">Reinstall</a>
-						{if strpos($MOD.type, "module") !== false}<a class="btn btn-danger btn-sm" href="?R[Page]=admin__module.list&R[ModuleId]=fremeo/core&R[ACTION]=uninstall-module&R[Module][Id]={$kMOD}">Uninstall</a>{/if}
+						{if $MOD.version != $MOD.version_latest}<button type="button" class="btn btn-primary btn-sm" onclick="modAction('update-module','{$kMOD|escape:'javascript'}')">Update</button>{/if}
+						<button type="button" class="btn btn-primary btn-sm" onclick="modAction('reinstall-module','{$kMOD|escape:'javascript'}','{$kMOD|escape:'javascript'} neu installieren?')">Reinstall</button>
+						{if $MOD.type != 'core'}<button type="button" class="btn btn-danger btn-sm" onclick="modAction('uninstall-module','{$kMOD|escape:'javascript'}','{$kMOD|escape:'javascript'} wirklich deinstallieren?')">Uninstall</button>{/if}
 					</div>
 					{/if}
 				</td>
@@ -63,8 +69,18 @@
 		{*<button type="submit" class="btn btn-primary btn-sm">Save</button>*}
 		<div class="table-footer sticky-bottom d-flex justify-content-between align-items-center px-3 py-2 bg-white border-top" style="width:stretch;">
 			<a class="btn btn-primary btn-sm" href="admin/module.store">Neues Module</a>
-			<a class="btn btn-primary btn-sm" href="?R[Page]=admin__module.list&R[ModuleId]=fremeo/core&R[ACTION]=update-all">Alle aktualisieren</a>
-			<a class="btn btn-primary btn-sm" href="?R[Page]=admin__module.list&R[ModuleId]=fremeo/core&R[ACTION]=migration-run">Migrationen ausführen</a>
+			<button type="button" class="btn btn-primary btn-sm" onclick="modAction('update-all','','Alle Pakete aktualisieren?')">Alle aktualisieren</button>
+			<button type="button" class="btn btn-outline-secondary btn-sm" title="Wird nach Installation und Update automatisch ausgeführt, nur bei Bedarf erneut anstößen" onclick="modAction('migration-run','')">Migrationen ausführen</button>
 		</div>
 	</form>
+	{literal}<script>
+		// Aktionen per POST senden (ändern das System, deshalb kein Link)
+		function modAction(action, id, question) {
+			if (question && !confirm(question)) return;
+			var f = document.getElementById('modForm');
+			f.elements['R[ACTION]'].value = action;
+			f.elements['R[Module][Id]'].value = id;
+			f.submit();
+		}
+	</script>{/literal}
 {/block}
