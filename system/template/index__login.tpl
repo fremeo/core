@@ -42,6 +42,8 @@
 				<form method="post">
 					<input type="hidden" name="D[PAGE]" value="login">
 					<input type="hidden" name="D[ACTION]" value="login">
+					<input type="hidden" name="R[Return][Page]" value="{$D.R.Return.Page|escape}">
+					<input type="hidden" name="R[Return][ModuleId]" value="{$D.R.Return.ModuleId|escape}">
 
 					<p class="text-center text-muted small">{$D.SESSION.AccountId}</p>
 

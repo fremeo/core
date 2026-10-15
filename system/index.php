@@ -7,7 +7,8 @@
 if(!check_user_page_right(['guest',(isset($D['SESSION']['UserId']))?'user':null,($D['SESSION']['UserId'])??null],$R['Page'], $C)) { #Prüfe ob die Guest Rechte und falls eingellogt auch User Rechte bereits ausreichen
 	#Rechte Reichen nicht aus
 	if( !isset($D['SESSION']['UserId']) ) { #Fals User nicht eingeloggt ist, dann zum Login
-		header("Location: ?R[Page]=index__login&R[ModuleId]=fremeo/core&R[Return][Page]={$D['_PAGE']}&R[Return][ModuleId]={$R['ModuleId']}");
+		$_SESSION['ReturnAfterLogin'] = http_build_query(['R' => $R ?? []]);
+		header("Location: ?R[Page]=index__login&R[ModuleId]=fremeo/core");
         exit;
     }
 	else { #User ist eingeloggt aber Rechte nicht ausreichend.

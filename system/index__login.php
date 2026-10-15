@@ -13,8 +13,15 @@ switch($D['ACTION']??null)
 				#$_SESSION['UserId'] = 'admin2';
 				$_SESSION['UserId'] = array_key_first($d['USER']['D']);
 				
+				$redirect = $_SESSION['ReturnAfterLogin'] ?? null;
+				unset($_SESSION['ReturnAfterLogin']);
+				if($redirect) {
+					header("Location: ?{$redirect}");
+					exit;
+				}
 				if($R['Return']['Page'] && $R['Return']['ModuleId']) {
 					header("Location: ?R[Page]={$R['Return']['Page']}&R[ModuleId]={$R['Return']['ModuleId']}");
+					exit;
 				}
 				else {
 					header("Location: ./");
