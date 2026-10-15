@@ -98,6 +98,29 @@ class LinkTest extends TestCase {
 		$this->assertSame($link->id('blog'), $link->createOne('blog', 'test__page', 'fremeo/test'));
 	}
 
+	public function testEmptyUrlIsHandledLikeAnyOtherAndGetsSuffix(): void {
+		$a = $this->db('a');
+		$b = $this->db('b');
+		$all = [$a, $b];
+
+		// leere SEO-URL = Startseite: die erste bleibt leer, jede weitere bekommt wie alle anderen ein Suffix (auch modulübergreifend)
+		$this->assertSame('',   (new Link($a, $all))->create($this->entry(''))[0]['SeoUrl']);
+		$this->assertSame('_1', (new Link($b, $all))->create($this->entry(''))[0]['SeoUrl']);
+		$this->assertSame('_2', (new Link($a, $all))->create($this->entry(''))[0]['SeoUrl']);
+		$this->assertTrue($this->exists(new Link($a), ''), 'die erste leere URL wurde nicht überschrieben');
+	}
+
+	public function testRenameToEmptyUrlGetsSuffixIfTaken(): void {
+		$link = new Link($this->db('a'));
+		$link->create($this->entry(''));
+		$link->create($this->entry('about'));
+
+		$this->assertTrue($link->renameBySeo('about', ''));
+		$this->assertTrue($this->exists($link, '_1'));
+		$this->assertTrue($this->exists($link, ''));
+		$this->assertFalse($this->exists($link, 'about'));
+	}
+
 	#[DataProvider('seoProvider')]
 	public function testNormalize(string $in, string $out): void {
 		$this->assertSame($out, (new Link($this->db('a')))->normalize($in));

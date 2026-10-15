@@ -51,18 +51,29 @@ class Link {
 		return trim($seo, '/_.-');
 	}
 
-	/** Alle vorhandenen SEO-URLs (in allen Datenbanken), die mit einer der Basis-URLs beginnen, z.B. ["blog", "blog_1", "blog_3"]. */
+	/** Alle vorhandenen SEO-URLs (in allen Datenbanken), die mit einer der Basis-URLs beginnen, z.B. ["blog", "blog_1", "blog_3"]. Die leere SEO-URL (Startseite) wird exakt gesucht. */
 	private function fetchExisting(array $baseSeo): array {
-		foreach (array_filter($baseSeo, 'strlen') as $seo) {
+		$F = [];
+		foreach (array_unique(array_map(fn($seo) => $seo === '' ? '_' : $seo, $baseSeo)) as $seo) { // leer: Suffix-URLs "_1", "_2" ... ('_' ist als LIKE-Platzhalter nur eine grobe Vorauswahl, geprüft wird exakt)
 			$F['LINK']['W'][]['FromURL']['LIKE%'] = $seo;
 		}
-		if (empty($F)) return [];
+		$withEmpty = in_array('', $baseSeo, true);
+		if (!$F) return [];
 
+		$emptyId = $this->id('');
 		$urls = [];
 		foreach ($this->allDB as $DB) {
-			$D = [];
-			$DB->get_object($D, $F);
-			$urls = [...$urls, ...array_column($D['LINK']['D'] ?? [], 'FromURL')];
+			if ($F) {
+				$D = [];
+				$DB->get_object($D, $F);
+				$urls = [...$urls, ...array_column($D['LINK']['D'] ?? [], 'FromURL')];
+			}
+			if ($withEmpty) {
+				$H = [];
+				$byId['LINK']['W'][0]['ID'] = [$emptyId];
+				$DB->get_object($H, $byId);
+				if (isset($H['LINK']['D'][$emptyId])) $urls[] = '';
+			}
 		}
 		return $urls;
 	}
