@@ -27,8 +27,13 @@ class Security {
     }
 
     public function registerSecurityD(string $StringValue): string {
-        $hash = $this->getSecurityD($StringValue);
-        $_SESSION['Security']['Map'][$hash] = $StringValue;
+        if($this->SecurityActive) {
+            $hash = $this->getSecurityD($StringValue);
+            $_SESSION['Security']['Map'][$hash] = $StringValue;
+            $hash = 'SD['.$hash.']';
+        } else {
+           $hash = $StringValue;
+        }
         return $hash;
     }
 
