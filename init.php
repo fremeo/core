@@ -10,19 +10,17 @@ define('SCRIPT_NAME',rtrim(dirname($_SERVER['SCRIPT_NAME']), '/').'/');
 require_once('system/vendor/autoload.php');
 
 require_once(__DIR__ . '/system/core/Security.php'); # ToDo: Über Autoload muss geladen werden
-$D = $_REQUEST['D'] ?? []; //Data Array
-$SD = $_REQUEST['SD'] ?? null; // security Data array
-$R = $_REQUEST['R'] ?? []; //Request Array
-if (!is_array($R)) {
-	$R = [];
-}
-
-$C = null;
+$D = $C = [];
 $C['Security'] = new \fremeo\core\Security();
-if (is_array($SD) && !empty($SD)) {
-	$D = $C['Security']->resolveSecureData($SD, $D);
-	$R = array_replace_recursive($R, $D['R'] ?? []);
+$C['Security']->SecurityActive = false;
+if ($C['Security']->SecurityActive) { #ToDo: hier muss prüfen wenn Security aktiviert ist, dann true Weil aich wen SD = null ist, bei aktivier Security darf $D nicht akzeptiert werden
+	$SD = $_REQUEST['SD'] ?? []; // security Data array	
+	$D = $C['Security']->resolveSecureData($SD, $D); #ToDo: zweite Parameter muss weg!
+	
+} else {
+	$D = $_REQUEST['D'] ?? []; //Data Array
 }
+$R = $_REQUEST['R'] ?? []; //Request Array
 
 $D['R'] = &$R;
 $D['C'] = &$C; //Klassen Instanz Array
