@@ -7,7 +7,7 @@
 				 <div class="input-group-prepend">
 					<span class="input-group-text" title="<img src='file/{$D.SESSION.ACCOUNT_ID}/{$D.PLATFORM_ID}/{$p.value}_100x100.jpg'>" style="background: url(file/{$D.SESSION.ACCOUNT_ID}/{$D.PLATFORM_ID}/{$p.value}_30x30.jpg) center center no-repeat;height:30px;width:30px;"></span>
 				</div>
-				<input class="form-control" name="{$p.name}" value="{$p.value}">
+				<input class="form-control" name="{$D.C.Security->registerSecurityD($p.name)}" value="{$p.value}">
 				{if $p.help}
 				<div class="input-group-append">
 					<span class="input-group-text p-1" style="cursor:pointer;" title="{$p.help}">&#xf128;</span>
@@ -16,7 +16,7 @@
 			</div>
 		{elseif $p.type == 'file'}
 			
-			<input type="hidden" id="input_{md5($p.name)}" class="form-control" name="{$p.name}" value="{$p.value}">
+			<input type="hidden" id="input_{md5($p.name)}" class="form-control" name="{$D.C.Security->registerSecurityD($p.name)}" value="{$p.value}">
 			<div id="fileuploadDropZone_{md5($p.name)}" class="p-1" style="/*max-width:500px;overflow-y:auto;*/overflow:hidden;height:60px;position:relative;background:#ddd; border:none !important;"
 			ondrop="$(this).css('background','#ddd')" 
 			ondragleave="$(this).css('background','#ddd')" 
@@ -98,7 +98,7 @@
 				Das Formular braucht enctype="multipart/form-data".
 			*}
 			{* in einer Zeile, da {strip} Zeilenumbrüche zwischen Attributen entfernt *}
-			<input type="file" class="form-control" id="file_{md5($p.name)}" name="{$p.name}{if $p.multiple}[]{/if}" {if $p.multiple}multiple {/if}{if $p.accept}accept="{$p.accept|escape}" {/if}{if $p.required}required {/if}{if $p.readonly}disabled {/if}>
+			<input type="file" class="form-control" id="file_{md5($p.name)}" name="{$D.C.Security->registerSecurityD($p.name)}{if $p.multiple}[]{/if}" {if $p.multiple}multiple {/if}{if $p.accept}accept="{$p.accept|escape}" {/if}{if $p.required}required {/if}{if $p.readonly}disabled {/if}>
 			{if $p.help}<div class="form-text">{$p.help}</div>{/if}
 		{elseif $p.type == 'image'}
 			{*
@@ -128,10 +128,16 @@
 				{foreach $p.value as $id => $item}
 					{$fid = $item[$ff]}{if !$fid}{$fid = $id}{/if}
 					<div class="img-tile position-relative border rounded overflow-hidden bg-light" data-fid="{$fid|escape}" style="width:{$size}px;height:{$size}px;{if $p.sortable}cursor:move;{/if}"{if $p.sortable} draggable="true"{/if}{if $item.Title} title="{$item.Title|escape}"{/if}>
-						<img src="file/{$fid|escape}_{$res}x{$res}.webp" width="{$size}" height="{$size}" class="w-100 h-100 object-fit-cover" alt="" loading="lazy" draggable="false">
-						{if $p.sortable && $p.name}<input type="hidden" class="img-sort" name="{$p.name|escape}[{$id|escape}][{$sf}]" value="{if isset($item[$sf])}{$item[$sf]}{else}{$id@index}{/if}">{/if}
+						<picture>
+							<source srcset="file/{$fid|escape}_{$res}x{$res}.avif" type="image/avif">
+							<source srcset="file/{$fid|escape}_{$res}x{$res}.webp" type="image/webp">
+							<img src="file/{$fid|escape}_{$res}x{$res}.jpg" width="{$size}" height="{$size}" class="w-100 h-100 object-fit-cover" alt="" loading="lazy" draggable="false">
+						</picture>
+						
+						
+						{if $p.sortable && $p.name}<input type="hidden" class="img-sort" name="{$D.C.Security->registerSecurityD($p.name|escape)}[{$id|escape}][{$sf}]" value="{if isset($item[$sf])}{$item[$sf]}{else}{$id@index}{/if}">{/if}
 						{if $p.deletable}
-							{if $p.name}<input type="hidden" class="img-delflag" name="{$p.name|escape}[{$id|escape}][__DELETE__]" value="1" disabled>{/if}
+							{if $p.name}<input type="hidden" class="img-delflag" name="{$D.C.Security->registerSecurityD($p.name|escape)}[{$id|escape}][__DELETE__]" value="1" disabled>{/if}
 							<button type="button" class="img-del btn btn-danger position-absolute bottom-0 end-0 p-0 lh-1 rounded-0 rounded-top-start" style="width:22px;height:22px;" title="Entfernen"><i class="fa-solid fa-trash-can" style="font-size:11px;"></i></button>
 						{/if}
 						{if $p.mainname && $p.max != 1}
@@ -146,7 +152,7 @@
 						<span class="img-addcount badge text-bg-primary position-absolute top-0 end-0 d-none"></span>
 					</label>
 				{/if}
-				{if $p.mainname}<input type="hidden" class="img-mainval" name="{$p.mainname|escape}" value="{$p.main|escape}">{/if}
+				{if $p.mainname}<input type="hidden" class="img-mainval" name="{$D.C.Security->registerSecurityD($p.mainname|escape)}" value="{$p.main|escape}">{/if}
 			</div>
 			<div class="form-text"><span class="img-n">{$count}</span>{if $p.max} / {$p.max}{/if} Bilder{if $p.help} &ndash; {$p.help}{/if}</div>
 			{literal}
@@ -216,14 +222,14 @@
 		<section class="section-preview">
 			{foreach name=nVAL from=$p.option key="kVAL" item="VAL"}
 			<div class="custom-control custom-radio">
-				<input type="radio" ischanged="0" onmouseout="input_onmouseout(this);" onfocusout="input_onmouseout(this);" class="custom-control-input" value="{$kVAL}" onclick="{$p.onclick}" {if $kVAL == $p.value}checked{/if} {if $p.group}group="{$p.group}"{/if} id="radio{md5($p.name)}_{$smarty.foreach.nVAL.index}" name="{$p.name}">
+				<input type="radio" ischanged="0" onmouseout="input_onmouseout(this);" onfocusout="input_onmouseout(this);" class="custom-control-input" value="{$kVAL}" onclick="{$p.onclick}" {if $kVAL == $p.value}checked{/if} {if $p.group}group="{$p.group}"{/if} id="radio{md5($p.name)}_{$smarty.foreach.nVAL.index}" name="{$D.C.Security->registerSecurityD($p.name)}">
 				<label class="custom-control-label" for="radio{md5($p.name)}_{$smarty.foreach.nVAL.index}">{$VAL}</label>
 			</div>
 			{/foreach}
 		</section>
 		{elseif $p.type == 'multiselect'}
 			<div class="input-group mb-0 {if $p.required}{if !$p.name}has-error{else}has-success{/if}{/if}">
-				<input id="{md5($p.name)}VALUE" value="{$p.value}" name="{$p.name}" type="hidden">
+				<input id="{md5($p.name)}VALUE" value="{$p.value}" name="{$D.C.Security->registerSecurityD($p.name)}" type="hidden">
 				<select multiple 
 				{if $p.title}title="{$p.title}"{/if}
 				{if $p.readonly}readonly{/if} class="form-control" ischanged="0" 
@@ -279,7 +285,7 @@
 				{*onmouseout="input_onmouseout(this);" 
 				onfocusout="input_onmouseout(this);"*}
 				onchange="input_onmouseout(this);" 
-				style="width:100%;" name="{$p.name}">
+				style="width:100%;" name="{$D.C.Security->registerSecurityD($p.name)}">
 					<option value="">---</option>
 					{$FIND = 0}
 					
@@ -319,7 +325,7 @@
 				{/if}
 			</div>
 		{elseif $p.type == 'json' || $p.type == 'textarea'}
-			<textarea id="{$p.name}" ischanged="0" onmouseout="input_onmouseout(this);" onfocusout="input_onmouseout(this);" {if $p.maxlength}maxlength='{$p.maxlength}'{/if} placeholder="{$p.placeholder}" class="form-control" style="{$p.style}" name="{$p.name}">{$p.value}</textarea>
+			<textarea id="{md5($p.name)}" ischanged="0" onmouseout="input_onmouseout(this);" onfocusout="input_onmouseout(this);" {if $p.maxlength}maxlength='{$p.maxlength}'{/if} placeholder="{$p.placeholder}" class="form-control" style="{$p.style}" name="{$D.C.Security->registerSecurityD($p.name)}">{$p.value}</textarea>
 		{elseif $p.type == 'wysiwyg'}
 		{*https://developer.mozilla.org/en-US/docs/Web/API/Document/execCommand*}
 			<div style="background:#eee;">
@@ -392,19 +398,19 @@
 				} );
 			</script>
 		{elseif $p.type ==  'datetime'}
-				<input id="{$p.name}" type="hidden" name="{$p.name}" value="{$p.value}">
+				<input id="{md5($p.name)}" type="hidden" name="{$D.C.Security->registerSecurityD($p.name)}" value="{$p.value}">
 				<input type="datetime-local" ischanged="0" 
 				{if $p.required}required{/if}
-				onchange="document.getElementById('{$p.name}').value = (this.value ? Date.parse(this.value)/ 1000 : '');{$p.onchange}"
+				onchange="document.getElementById('{md5($p.name)}').value = (this.value ? Date.parse(this.value)/ 1000 : '');{$p.onchange}"
 				onmouseout="input_onmouseout(this);" onfocusout="input_onmouseout(this);" class="form-control" style="text-align:right;" placeholder="{$p.placeholder}" value="{if $p.value}{date("Y-m-d\TH:i",(int)$p.value)}{/if}">
 		{elseif $p.type ==  'checkbox'}{*ToDo: Active Box muss gesetzt werden, auch nicht bewust ob 0/1 oder 1/-2 sein soll*}
-			<input id="{$p.name}" type="hidden" name="{$p.name}" value="{$p.value}">
+			<input id="{md5($p.name)}" type="hidden" name="{$D.C.Security->registerSecurityD($p.name)}" value="{$p.value}">
 				{if !$p.option}{$p.option = [0 => 1, 1 => 0 ]}{/if}
 			<input class="form-check-input" {if $p.title}title="{$p.title}"{/if} 
-			onclick="{if $p.option}document.getElementById('{$p.name}').value = (this.checked)?'{$p.option[0]}':'{$p.option[1]}';{else}document.getElementById('id{md5($p.name)}ACTIVE').value = (this.checked)?1:-2;document.getElementById('{$p.name}').value = (this.checked)?1:0;{/if} 
+			onclick="{if $p.option}document.getElementById('{md5($p.name)}').value = (this.checked)?'{$p.option[0]}':'{$p.option[1]}';{else}document.getElementById('id{md5($p.name)}ACTIVE').value = (this.checked)?1:-2;document.getElementById('{if $p.id}{$p.id}{else}checkbox_{md5($p.name)}{/if}').value = (this.checked)?1:0;{/if} 
 			
 			{if $p.onclick}{$p.onclick}{/if}" 
-			onchange="document.getElementById('{if $p.id}{$p.id}{else}{$p.name}{/if}').setAttribute('ischanged', (this.checked === this.defaultChecked ?0:1) );"
+			onchange="document.getElementById('{md5($p.name)}').setAttribute('ischanged', (this.checked === this.defaultChecked ?0:1) );"
 			type="checkbox" {if $p.value && $p.value > 0}checked{/if}>
 			
 		{elseif $p.type ==  'number'}
@@ -424,7 +430,7 @@
 			{/if}
 			lang="en-150"
 			onkeyup="{$p.onkeyup}"
-			id="{$p.name}" class="form-control" style="text-align:right;{$p.style}" {if $p.maxlength}maxlength='{$p.maxlength}'{/if} placeholder="{$p.placeholder}" name="{$p.name}" value="{$p.value}">
+			id="{md5($p.name)}" class="form-control" style="text-align:right;{$p.style}" {if $p.maxlength}maxlength='{$p.maxlength}'{/if} placeholder="{$p.placeholder}" name="{$D.C.Security->registerSecurityD($p.name)}" value="{$p.value}">
 			<style>
 			input[type=number]::-webkit-outer-spin-button,input[type=number]::-webkit-inner-spin-button { -webkit-appearance: none;margin: 0;}
 			input[type=number] { -moz-appearance:textfield;}
@@ -432,11 +438,12 @@
 		{elseif $p.type ==  'label'}
 			<label>{$p.value}</label>
 		{elseif $p.type ==  'hidden'}{*Change muss getriggert werden um ischanged zu prüfen: $('#').val('-2').trigger('change');*}
-			<input ischanged="{$p.ischanged}" type="hidden" onchange="input_onmouseout(this);" id="{if $p.id}{$p.id}{else}{$p.name}{/if}" name="{$p.name}" value="{$p.value}">
+			<input ischanged="{$p.ischanged}" type="hidden" onchange="input_onmouseout(this);" id="{if $p.id}{$p.id}{else}{md5($p.name)}{/if}" name="{$D.C.Security->registerSecurityD($p.name)}" value="{$p.value}">
 		{elseif $p.type == 'button' || $p.type == 'submit'}
-			{if $p.name}<input ischanged="{$p.ischanged}" type="hidden" onchange="input_onmouseout(this);" id="{if $p.id}{$p.id}{else}{$p.name}{/if}" name="{$p.name}" value="{$p.value}">{/if}
+			{if $p.name}
+				<input ischanged="{$p.ischanged}" type="hidden" onchange="input_onmouseout(this);" id="{if $p.id}{$p.id}{else}{md5($p.name)}{/if}" name="{$D.C.Security->registerSecurityD($p.name)}" value="{$p.value}">{/if}
 			<button {if $p.class}class="btn {$p.class}"{/if} type="{$p.type}" 
-			{if $p.onclick}onclick="{$p.onclick} document.getElementById('{if $p.id}{$p.id}{else}{$p.name}{/if}').setAttribute('ischanged', '1');"{/if}
+			{if $p.onclick}onclick="{$p.onclick} document.getElementById('{if $p.id}{$p.id}{else}{md5($p.name)}{/if}').setAttribute('ischanged', '1');"{/if}
 			>{$p.label}</button>
 		{else}
 			{*<div class="form-floating mb-2">*}
@@ -449,7 +456,7 @@
 				{else}
 					readonly="readonly"
 				{/if}
-				id="{if $p.id}{$p.id}{else}{$p.name}{/if}"
+				id="{if $p.id}{$p.id}{else}{md5($p.name)}{/if}"
 				
 				class="form-control{if $p.ischanged} bg-warning-subtle border-warning{/if}{if $p.class} {$p.class}{/if}{if $p.required} border-danger{/if}"
 				
@@ -457,7 +464,7 @@
 				{if $p.style} style="{$p.style}"{/if}
 				{if $p.maxlength} maxlength='{$p.maxlength}'{/if} 
 				{if $p.placeholder} placeholder="{$p.placeholder}"{/if}
-				{if $p.name} name="{$p.name}"{/if}
+				{if $p.name} name="{$D.C.Security->registerSecurityD($p.name)}"{/if}
 				{if isset($p.value)} value="{$p.value}"{/if}>
 				{*<label for="{if $p.id}{$p.id}{else}{$p.name}{/if}">{$p.placeholder}</label>
 			</div>*}

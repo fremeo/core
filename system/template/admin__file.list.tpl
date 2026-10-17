@@ -56,7 +56,7 @@
 				<tr>
 					<td scope="row">{$kFIL}</td>
 					<td scope="row"><img src="./file/{$kFIL}_25x25.{$FIL.Extension}"></td>
-					<td scope="row">{input p=['name' => "D[FILE][D][{$kFIL}][Active]", "type" => 'text', 'value'=>$FIL.Active]}</td>
+					<td scope="row">{input p=['name' => "D[FILE][D][{$kFIL}][Active]", "type" => 'checkbox', 'value'=>$FIL.Active]}</td>
 					<td scope="row"><a href="./file/{$kFIL}_100x100.{$FIL.Extension}" target="_blank">/file/{$kFIL}_100x100.{$FIL.Extension}</a></td>
 					<td>{$FIL.Size} byte</td>
 					<td>{$FIL.Extension}</td>

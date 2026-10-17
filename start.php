@@ -1,6 +1,8 @@
 <?php 
-session_name('fremeo');
-session_start();
+if (session_status() === PHP_SESSION_NONE) {
+    session_name('fremeo');
+    session_start();
+}
 $D['SESSION'] = $_SESSION;
 
 	$C['Smarty']->addTemplateDir(__DIR__ . '/system/template/', 'core');
@@ -19,11 +21,11 @@ $D['SESSION'] = $_SESSION;
 	
 	$C['Smarty']->enableSecurity($my_security_policy);
 
-if( isset($D['SEO_URL']) ) {
+if( isset($R['SEO_URL']) ) {
 
 	if(!isset($R['Page'])) { #Mit SEO Link darf kein Page übergeben werden
 	
-		$hURL = hash("crc32b", rtrim($D['SEO_URL'],'/'));
+		$hURL = hash("crc32b", rtrim($R['SEO_URL'],'/'));
 		
 		$f['LINK']['W'][0]['ID'] = $hURL;
 		$f['LINK']['W'][0]['Active'] = 1;

@@ -18,7 +18,7 @@
 		<link rel="shortcut icon" href="view/account/template/core/favicon/favicon.ico">
 		
 		{*mobile Ende*}
-		<title>Z-Shop</title>
+		<title></title>
 		
 		<link rel="shortcut icon" href="view/account/template/core/icon.png">
 

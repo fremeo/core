@@ -7,15 +7,26 @@ use Symfony\Component\Finder\Finder;
 define('SCRIPT_NAME',rtrim(dirname($_SERVER['SCRIPT_NAME']), '/').'/');
 
 
-$D = $_REQUEST['D'] ?? null; //Data Array
+require_once('system/vendor/autoload.php');
+
+require_once(__DIR__ . '/system/core/Security.php'); # ToDo: Über Autoload muss geladen werden
+$D = $_REQUEST['D'] ?? []; //Data Array
 $SD = $_REQUEST['SD'] ?? null; // security Data array
-$R = $_REQUEST['R'] ?? null; //Request Array
-$D['R'] = &$R;
+$R = $_REQUEST['R'] ?? []; //Request Array
+if (!is_array($R)) {
+	$R = [];
+}
+
 $C = null;
+$C['Security'] = new \fremeo\core\Security();
+if (is_array($SD) && !empty($SD)) {
+	$D = $C['Security']->resolveSecureData($SD, $D);
+	$R = array_replace_recursive($R, $D['R'] ?? []);
+}
+
+$D['R'] = &$R;
 $D['C'] = &$C; //Klassen Instanz Array
 $D['SESSION'] = null; 
-
-require_once('system/vendor/autoload.php');
 
 
 include_once(__dir__.'/system/core/Packagist.php'); #ToDo: Über autoloader laden
