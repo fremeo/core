@@ -37,9 +37,8 @@ class Security {
         return $hash;
     }
 
-    public function resolveSecureData(array $secureData = [], array $baseData = []): array {
-        $result = $baseData;
-
+    public function resolveSecureData(array $secureData = []): array {
+		$result = [];
         foreach ((array) $secureData as $hash => $value) {
             $key = $_SESSION['Security']['Map'][$hash] ?? null;
             if ($key === null || $key === '') {
@@ -48,7 +47,6 @@ class Security {
 
             $this->setNestedValue($result, $key, $value);
         }
-
         return $result;
     }
 

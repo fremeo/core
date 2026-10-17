@@ -9,14 +9,18 @@ define('SCRIPT_NAME',rtrim(dirname($_SERVER['SCRIPT_NAME']), '/').'/');
 
 require_once('system/vendor/autoload.php');
 
-require_once(__DIR__ . '/system/core/Security.php'); # ToDo: Über Autoload muss geladen werden
-$D = $C = [];
+
+require_once(__DIR__.'/system/core/Security.php'); # ToDo: Über Autoload muss geladen werden
+include_once(__dir__.'/system/core/Packagist.php'); #ToDo: Über autoloader laden
+include_once(__dir__.'/system/core/Composer.php'); #ToDo: Über autoloader laden # identisch mit setup/Composer.php (Setup kann den Core bei der Installation noch nicht laden), beide synchron halten
+
 $C['Security'] = new \fremeo\core\Security();
-$C['Security']->SecurityActive = false;
-if ($C['Security']->SecurityActive) { #ToDo: hier muss prüfen wenn Security aktiviert ist, dann true Weil aich wen SD = null ist, bei aktivier Security darf $D nicht akzeptiert werden
+
+
+$C['Security']->SecurityActive = false; #ToDo: aktivierung von Security über DB einstellung
+if ($C['Security']->SecurityActive) {
 	$SD = $_REQUEST['SD'] ?? []; // security Data array	
-	$D = $C['Security']->resolveSecureData($SD, $D); #ToDo: zweite Parameter muss weg!
-	
+	$D = $C['Security']->resolveSecureData($SD);
 } else {
 	$D = $_REQUEST['D'] ?? []; //Data Array
 }
@@ -27,8 +31,6 @@ $D['C'] = &$C; //Klassen Instanz Array
 $D['SESSION'] = null; 
 
 
-include_once(__dir__.'/system/core/Packagist.php'); #ToDo: Über autoloader laden
-include_once(__dir__.'/system/core/Composer.php'); # identisch mit setup/Composer.php (Setup kann den Core bei der Installation noch nicht laden), beide synchron halten
 
 $C['Packagist'] = new Packagist();
 
@@ -39,18 +41,10 @@ $C['ImageManager'] = new ImageManager( Driver::class );
 $C['Finder'] = new Finder();
 
 
-
-
-
-#require_once('system/vendor/phploader/cdata/lib/CData.php'); #ToDo: Über autoloader laden
-#require_once('system/vendor/phploader/cdata/lib/CCache.php'); #ToDo: Über autoloader laden
-
-
-
 $C['Filesystem']->mkdir(PROJECT_ROOT.'data_c/fremeo~core/'); # ToDo: ins CCAche verschieben
 $C['CCache'] = new \phploader\CCache([ 'DB' => ['FILENAME' => PROJECT_ROOT.'data_c/fremeo~core/cache.cache' ] ]); # Gemeinsamer Cache für alle Module, die CCache nutzen.
 
-
+$C['Smarty'] = new Smarty();
 
 // 1. Module scannen und Metadaten sammeln # Todo: Cachen
 foreach (glob(PROJECT_ROOT . '/system/vendor/' . '/*/*', GLOB_ONLYDIR) as $moduleDir) {
@@ -78,7 +72,7 @@ foreach (glob(PROJECT_ROOT . '/system/vendor/' . '/*/*', GLOB_ONLYDIR) as $modul
 ##session_start();
 #$D['SESSION'] = $_SESSION['D'];
 
-$C['Smarty'] = new Smarty();
+
 
 #$C['CData'] = new \phploader\CData( [ 'DB' => ['FILENAME' => __DIR__.'/../../../../data/data.db' ] ] );
 $C['fremeo/core']['CData'] = new \phploader\CData( [ 'DB' => ['FILENAME' => PROJECT_ROOT.'data/fremeo~core/data.db', 'FILENAME_C' => PROJECT_ROOT.'data_c/fremeo~core/data.db' ] ] );
@@ -179,8 +173,8 @@ foreach ($D['MODULE']['D'] as $moduleDir => $info) {
 	# Datenbank für je Modul registrieren, falls das Modul CData nutzt.
 	if(isset($C[$moduleDir]['CData']) ) {
 		$C[$moduleDir]['CData']->registerPattern($globalPattern);
-		$C[$moduleDir]['File'] = new \fremeo\core\File($C, $moduleDir); #Datei Upload/Löschen, gebunden an das eigene Modul: $C['fremeo/blog']['File']->add($_FILES['x']);
 	}
+	$C[$moduleDir]['File'] = new \fremeo\core\File($C, $moduleDir); #Datei Upload/Löschen, gebunden an das eigene Modul: $C['fremeo/blog']['File']->add($_FILES['x']);
 }
 
 # 3. Phase: alle cli.php laden, wenn CLI Modus
