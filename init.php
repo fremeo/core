@@ -13,8 +13,14 @@ require_once('system/vendor/autoload.php');
 require_once(__DIR__.'/system/core/Security.php'); # ToDo: Über Autoload muss geladen werden
 include_once(__dir__.'/system/core/Packagist.php'); #ToDo: Über autoloader laden
 include_once(__dir__.'/system/core/Composer.php'); #ToDo: Über autoloader laden # identisch mit setup/Composer.php (Setup kann den Core bei der Installation noch nicht laden), beide synchron halten
+include_once(__dir__.'/system/core/LazyProxy.php'); #ToDo: Über autoloader laden
 
-$C['Security'] = new \fremeo\core\Security();
+// Hilfsfunktion für echtes Lazy Loading innerhalb des Arrays
+
+
+
+#$C['Security'] = new \fremeo\core\Security();
+$C['Security'] = new \fremeo\core\LazyProxy(function() { return new \fremeo\core\Security(); });
 
 
 $C['Security']->SecurityActive = false; #ToDo: aktivierung von Security über DB einstellung
@@ -32,18 +38,21 @@ $D['SESSION'] = null;
 
 
 
-$C['Packagist'] = new Packagist();
+#$C['Packagist'] = new Packagist();
+$C['Packagist'] = new \fremeo\core\LazyProxy(function() { return new Packagist(); });
 
-$C['Composer'] = new Composer(__DIR__.'/system/core/composer.phar', PROJECT_ROOT); # PHP-CLI wird automatisch gesucht, ohne proc_open läuft Composer im selben Prozess
-
-$C['Filesystem'] = new Filesystem();
-$C['ImageManager'] = new ImageManager( Driver::class );
-$C['Finder'] = new Finder();
+#$C['Composer'] = new Composer(__DIR__.'/system/core/composer.phar', PROJECT_ROOT); # PHP-CLI wird automatisch gesucht, ohne proc_open läuft Composer im selben Prozess
+$C['Composer'] = new \fremeo\core\LazyProxy(function() { return new Composer(__DIR__.'/system/core/composer.phar', PROJECT_ROOT); });
+#$C['Filesystem'] = new Filesystem();
+$C['Filesystem'] = new \fremeo\core\LazyProxy(function() { return new Filesystem(); });
+#$C['ImageManager'] = new ImageManager( Driver::class );
+$C['ImageManager'] = new \fremeo\core\LazyProxy(function() { return new ImageManager( Driver::class ); });
+#$C['Finder'] = new Finder();
+$C['Finder'] = new \fremeo\core\LazyProxy(function() { return new Finder(); });
 
 
 $C['Filesystem']->mkdir(PROJECT_ROOT.'data_c/fremeo~core/'); # ToDo: ins CCAche verschieben
 $C['CCache'] = new \phploader\CCache([ 'DB' => ['FILENAME' => PROJECT_ROOT.'data_c/fremeo~core/cache.cache' ] ]); # Gemeinsamer Cache für alle Module, die CCache nutzen.
-
 $C['Smarty'] = new Smarty();
 
 // 1. Module scannen und Metadaten sammeln # Todo: Cachen
@@ -174,7 +183,8 @@ foreach ($D['MODULE']['D'] as $moduleDir => $info) {
 	if(isset($C[$moduleDir]['CData']) ) {
 		$C[$moduleDir]['CData']->registerPattern($globalPattern);
 	}
-	$C[$moduleDir]['File'] = new \fremeo\core\File($C, $moduleDir); #Datei Upload/Löschen, gebunden an das eigene Modul: $C['fremeo/blog']['File']->add($_FILES['x']);
+	#$C[$moduleDir]['File'] = new \fremeo\core\File($C, $moduleDir); #Datei Upload/Löschen, gebunden an das eigene Modul: $C['fremeo/blog']['File']->add($_FILES['x']);
+	$C[$moduleDir]['File'] = new \fremeo\core\LazyProxy(function() { return new \fremeo\core\File($C, $moduleDir); });
 }
 
 # 3. Phase: alle cli.php laden, wenn CLI Modus

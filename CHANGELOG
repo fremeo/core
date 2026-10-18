@@ -1,4 +1,8 @@
 # Changelog
+#0.0.7
++ Performance: LazyProxy Classe, verbessert die Ladezeiten bis zu 50%
+#0.0.6
++ Input name Security hinzugefügt
 #0.0.2
 ~ migration/00000000000000_install.php: Überarbeitet: Admin Zugang wird nach der Installation angezeigt. 
 #0.0.1
