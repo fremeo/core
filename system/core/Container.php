@@ -114,6 +114,21 @@ class Container implements ArrayAccess, IteratorAggregate, Countable
         return $this->make($key, $args, $moduleId);
     }
 
+    /**
+     * Gibt den Dienst $key von allen Modulen zurück, die ihn registriert haben: [ModulId => Dienst].
+     * Z.B. getAll('CData') = die Datenbanken aller Module (Libraries haben keine und fehlen in der Liste).
+     */
+    public function getAll(string $key): array
+    {
+        $all = [];
+        foreach ($this->services as $moduleId => $service) {
+            if ($service instanceof self && $service->hasService($key)) {
+                $all[$moduleId] = $service->make($key);
+            }
+        }
+        return $all;
+    }
+
     public function __get(string $key): mixed
     {
         return $this->make($key);

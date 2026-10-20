@@ -1,4 +1,4 @@
-{config_load file="de.conf" section=$D.R.Page}
+{*config_load file="de.conf" section=$D.R.Page*}
 {assign var="PLA" value=$D.PLATFORM.D[$D.PLATFORM_ID]}
 {block name="page"}
 <!DOCTYPE html>
