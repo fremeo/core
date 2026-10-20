@@ -9,11 +9,8 @@ $D['SESSION'] = $_SESSION;
     $C['Smarty']->setCompileDir("{$D['MODULE']['D']['fremeo/core']['INFO']['CacheDir']}template_c/");
 	$C['Smarty']->error_reporting = E_ALL & ~E_NOTICE & ~E_WARNING & ~E_DEPRECATED;
     
-    #ToDo: wenn der config ordner nicht vorhanden ist, muss ordner und Language Datei erstellt werden. für die angeforderte Sprache
-    if (!is_dir("{$D['MODULE']['D']['fremeo/core']['INFO']['DataDir']}smarty-config/")) {
-        mkdir("{$D['MODULE']['D']['fremeo/core']['INFO']['DataDir']}smarty-config/", 0755, true);
-    }
-    $C['Smarty']->setConfigDir("{$D['MODULE']['D']['fremeo/core']['INFO']['DataDir']}smarty-config/"); #ToDo aus data/fremeo~core/smarty-config auslesen
+  
+    #$C['Smarty']->setConfigDir("{$D['MODULE']['D']['fremeo/core']['INFO']['DataDir']}smarty-config/"); #ToDo aus data/fremeo~core/smarty-config auslesen
 
 	$my_security_policy = new Smarty_Security($C['Smarty']);
 
@@ -73,19 +70,14 @@ if( isset($R['SEO_URL']) ) {
 
 
 if($D['R']['ModuleId']) {
-	#Globales Link Objekt für die gesamte Anwendung. Geschrieben wird in das aktive Modul, vergebene SEO-URLs werden in allen Modulen geprüft.
-	/*$C['Link'] = new \fremeo\core\Link(
-		$C[ $D['R']['ModuleId'] ]['CData'],
-		array_column(array_filter($C, 'is_array'), 'CData')
-	);*/
-    $C->set('Link', fn () => new \fremeo\core\Link(
-        $C[ $D['R']['ModuleId'] ]['CData'],
-        array_column(array_filter($C, 'is_array'), 'CData')
-    ), 'fremeo/core');
+	
+    #Todo: Prüfen ob es so richtig ist, dass link für fremeo/core gesetzt wird, oder ob es dynamisch für das aktive Modul gesetzt werden sollte.
+    $_moduleId = $D['R']['ModuleId'];
+    #$C->set('Link', fn () => new \fremeo\core\Link($C[$_moduleId]['CData'], array_values($C->getAll('CData'))), 'fremeo/core');
+    $C->set('Link', fn () => new \fremeo\core\Link($C[$_moduleId]['CData'], array_values($C->getAll('CData'))), $_moduleId);
 }
 
 	#Template und php Verkettung
-
 	$_tpl = getExtends($D['MODULE']['D'], $D['R']['ModuleId'], $D['R']['Page']);
 
 
