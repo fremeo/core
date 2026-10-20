@@ -19,11 +19,11 @@ class File {
 	/** Endungen, die nie gespeichert werden (ausführbarer Code). */
 	private const BLOCKED = ['php', 'phtml', 'pht', 'phar', 'php3', 'php4', 'php5', 'php7', 'php8', 'phps', 'shtml', 'cgi', 'pl', 'py', 'htaccess'];
 
-	private array $C;
+	private Container $C;
 	private string $dir;
 
 	/** $C wird als Referenz gehalten, damit später registrierte Modul-CData verfügbar sind. */
-	public function __construct(array &$C, private string $moduleId) {
+	public function __construct(Container &$C, private string $moduleId) {
 		$this->C   = &$C;
 		$this->dir = 'data/' . str_replace('/', '~', $moduleId) . '/file/';
 	}

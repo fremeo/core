@@ -6,21 +6,24 @@ use Symfony\Component\Finder\Finder;
 
 define('SCRIPT_NAME',rtrim(dirname($_SERVER['SCRIPT_NAME']), '/').'/');
 
-
 require_once('system/vendor/autoload.php');
 
-
-require_once(__DIR__.'/system/core/Security.php'); # ToDo: Über Autoload muss geladen werden
-include_once(__dir__.'/system/core/Packagist.php'); #ToDo: Über autoloader laden
 include_once(__dir__.'/system/core/Composer.php'); #ToDo: Über autoloader laden # identisch mit setup/Composer.php (Setup kann den Core bei der Installation noch nicht laden), beide synchron halten
-include_once(__dir__.'/system/core/LazyProxy.php'); #ToDo: Über autoloader laden
-
-// Hilfsfunktion für echtes Lazy Loading innerhalb des Arrays
+include_once(__dir__.'/system/core/Packagist.php'); #Todo: Über autoloader laden 
 
 
-#ToDo:aus LazyProxy in einen echten Container Classe machen.
-#$C['Security'] = new \fremeo\core\Security();
-$C['Security'] = new \fremeo\core\LazyProxy(function() { return new \fremeo\core\Security(); });
+$C = new fremeo\core\Container(); # Klassen Instanz Array, für alle Module und Core Klassen
+# Module Klassen Instanzen werden in $C['ModulId']['KlassenName'] gespeichert
+$C->set('Security', fn () => new \fremeo\core\Security());
+$C->set('Packagist', fn () => new Packagist() );
+$C->set('Composer', fn () => new Composer(__DIR__.'/system/core/composer.phar', PROJECT_ROOT) );
+$C->set('Filesystem', fn () => new Filesystem() );
+$C->set('ImageManager', fn () => new ImageManager( Driver::class ) );
+$C->set('Finder', fn () => new Finder() );
+$C->set('Smarty', fn () => new Smarty() );
+
+$C->set('CCache', fn () => new \phploader\CCache([ 'DB' => ['FILENAME' => PROJECT_ROOT.'data_c/fremeo~core/cache.cache' ] ]), 'fremeo/core');
+
 
 
 $C['Security']->SecurityActive = false; #ToDo: aktivierung von Security über DB einstellung
@@ -37,23 +40,6 @@ $D['C'] = &$C; //Klassen Instanz Array
 $D['SESSION'] = null; 
 
 
-
-#$C['Packagist'] = new Packagist();
-$C['Packagist'] = new \fremeo\core\LazyProxy(function() { return new Packagist(); });
-
-#$C['Composer'] = new Composer(__DIR__.'/system/core/composer.phar', PROJECT_ROOT); # PHP-CLI wird automatisch gesucht, ohne proc_open läuft Composer im selben Prozess
-$C['Composer'] = new \fremeo\core\LazyProxy(function() { return new Composer(__DIR__.'/system/core/composer.phar', PROJECT_ROOT); });
-#$C['Filesystem'] = new Filesystem();
-$C['Filesystem'] = new \fremeo\core\LazyProxy(function() { return new Filesystem(); });
-$C['ImageManager'] = new ImageManager( Driver::class );
-##$C['ImageManager'] = new \fremeo\core\LazyProxy(function() { return new ImageManager( Driver::class ); });
-#$C['Finder'] = new Finder();
-$C['Finder'] = new \fremeo\core\LazyProxy(function() { return new Finder(); });
-
-
-$C['Filesystem']->mkdir(PROJECT_ROOT.'data_c/fremeo~core/'); # ToDo: ins CCAche verschieben
-$C['CCache'] = new \phploader\CCache([ 'DB' => ['FILENAME' => PROJECT_ROOT.'data_c/fremeo~core/cache.cache' ] ]); # Gemeinsamer Cache für alle Module, die CCache nutzen.
-$C['Smarty'] = new Smarty();
 
 // 1. Module scannen und Metadaten sammeln # Todo: Cachen
 foreach (glob(PROJECT_ROOT . '/system/vendor/' . '/*/*', GLOB_ONLYDIR) as $moduleDir) {
@@ -77,22 +63,8 @@ foreach (glob(PROJECT_ROOT . '/system/vendor/' . '/*/*', GLOB_ONLYDIR) as $modul
 	];
 }
 
-
-##session_start();
-#$D['SESSION'] = $_SESSION['D'];
-
-
-
-#$C['CData'] = new \phploader\CData( [ 'DB' => ['FILENAME' => __DIR__.'/../../../../data/data.db' ] ] );
-$C['fremeo/core']['CData'] = new \phploader\CData( [ 'DB' => ['FILENAME' => PROJECT_ROOT.'data/fremeo~core/data.db', 'FILENAME_C' => PROJECT_ROOT.'data_c/fremeo~core/data.db' ] ] );
-
-#Globales Link Objekt für die gesamte Anwendung
-
-#$C['fremeo/core']['Link'] = new \fremeo\core\Link( $C['fremeo/core']['CData'] );
-
 #DB-----------------
 
-$Pattern = [];
 
 $globalPattern = [
 	'LINK'		=> [
@@ -128,26 +100,16 @@ $globalPattern = [
 	],	#Todo: abhängige Einstellungen; Option auswahl
 ];
  
+#?? $LANGUAGE[D][DE][CONTEXT][D][id][Value]
+/*
+$globalPattern['LANGUAGE']['D']['CONTEXT'] = [
+	'Active'		=> ['Type' => 'checkbox'],
+	'Value'			=> ['Type' => 'text'],
+];
+*/
+/*
 $C['fremeo/core']['CData']->registerPattern([ 
-	/*
-	'SETTING'	=> [
-			'Active'		=> ['Type' => 'checkbox'],
-			##'ParentId'		=> ['Type' => 'id', 'ForeignKey' => 1],
-			'Value'			=> ['Type' => 'text'],
-			'InputType'		=> ['Type' => 'text'], # z.B. "text", "number", "checkbox", "select", "radio", "textarea", "file", "json", "image"
-			'Path'			=> ['Type' => 'text'], # Pfad, z.B. "Navigation/Menu1" (für die Anzeige in der Admin-Oberfläche, kann auch leer sein)
-		],*/
-	/*'LINK'		=> [
-			'Active'		=> ['Type' => 'checkbox'],
-			'FromURL'		=> ['Type' => 'text'],
-			'ToURL'			=> ['Type' => 'text'],
-			'ModuleId'		=> ['Type' => 'id', 'ForeignKey' => 1],
-		],*/
-	/*'FILE' 		=> [
-			'Name'			=> ['Type' => 'text'],
-			'Size'			=> ['Type' => 'number'],
-			'Extension'		=> ['Type' => 'text'],
-		],*/
+
 	'USER'		=> [
 			'Active'		=> ['Type' => 'checkbox'],
 			'Name'			=> ['Type' => 'text'],
@@ -156,7 +118,14 @@ $C['fremeo/core']['CData']->registerPattern([
 		],
 	
  ]);
- 
+ */
+$Pattern['USER'] = [
+			'Active'		=> ['Type' => 'checkbox'],
+			'Name'			=> ['Type' => 'text'],
+			'Mail'			=> ['Type' => 'text'],
+			'Password'		=> ['Type' => 'text'],
+		];
+
 $Pattern['USER']['D']['GROUP'] = [
 			'Active'		=> ['Type' => 'checkbox'],
 ];
@@ -180,31 +149,28 @@ $Pattern['ACCOUNT'] = [ #Kunden Accounts
 ];
 
 
+#Todo: weil die untere Schleife core nicht priorisiert lädt, muss core hier zuerst initialisiert werden.
+$C->set('CData', new \phploader\CData( [ 'DB' => ['FILENAME' => PROJECT_ROOT.'data/fremeo~core/data.db', 'FILENAME_C' => PROJECT_ROOT.'data_c/fremeo~core/data.db' ] ] ), 'fremeo/core');
+$C['fremeo/core']['CData']->registerPattern($globalPattern);
 $C['fremeo/core']['CData']->registerPattern($Pattern);
-
-/*
-$frame = new fremeo\framework($ModulId);
-$frame->getLink($F);
-$frame->setLink($active,$FromURL,$ToURL);
-*/
-
 #Todo: inaktive Module nicht laden
 # 2. Phase: alle init.php laden 
 foreach ($D['MODULE']['D'] as $moduleDir => $info) {
 
-	if('fremeo/core' != $moduleDir) { 
+	# Überspringe libery und core type
+	if ( in_array($info['INFO']['Type'], ['library', 'core']) === false) {
+	
+		$_modulePath = str_replace( '/', '~', $moduleDir);
+		$C->set('CData', new \phploader\CData( [ 'DB' => ['FILENAME' => PROJECT_ROOT.'data/'.$_modulePath.'/data.db', 'FILENAME_C' => PROJECT_ROOT.'data_c/'.$_modulePath.'/data.db' ] ] ), $moduleDir);
+		$C[$moduleDir]['CData']->registerPattern($globalPattern); # Globales Pattern für alle Module registrieren
+
 		$init = $info['INFO']['ModulDir'] . '/init.php';
-		if (is_file($init)) {
-			require_once $init;
-		}
+		require_once $init;
+
+		$C->set('File', fn () => new \fremeo\core\File($C, $moduleDir), $moduleDir);
 	}
-	# Datenbank für je Modul registrieren, falls das Modul CData nutzt.
-	if(isset($C[$moduleDir]['CData']) ) {
-		$C[$moduleDir]['CData']->registerPattern($globalPattern);
-	}
-	$C[$moduleDir]['File'] = new \fremeo\core\File($C, $moduleDir); #Datei Upload/Löschen, gebunden an das eigene Modul: $C['fremeo/blog']['File']->add($_FILES['x']);
-	#$C[$moduleDir]['File'] = new \fremeo\core\LazyProxy(function() { return new \fremeo\core\File($C, $moduleDir); });
 }
+$C['fremeo/core']['CData']->registerPattern($Pattern);
 
 # 3. Phase: alle cli.php laden, wenn CLI Modus
 if (PHP_SAPI === 'cli') {

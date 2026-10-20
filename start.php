@@ -8,7 +8,12 @@ $D['SESSION'] = $_SESSION;
 	$C['Smarty']->addTemplateDir(__DIR__ . '/system/template/', 'core');
     $C['Smarty']->setCompileDir("{$D['MODULE']['D']['fremeo/core']['INFO']['CacheDir']}template_c/");
 	$C['Smarty']->error_reporting = E_ALL & ~E_NOTICE & ~E_WARNING & ~E_DEPRECATED;
-
+    
+    #ToDo: wenn der config ordner nicht vorhanden ist, muss ordner und Language Datei erstellt werden. für die angeforderte Sprache
+    if (!is_dir("{$D['MODULE']['D']['fremeo/core']['INFO']['DataDir']}smarty-config/")) {
+        mkdir("{$D['MODULE']['D']['fremeo/core']['INFO']['DataDir']}smarty-config/", 0755, true);
+    }
+    $C['Smarty']->setConfigDir("{$D['MODULE']['D']['fremeo/core']['INFO']['DataDir']}smarty-config/"); #ToDo aus data/fremeo~core/smarty-config auslesen
 
 	$my_security_policy = new Smarty_Security($C['Smarty']);
 
@@ -28,11 +33,16 @@ if( isset($R['SEO_URL']) ) {
 		$hURL = hash("crc32b", rtrim($R['SEO_URL'],'/'));
 		
 		$f['LINK']['W'][0]['ID'] = $hURL;
-		$f['LINK']['W'][0]['Active'] = 1;
+		$f['LINK']['W'][0]['Active'] = 1; #ToDo: wird in cData nicht erkannt, wieso?
 
 		foreach((array)($D['MODULE']['D'] ?? []) AS $kMOD => $MOD) {
 
+            # keine libery
+            if($MOD['INFO']['Type'] === 'library') {
+                continue;
+            }
 			if(!isset($C[$kMOD]['CData'])) continue;
+            
 			$C[$kMOD]['CData']->get_object($D['MODULE']['D'][$kMOD],$f);
 
 			$link = $D['MODULE']['D'][$kMOD]['LINK']['D'][ $hURL ] ?? null;
@@ -64,10 +74,14 @@ if( isset($R['SEO_URL']) ) {
 
 if($D['R']['ModuleId']) {
 	#Globales Link Objekt für die gesamte Anwendung. Geschrieben wird in das aktive Modul, vergebene SEO-URLs werden in allen Modulen geprüft.
-	$C['Link'] = new \fremeo\core\Link(
+	/*$C['Link'] = new \fremeo\core\Link(
 		$C[ $D['R']['ModuleId'] ]['CData'],
 		array_column(array_filter($C, 'is_array'), 'CData')
-	);
+	);*/
+    $C->set('Link', fn () => new \fremeo\core\Link(
+        $C[ $D['R']['ModuleId'] ]['CData'],
+        array_column(array_filter($C, 'is_array'), 'CData')
+    ), 'fremeo/core');
 }
 
 	#Template und php Verkettung
