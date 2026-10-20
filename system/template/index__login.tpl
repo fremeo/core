@@ -37,7 +37,7 @@
 			
 			<div class="login-card">
 
-				<h2 class="login-title">{i18n id="Login"}</h2>
+				<h2 class="login-title">{#login_title#}</h2>
 
 				<form method="post">
 					<input type="hidden" name="D[PAGE]" value="login">
@@ -50,22 +50,22 @@
 					<!-- Username -->
 					<div class="input-group mb-3">
 						<span class="input-group-text">👤</span>
-						<input name="R[UserName]" value="{$D.R.UserName}" class="form-control" type="text" placeholder="{i18n id='Username'}" required autofocus>
+						<input name="R[UserName]" value="{$D.R.UserName}" class="form-control" type="text" placeholder="{#username#}" required autofocus>
 					</div>
 					<!-- Password -->
 					<div class="input-group mb-2">
 						<span class="input-group-text">🔒</span>
-						<input name="R[Password]" class="form-control" type="password" placeholder="{i18n id='Password'}" required>
+						<input name="R[Password]" class="form-control" type="password" placeholder="{#password#}" required>
 					</div>
 
 					<!-- Passwort vergessen -->
 					<a href="?R[Page]=index__password_forgot&R[ModuleId]=fremeo/core" class="forgot-link">
-						{i18n id="PasswordForgot"}?
+						{#password_forgot#}
 					</a>
 
 					<!-- Login Button -->
 					<button type="submit" class="btn btn-primary w-100 mt-3">
-						{i18n id="Login"}
+						{#btn_login#}
 					</button>
 				</form>
 
