@@ -50,9 +50,10 @@ if ($source && (($x > 0 && $y > 0) || $size > 0)) {
 	}
 
 	// Intervention Image 4 (PHP >= 8.3): decodePath() / encodeUsingFormat(). Version 3 (l\u00e4uft ab PHP 8.1): read() / toAvif() usw.
+	
 	$v4    = method_exists($C['ImageManager'], 'decodePath');
 	$image = $v4 ? $C['ImageManager']->decodePath($source) : $C['ImageManager']->read($source);
-
+	
 	if ($x > 0 && $y > 0) {
 		$image->contain(width: $x, height: $y, background: 'ffffff');
 	} else {

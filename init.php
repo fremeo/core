@@ -18,7 +18,7 @@ include_once(__dir__.'/system/core/LazyProxy.php'); #ToDo: Über autoloader lade
 // Hilfsfunktion für echtes Lazy Loading innerhalb des Arrays
 
 
-
+#ToDo:aus LazyProxy in einen echten Container Classe machen.
 #$C['Security'] = new \fremeo\core\Security();
 $C['Security'] = new \fremeo\core\LazyProxy(function() { return new \fremeo\core\Security(); });
 
@@ -45,8 +45,8 @@ $C['Packagist'] = new \fremeo\core\LazyProxy(function() { return new Packagist()
 $C['Composer'] = new \fremeo\core\LazyProxy(function() { return new Composer(__DIR__.'/system/core/composer.phar', PROJECT_ROOT); });
 #$C['Filesystem'] = new Filesystem();
 $C['Filesystem'] = new \fremeo\core\LazyProxy(function() { return new Filesystem(); });
-#$C['ImageManager'] = new ImageManager( Driver::class );
-$C['ImageManager'] = new \fremeo\core\LazyProxy(function() { return new ImageManager( Driver::class ); });
+$C['ImageManager'] = new ImageManager( Driver::class );
+##$C['ImageManager'] = new \fremeo\core\LazyProxy(function() { return new ImageManager( Driver::class ); });
 #$C['Finder'] = new Finder();
 $C['Finder'] = new \fremeo\core\LazyProxy(function() { return new Finder(); });
 
@@ -64,9 +64,9 @@ foreach (glob(PROJECT_ROOT . '/system/vendor/' . '/*/*', GLOB_ONLYDIR) as $modul
 	$Id = "{$vendor}/{$package}";
 	
 	# Typ aus der composer.json des Moduls (core | template | module)
-	$type = (string)(json_decode((string)@file_get_contents("{$moduleDir}/composer.json"), true)['type'] ?? 'module');
+	$type = (string)(json_decode((string)@file_get_contents("{$moduleDir}/composer.json"), true)['type'] ?? 'library');
 	
-	$D['MODULE']['D'][ $Id ] = [
+	$D['MODULE']['D'][ $Id ]['INFO'] = [ #Todo: in ['INFO'] ändern, damit Module Array für anhänge anderer Module daten möglich ist.
 		'Id'			=> $Id,
 		'Type'			=> $type,
 		'ModulDir'		=> $moduleDir,
@@ -110,14 +110,33 @@ $globalPattern = [
 		'File'			=> ['Type' => 'text'],
 		'Timestamp'		=> ['Type' => 'number'],
 	],
+	'SETTING_KATEGORIE'	=> [
+		#'Active'		=> ['Type' => 'checkbox'],
+		#'Name'			=> ['Type' => 'text'],
+		'Path'			=> ['Type' => 'text'], # Pfad, z.B. "Frontend/Navigation/Menu1" (sind Ids von Sprach Variablen) (für die Anzeige in der Admin-Oberfläche, kann auch leer sein)
+	],
+	'SETTING'	=> [ #ID = Frontend_Navigation_Menu1
+			#'Active'		=> ['Type' => 'checkbox'],
+			'SettingKategorieId'	=> ['Type' => 'id', 'ForeignKey' => 1],
+			'Value'			=> ['Type' => 'text'],
+			'Required'		=> ['Type' => 'checkbox'], #Pflichtfeld
+			'StandardValue'	=> ['Type' => 'text'],
+			'Option'		=> ['Type' => 'text'], #Optionen für Select, Radio, Checkbox (JSON-Array)
+			#'RequiredSetting'=> ['Type' => 'text'], #array Ids, von Einstellungen diese benötigt werden, damit diese Einstellung angezeigt wird. (JSON-Array)
+			'InputType'		=> ['Type' => 'text'], # z.B. "text", "number", "checkbox", "select", "radio", "textarea", "file", "json", "image"
+			#'Path'			=> ['Type' => 'text'], # Pfad, z.B. "Frontend/Navigation/Menu1" (sind Ids von Sprach Variablen) (für die Anzeige in der Admin-Oberfläche, kann auch leer sein)
+	],	#Todo: abhängige Einstellungen; Option auswahl
 ];
  
 $C['fremeo/core']['CData']->registerPattern([ 
+	/*
 	'SETTING'	=> [
 			'Active'		=> ['Type' => 'checkbox'],
-			'ParentId'		=> ['Type' => 'id', 'ForeignKey' => 1],
+			##'ParentId'		=> ['Type' => 'id', 'ForeignKey' => 1],
 			'Value'			=> ['Type' => 'text'],
-		],
+			'InputType'		=> ['Type' => 'text'], # z.B. "text", "number", "checkbox", "select", "radio", "textarea", "file", "json", "image"
+			'Path'			=> ['Type' => 'text'], # Pfad, z.B. "Navigation/Menu1" (für die Anzeige in der Admin-Oberfläche, kann auch leer sein)
+		],*/
 	/*'LINK'		=> [
 			'Active'		=> ['Type' => 'checkbox'],
 			'FromURL'		=> ['Type' => 'text'],
@@ -174,7 +193,7 @@ $frame->setLink($active,$FromURL,$ToURL);
 foreach ($D['MODULE']['D'] as $moduleDir => $info) {
 
 	if('fremeo/core' != $moduleDir) { 
-		$init = $info['ModulDir'] . '/init.php';
+		$init = $info['INFO']['ModulDir'] . '/init.php';
 		if (is_file($init)) {
 			require_once $init;
 		}
@@ -183,14 +202,14 @@ foreach ($D['MODULE']['D'] as $moduleDir => $info) {
 	if(isset($C[$moduleDir]['CData']) ) {
 		$C[$moduleDir]['CData']->registerPattern($globalPattern);
 	}
-	#$C[$moduleDir]['File'] = new \fremeo\core\File($C, $moduleDir); #Datei Upload/Löschen, gebunden an das eigene Modul: $C['fremeo/blog']['File']->add($_FILES['x']);
-	$C[$moduleDir]['File'] = new \fremeo\core\LazyProxy(function() { return new \fremeo\core\File($C, $moduleDir); });
+	$C[$moduleDir]['File'] = new \fremeo\core\File($C, $moduleDir); #Datei Upload/Löschen, gebunden an das eigene Modul: $C['fremeo/blog']['File']->add($_FILES['x']);
+	#$C[$moduleDir]['File'] = new \fremeo\core\LazyProxy(function() { return new \fremeo\core\File($C, $moduleDir); });
 }
 
 # 3. Phase: alle cli.php laden, wenn CLI Modus
 if (PHP_SAPI === 'cli') {
 	foreach ($D['MODULE']['D'] as $moduleDir => $info) {
-		$init = $info['ModulDir'] . '/cli.php';
+		$init = $info['INFO']['ModulDir'] . '/cli.php';
 		if (is_file($init)) {
 			require_once $init;
 		}

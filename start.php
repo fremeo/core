@@ -6,7 +6,7 @@ if (session_status() === PHP_SESSION_NONE) {
 $D['SESSION'] = $_SESSION;
 
 	$C['Smarty']->addTemplateDir(__DIR__ . '/system/template/', 'core');
-    $C['Smarty']->setCompileDir("{$D['MODULE']['D']['fremeo/core']['CacheDir']}template_c/");
+    $C['Smarty']->setCompileDir("{$D['MODULE']['D']['fremeo/core']['INFO']['CacheDir']}template_c/");
 	$C['Smarty']->error_reporting = E_ALL & ~E_NOTICE & ~E_WARNING & ~E_DEPRECATED;
 
 
@@ -118,7 +118,7 @@ function getExtends(array $modules, string $activeModuleId, string $page): array
     uasort($first, fn($a, $b) => ($firstOrder[$typeOf($a)] ?? 2) <=> ($firstOrder[$typeOf($b)] ?? 2));
 
     // Hilfsfunktion: TPL existiert?
-    $exists = fn(array $module, string $tpl): bool => file_exists($module['ModulDir'] . '/system/template/' . $tpl);
+    $exists = fn(array $module, string $tpl): bool => file_exists($module['INFO']['ModulDir'] . '/system/template/' . $tpl);
 
     // Hilfsfunktion: TPL → PHP Pfad
     $toPhp = fn(string $tplPath): string => str_replace(['/system/template/', '.tpl'], ['/system/', '.php'], $tplPath);
@@ -136,7 +136,7 @@ function getExtends(array $modules, string $activeModuleId, string $page): array
     // ---------------------------------------------------------
     if (!str_contains($page, '__')) {
 
-        $tpl = $modules[$activeModuleId]['ModulDir'] . '/system/template/' . $page . '.tpl';
+        $tpl = $modules[$activeModuleId]['INFO']['ModulDir'] . '/system/template/' . $page . '.tpl';
         $php = $toPhp($tpl);
 
         return [
@@ -158,7 +158,7 @@ function getExtends(array $modules, string $activeModuleId, string $page): array
 
     foreach ($first as $moduleDir) {
         if ($exists($moduleDir, $subBase)) {
-            $add($moduleDir['ModulDir'] . '/system/template/' . $subBase);
+            $add($moduleDir['INFO']['ModulDir'] . '/system/template/' . $subBase);
             break; // nur das erste gefundene Modul verwenden
         }
     }
@@ -167,7 +167,7 @@ function getExtends(array $modules, string $activeModuleId, string $page): array
     // 3. konkrete Seite (nur aktives Modul) → unterstes Element
     // ---------------------------------------------------------
     if ($exists($modules[$activeModuleId], $page . '.tpl')) {
-        $add($modules[$activeModuleId]['ModulDir'] . '/system/template/' . $page . '.tpl');
+        $add($modules[$activeModuleId]['INFO']['ModulDir'] . '/system/template/' . $page . '.tpl');
     }
 
     // ---------------------------------------------------------
@@ -176,7 +176,7 @@ function getExtends(array $modules, string $activeModuleId, string $page): array
     $baseBase = "{$base}__{$base}.tpl";
 
     foreach ($modules as $moduleDir) {
-        $tplPath = $moduleDir['ModulDir'] . '/system/template/' . $baseBase;
+        $tplPath = $moduleDir['INFO']['ModulDir'] . '/system/template/' . $baseBase;
 
         if ($exists($moduleDir, $baseBase)) {
             $add($tplPath);                                   // TPL + PHP (falls vorhanden)
@@ -198,7 +198,7 @@ function getExtends(array $modules, string $activeModuleId, string $page): array
         $candidates = [];
 
         foreach ($modules as $moduleDir) {
-            foreach (glob($moduleDir['ModulDir'] . "/system/template/*__{$currentBase}.tpl") as $file) {
+            foreach (glob($moduleDir['INFO']['ModulDir'] . "/system/template/*__{$currentBase}.tpl") as $file) {
 
                 // base__base.tpl überspringen (haben wir in Schritt 4 schon)
                 if (basename($file) === $baseBase) {
@@ -254,7 +254,7 @@ function getExtends(array $modules, string $activeModuleId, string $page): array
 	$rootBaseBasePhp = $currentBase . '__' . $currentBase . '.php';
 
 	foreach ($first as $moduleDir) {
-		if (file_exists($phpPath = $moduleDir['ModulDir'] . '/system/' . $rootBaseBasePhp)) {
+		if (file_exists($phpPath = $moduleDir['INFO']['ModulDir'] . '/system/' . $rootBaseBasePhp)) {
 			$phpChain[] = $phpPath;   // index__index.php
 			break;
 		}
@@ -263,7 +263,7 @@ function getExtends(array $modules, string $activeModuleId, string $page): array
 	// 6b. root.tpl + root.php danach einfügen (z.B. index.tpl, index.php)
 	foreach ($first as $moduleDir) {
 		if ($exists($moduleDir, $rootTplName)) {
-			$add($moduleDir['ModulDir'] . '/system/template/' . $rootTplName);
+			$add($moduleDir['INFO']['ModulDir'] . '/system/template/' . $rootTplName);
 			break;
 		}
 	}
