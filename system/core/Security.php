@@ -51,10 +51,9 @@ class Security {
     }
 
     private function setNestedValue(array &$target, string $path, $value): void {
-        preg_match_all('/\[?([A-Za-z0-9_:-]+)\]?/', $path, $matches);
-        $keys = $matches[1] ?? [];
+        $keys = preg_split('/\[|\]/', $path, -1, PREG_SPLIT_NO_EMPTY);
 
-        if ($keys && $keys[0] === 'D') {
+        if (($keys[0] ?? null) === 'D') {
             array_shift($keys);
         }
 

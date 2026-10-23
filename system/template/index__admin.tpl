@@ -131,6 +131,7 @@ margin-right:0.5rem;
 						
 						<li class="nav-item"><a class="nav-link" href="?R[Page]=assistant#submenu5"><i class="fas fa-parachute-box"></i> Assistent</a></li>
 						<li class="nav-item"><a class="nav-link" href="?R[Page]=admin__setting.list&R[ModuleId]=fremeo/core#submenu5"><i class="fas fa-cog"></i> Einstellungen</a></li>
+						<li class="nav-item"><a class="nav-link" href="?R[Page]=admin__languagevariable.list&R[ModuleId]=fremeo/core#submenu5"><i class="fas fa-language"></i> Sprachvariablen</a></li>
 						{*<li class="nav-item"><a class="nav-link" href="?R[Page]=admin__link.list#submenu5"><i class="fas fa-link"></i> Link</a></li>
 						<li class="nav-item"><a class="nav-link" href="?R[Page]=file.list#submenu5"><i class="fas fa-file-alt"></i> Dateien</a></li>*}
 						{/block}

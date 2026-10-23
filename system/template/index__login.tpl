@@ -50,22 +50,22 @@
 					<!-- Username -->
 					<div class="input-group mb-3">
 						<span class="input-group-text">👤</span>
-						<input name="R[UserName]" value="{$D.R.UserName}" class="form-control" type="text" placeholder="{#username#}" required autofocus>
+						<input name="R[UserName]" value="{$D.R.UserName}" class="form-control" type="text" placeholder="{#login_username#}" required autofocus>
 					</div>
 					<!-- Password -->
 					<div class="input-group mb-2">
 						<span class="input-group-text">🔒</span>
-						<input name="R[Password]" class="form-control" type="password" placeholder="{#password#}" required>
+						<input name="R[Password]" class="form-control" type="password" placeholder="{#login_password#}" required>
 					</div>
 
 					<!-- Passwort vergessen -->
 					<a href="?R[Page]=index__password_forgot&R[ModuleId]=fremeo/core" class="forgot-link">
-						{#password_forgot#}
+						{#login_password_forgot#}
 					</a>
 
 					<!-- Login Button -->
 					<button type="submit" class="btn btn-primary w-100 mt-3">
-						{#btn_login#}
+						{#login_btn_login#}
 					</button>
 				</form>
 

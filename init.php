@@ -11,7 +11,8 @@ require_once('system/vendor/autoload.php');
 include_once(__dir__.'/system/core/Composer.php'); #ToDo: Über autoloader laden # identisch mit setup/Composer.php (Setup kann den Core bei der Installation noch nicht laden), beide synchron halten
 include_once(__dir__.'/system/core/Packagist.php'); #Todo: Über autoloader laden 
 
-
+$D = [];
+# Alle Module und Core Klassen werden in $C gespeichert, damit sie von allen Modulen genutzt werden können.
 $C = new fremeo\core\Container(); # Klassen Instanz Array, für alle Module und Core Klassen
 # Module Klassen Instanzen werden in $C['ModulId']['KlassenName'] gespeichert
 $C->set('Security', fn () => new \fremeo\core\Security());
@@ -21,15 +22,29 @@ $C->set('Filesystem', fn () => new Filesystem() );
 $C->set('ImageManager', fn () => new ImageManager( Driver::class ) );
 $C->set('Finder', fn () => new Finder() );
 $C->set('Smarty', fn () => new Smarty() );
+$C->set('Setting', fn () => new \fremeo\core\Setting($C, $D) );
 
 $C->set('CCache', fn () => new \phploader\CCache([ 'DB' => ['FILENAME' => PROJECT_ROOT.'data_c/fremeo~core/cache.cache' ] ]), 'fremeo/core');
 
 
+#DB-----------------
+#Todo: weil die untere Schleife core nicht priorisiert lädt, muss core hier zuerst initialisiert werden.
+$C->set('CData', new \phploader\CData( [ 'DB' => ['FILENAME' => PROJECT_ROOT.'data/fremeo~core/data.db', 'FILENAME_C' => PROJECT_ROOT.'data_c/fremeo~core/data.db' ] ] ), 'fremeo/core');
+if(is_file(__dir__ . '/system/default/default.global.pattern.php') ) {
+	$globalPattern = include __dir__ . '/system/default/default.global.pattern.php';
+	$C['fremeo/core']['CData']->registerPattern($globalPattern);
+}
+if(is_file(__dir__ . '/system/default/default.pattern.php') ) {
+	$Pattern = include __dir__ . '/system/default/default.pattern.php';
+	$C['fremeo/core']['CData']->registerPattern($Pattern);
+}
 
-$C['Security']->SecurityActive = false; #ToDo: aktivierung von Security über DB einstellung
+ #Todo: Problem: wenn unter einstellugnen diese Einstellung geändert wird, dann wird dies nach zweitem reload erst wirksam.
+$C['Security']->SecurityActive = $C['Setting']->get('fremeo/core','security_enable_hash_input_names')?true:false;
 if ($C['Security']->SecurityActive) {
 	$SD = $_REQUEST['SD'] ?? []; // security Data array	
 	$D = $C['Security']->resolveSecureData($SD);
+
 } else {
 	$D = $_REQUEST['D'] ?? []; //Data Array
 }
@@ -37,7 +52,11 @@ $R = $_REQUEST['R'] ?? []; //Request Array
 
 $D['R'] = &$R;
 $D['C'] = &$C; //Klassen Instanz Array
-$D['SESSION'] = null; 
+if (session_status() === PHP_SESSION_NONE) {
+    session_name('fremeo');
+    session_start();
+}
+$D['SESSION'] = $_SESSION;
 
 
 
@@ -63,96 +82,7 @@ foreach (glob(PROJECT_ROOT . '/system/vendor/' . '/*/*', GLOB_ONLYDIR) as $modul
 	];
 }
 
-#DB-----------------
 
-
-$globalPattern = [
-	'LINK'		=> [
-		'Active'		=> ['Type' => 'checkbox'],
-		'FromURL'		=> ['Type' => 'text'],
-		'ToURL'			=> ['Type' => 'text'],
-		#'ModuleId'		=> ['Type' => 'id', 'ForeignKey' => 1],
-	],
-	'FILE' 		=> [
-		'Name'			=> ['Type' => 'text'],
-		'Size'			=> ['Type' => 'number'],
-		'Extension'		=> ['Type' => 'text'],
-	],
-	'MIGRATION'	=> [
-		'File'			=> ['Type' => 'text'],
-		'Timestamp'		=> ['Type' => 'number'],
-	],
-	'SETTING_KATEGORIE'	=> [
-		#'Active'		=> ['Type' => 'checkbox'],
-		#'Name'			=> ['Type' => 'text'],
-		'Path'			=> ['Type' => 'text'], # Pfad, z.B. "Frontend/Navigation/Menu1" (sind Ids von Sprach Variablen) (für die Anzeige in der Admin-Oberfläche, kann auch leer sein)
-	],
-	'SETTING'	=> [ #ID = Frontend_Navigation_Menu1
-			#'Active'		=> ['Type' => 'checkbox'],
-			'SettingKategorieId'	=> ['Type' => 'id', 'ForeignKey' => 1],
-			'Value'			=> ['Type' => 'text'],
-			'Required'		=> ['Type' => 'checkbox'], #Pflichtfeld
-			'StandardValue'	=> ['Type' => 'text'],
-			'Option'		=> ['Type' => 'text'], #Optionen für Select, Radio, Checkbox (JSON-Array)
-			#'RequiredSetting'=> ['Type' => 'text'], #array Ids, von Einstellungen diese benötigt werden, damit diese Einstellung angezeigt wird. (JSON-Array)
-			'InputType'		=> ['Type' => 'text'], # z.B. "text", "number", "checkbox", "select", "radio", "textarea", "file", "json", "image"
-			#'Path'			=> ['Type' => 'text'], # Pfad, z.B. "Frontend/Navigation/Menu1" (sind Ids von Sprach Variablen) (für die Anzeige in der Admin-Oberfläche, kann auch leer sein)
-	],	#Todo: abhängige Einstellungen; Option auswahl
-];
- 
-#?? $LANGUAGE[D][DE][CONTEXT][D][id][Value]
-/*
-$globalPattern['LANGUAGE']['D']['CONTEXT'] = [
-	'Active'		=> ['Type' => 'checkbox'],
-	'Value'			=> ['Type' => 'text'],
-];
-*/
-/*
-$C['fremeo/core']['CData']->registerPattern([ 
-
-	'USER'		=> [
-			'Active'		=> ['Type' => 'checkbox'],
-			'Name'			=> ['Type' => 'text'],
-			'Mail'			=> ['Type' => 'text'],
-			'Password'		=> ['Type' => 'text'],
-		],
-	
- ]);
- */
-$Pattern['USER'] = [
-			'Active'		=> ['Type' => 'checkbox'],
-			'Name'			=> ['Type' => 'text'],
-			'Mail'			=> ['Type' => 'text'],
-			'Password'		=> ['Type' => 'text'],
-		];
-
-$Pattern['USER']['D']['GROUP'] = [
-			'Active'		=> ['Type' => 'checkbox'],
-];
- 
-$Pattern['USER_GROUP'] = [ #Rechteverwaltung
-			'Active'		=> ['Type' => 'checkbox'],
-			'Name'			=> ['Type' => 'text'],
-];
-		
-$Pattern['USER_GROUP']['D']['PAGE'] = [#Rechteverwaltung je Seite
-			'Active'		=> ['Type' => 'checkbox'],
-];
- 
- #ToDo: Prüfen ob Accounts wirklich in phpapp angelegt werden müssen. 
-$Pattern['USER']['D']['ACCOUNT'] = [
-			'Active'		=> ['Type' => 'checkbox'],
-];
-$Pattern['ACCOUNT'] = [ #Kunden Accounts
-			'Active'		=> ['Type' => 'checkbox'],
-			'Name'			=> ['Type' => 'text'], #??
-];
-
-
-#Todo: weil die untere Schleife core nicht priorisiert lädt, muss core hier zuerst initialisiert werden.
-$C->set('CData', new \phploader\CData( [ 'DB' => ['FILENAME' => PROJECT_ROOT.'data/fremeo~core/data.db', 'FILENAME_C' => PROJECT_ROOT.'data_c/fremeo~core/data.db' ] ] ), 'fremeo/core');
-$C['fremeo/core']['CData']->registerPattern($globalPattern);
-$C['fremeo/core']['CData']->registerPattern($Pattern);
 #Todo: inaktive Module nicht laden
 # 2. Phase: alle init.php laden 
 foreach ($D['MODULE']['D'] as $moduleDir => $info) {

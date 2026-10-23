@@ -1,10 +1,11 @@
 <?php 
+/*
 if (session_status() === PHP_SESSION_NONE) {
     session_name('fremeo');
     session_start();
 }
 $D['SESSION'] = $_SESSION;
-
+*/
 	$C['Smarty']->addTemplateDir(__DIR__ . '/system/template/', 'core');
     $C['Smarty']->setCompileDir("{$D['MODULE']['D']['fremeo/core']['INFO']['CacheDir']}template_c/");
 	$C['Smarty']->error_reporting = E_ALL & ~E_NOTICE & ~E_WARNING & ~E_DEPRECATED;
