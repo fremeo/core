@@ -33,7 +33,7 @@ foreach ($D['MODULE']['D'] as $kMOD => $MOD) {
 	$item = fn ($key) => [
 		'Module' => $kMOD,
 		'Key' => $key,
-		'Meta' => $aSetting[$key],
+		'Meta' => array_map(fn ($v) => $v instanceof Closure ? $v($C) : $v, $aSetting[$key]), # Closure in der Config (z.B. 'Options' => fn ($C) => [...]) = dynamischer Wert
 		'Value' => $D['MODULE']['D'][$kMOD]['SETTING']['D'][$key]['Value'] ?? ($aSetting[$key]['Value'] ?? null),
 	];
 

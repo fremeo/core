@@ -19,7 +19,7 @@ foreach ($mods as $kMOD => $MOD) {
 
 $F['LANGUAGE']['I18N'] = []; # Kind-Typ muss mitgeladen werden
 
-if (($D['ACTION'] ?? null) == 'save') {
+if (($R['ACTION'] ?? null) == 'save') {
 	foreach ($mods as $kMOD => $MOD) {
 		# Wert gleich dem Standard: nicht speichern, eine bereits gespeicherte Abweichung wird entfernt
 		$del = [];

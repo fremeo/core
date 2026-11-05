@@ -1,6 +1,6 @@
 {block name="inner_body"}
 	<form method="post">
-		<input type="hidden" name="D[ACTION]" value="save">
+		<input type="hidden" name="R[ACTION]" value="save">
 		<div class="sticky-top bg-white" style="z-index: 1000;">
 			<ul class="nav nav-tabs">
 				{foreach from=$D.R.LanguageRows key="kMOD" item="rows" name="tabs"}
@@ -29,7 +29,7 @@
 										<td>{input p=['name' => "D[MODULE][D][{$kMOD}][LANGUAGE][D][{$iso}][I18N][D][{$id}][Value]", 'type' => 'text', 'value' => $value]}</td>
 									{/foreach}
 									<td class="text-end">
-										<input type="hidden" class="lang-delflag" name="{$D.C.Security->registerSecurityD("D[MODULE][D][{$kMOD}][LANGUAGE][D][{$D.R.LanguageIsos[0]}][I18N][D]")}[{$id|escape}]" value="__DELETE__" disabled>
+										<input type="hidden" class="lang-delflag" name="{$D.C.Security->registerSecurityD("D[MODULE][D][{$kMOD}][LANGUAGE][D][{$D.R.LanguageIsos[0]}][I18N][D][{$id}]")}" value="__DELETE__" disabled>
 										<button type="button" class="btn btn-outline-danger btn-sm lang-delete" title="Löschen (erst beim Speichern)"><i class="fa-solid fa-trash"></i></button>
 									</td>
 								</tr>
