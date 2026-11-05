@@ -22,6 +22,7 @@ $C->set('Filesystem', fn () => new Filesystem() );
 $C->set('ImageManager', fn () => new ImageManager( Driver::class ) );
 $C->set('Finder', fn () => new Finder() );
 $C->set('Smarty', fn () => new Smarty() );
+$C->set('Template', fn () => new \fremeo\core\Template() );
 $C->set('Setting', fn () => new \fremeo\core\Setting($C, $D) );
 
 $C->set('CCache', fn () => new \phploader\CCache([ 'DB' => ['FILENAME' => PROJECT_ROOT.'data_c/fremeo~core/cache.cache' ] ]), 'fremeo/core');

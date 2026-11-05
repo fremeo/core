@@ -31,6 +31,10 @@ Aussagekräftige Analyse‑ und Auswertungsfunktionen liefern wertvolle Einblick
 
 ### Sprachverwaltung
 
+## Architekturkonzepte
+
+- [Templates, Zweige und Themes](docs/Konzept_Template_Theme.md) - geplante Vererbung, Einstellungen, Asset-Verarbeitung und statische Theme-Auslieferung.
+
 ## Installationsanleitung
 Für die Installation des phpApp‑Systems wird der phpApp Loader benötigt. Dieser muss als erstes auf dem System eingerichtet werden. Beim Ausführen installiert der Loader automatisch das phpApp‑Framework, legt alle notwendigen Standardwerte an und erzeugt einen initialen Administrator‑Zugang.
 

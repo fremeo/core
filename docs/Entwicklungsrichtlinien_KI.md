@@ -81,6 +81,7 @@ Ergänzend gilt [.github/Programmierleitfaden_Module.md](../../../../../.github/
 
 ## 8. Smarty-Templates
 
+- Template-/Theme-Verhalten und Regeln sind in [Konzept_Template_Theme.md](Konzept_Template_Theme.md) beschrieben. Bei Umsetzung oder Aenderungen dieses Systemteils das Konzept im selben Arbeitsschritt aktualisieren; geplanten und implementierten Stand klar trennen.
 - Die Smarty-Security erlaubt nur freigegebene PHP-Funktionen (Liste in `start.php`). **`min()`, `max()`-Varianten und andere fehlende Funktionen nicht im Template aufrufen**: Wert in der PHP-Seite vorbereiten oder mit `{if}` lösen (`{if $level < 6}{$next = $level + 1}{else}{$next = 6}{/if}`).
 - `{function}` für wiederkehrende/rekursive Darstellung. Parameter explizit übergeben (Funktionen erben keine Variablen), Standardwerte im Kopf.
 - Funktionen aus `input.tpl` sind im Template verfügbar, weil die Seitentemplates in der Kette stehen. Zum Testen mit Smarty den Text von `input.tpl` und `{input ...}` in **ein** Template schreiben (`{include}` registriert die Funktionen erst zur Laufzeit).

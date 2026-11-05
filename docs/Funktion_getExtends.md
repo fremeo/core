@@ -1,4 +1,11 @@
-# Template- & PHP-Vererbungssystem (`getExtends()`)
+# Template- & PHP-Vererbungssystem (`Template::getExtends()`)
+
+Die bisherige Funktion liegt unveraendert als Methode in
+[`fremeo\core\Template`](../system/core/Template.php). Der globale Dienst wird in
+`init.php` registriert und ueber `$C['Template']` verwendet; eine globale Funktion
+`getExtends()` gibt es nicht mehr. Algorithmus und Rueckgabeformat bleiben erhalten.
+Der weitere Ausbau ist im [Template-/Theme-Konzept](Konzept_Template_Theme.md)
+beschrieben.
 
 | Abschnitt | Beschreibung |
 |----------|--------------|
@@ -13,7 +20,6 @@
 | **Ablauf der Funktion** | 1. Prüfen, ob die Seite eine Vererbung besitzt<br>2. Zerlegen in `base` und `sub`<br>3. Konkrete Seite laden (`base__sub.tpl`)<br>4. Sub‑Root‑Template laden (`sub__sub.tpl`)<br>5. Base‑Root‑Template laden (`base__base.tpl`)<br>6. Rekursive Suche nach `*__base.tpl`<br>7. Root‑Template bestimmen (`base.tpl`)<br>8. Reihenfolge umdrehen → fertige Vererbungskette |
 | **Smarty‑Ausgabe** | Die Funktion erzeugt eine Smarty‑`extends:`‑Kette:<br>`extends:index.tpl\|index__frontend.tpl\|frontend__frontend.tpl\|frontend__user.register.tpl\|user.register__user.register.tpl` |
 | **Rückgabewert** | ```php<br>[<br>  'extends' => 'extends:…',<br>  'tpl'     => [...],<br>  'php'     => [...]<br>]``` |
-| **Verwendung im Code** | ```php<br>$_tpl = getExtends($modules, $activeModuleId, $page);<br><br>foreach ($_tpl['php'] as $file) {<br>    include_once($file);<br>}<br><br>$Smarty->assign('D', $D);<br>$Smarty->display($_tpl['extends'] . "|include/input.tpl");``` |
+| **Verwendung im Code** | ```php<br>$_tpl = $C['Template']->getExtends($modules, $activeModuleId, $page);<br><br>foreach ($_tpl['php'] as $file) {<br>    include_once($file);<br>}<br><br>$Smarty->assign('D', $D);<br>$Smarty->display($_tpl['extends'] . "|include/input.tpl");``` |
 | **Vorteile des Systems** | • Klare, modulare Template‑Struktur<br>• PHP‑Logik kann sich ergänzen statt überschreiben<br>• Wiederverwendbarkeit von Layouts und Logik<br>• Automatische, fehlerfreie Vererbung<br>• Erweiterbar für beliebige Module und Seiten |
 | **Erweiterbarkeit** | Neue Templates, Module oder Sub‑Bereiche können ohne Anpassung der Funktion hinzugefügt werden. Die Vererbung wird automatisch erkannt. |
-
