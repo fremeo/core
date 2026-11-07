@@ -25,8 +25,8 @@ $setting['enable_languages'] = [
 $section['Template']['D']['Core']['D']['theme'] = 1;
 $setting['theme'] = [
 	'InputType' => 'select', 'Value' => 'basic', 'Label' => 'Theme', 'AllowEmpty' => false,
-	'Description' => 'Theme oder Ableitung fuer die von Core bereitgestellten Layouts.',
-	'Options' => fn ($C) => array_keys($C['Template']->getThemes('fremeo/core')),
+	'Description' => 'Template-Herkunft und Theme fuer die von Core bereitgestellten Layouts gemeinsam auswaehlen.',
+	'Options' => fn ($C) => $C['Template']->getThemeOptions('fremeo/core'),
 ];
 foreach (glob(__DIR__ . '/../template/theme/*', GLOB_ONLYDIR) as $dir) {
 	$name = basename($dir);

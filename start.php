@@ -99,7 +99,7 @@ if($D['R']['ModuleId']) {
 	}
 	$C['fremeo/core']['CData']->get_object($D,$F); #Datenbank Abfrage
 	$R['Theme'] = $C['Template']->publishTheme(
-		$C['Template']->resolveTheme($_tpl['tpl']),
+		$_theme,
 		PROJECT_ROOT . 'data_c/public/theme',
 		SCRIPT_NAME
 	);

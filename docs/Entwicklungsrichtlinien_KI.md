@@ -18,7 +18,13 @@ Ergänzend gilt [.github/Programmierleitfaden_Module.md](../../../../../.github/
 - **Erst die Ursache, dann die Korrektur.** Fehler vor dem Ändern nachstellen (kleines Skript mit der echten Klasse), nicht raten. Beispiele aus der Praxis stehen in Abschnitt 9.
 - **Immer prüfen, bevor "fertig" gemeldet wird:** `php -l`, dazu ein Lauf mit den echten Klassen (`CData`, `Container`, `Setting`, Smarty) und temporärer Datenbank. Was nicht geprüft werden konnte (Browser, JavaScript), wird so benannt.
 - Testskripte und temporäre Datenbanken liegen in `sys_get_temp_dir()` bzw. `%TEMP%`, nie im Projekt. Dauerhafte Tests gehören nach `<modul>/tests/`.
-- Rückfragen nur bei echter Unklarheit. Sonst die einfachere, gängige Variante wählen und die Entscheidung in der Antwort nennen.
+- Bei unklarer Umsetzung immer vor der Aenderung nachfragen; Anforderungen nicht eigenmaechtig interpretieren und umsetzen.
+
+### Modulversionen und Releases
+
+- Die Modulversion im Feld `version` der jeweiligen `composer.json` pflegen. Bei Tag-Releases muss der Release-Ablauf die Version automatisch vor dem Taggen erhoehen und committen; Version und Tag muessen uebereinstimmen (`0.1.5` / `v0.1.5`). SemVer verwenden; Kompatibilitaetsgrenzen bei `0.x` ausdruecklich pruefen. Bestehende Tags nicht verschieben.
+- Nutzt eine Aenderung neue Funktionen, Datenstrukturen oder Template-Bloecke eines anderen Moduls oder des Cores, dessen benoetigte Mindestversion unter `require` im abhaengigen Modul anheben. Erst die Abhaengigkeit veroeffentlichen, dann das abhaengige Modul; kompatible Obergrenzen beibehalten.
+- Vor Releases sicherstellen, dass Constraints keine funktional unzureichenden Versionen erlauben. Vorhandene Lock-Dateien passend aktualisieren und pruefen; `composer install` aktualisiert einen veralteten Lock-Stand nicht automatisch.
 
 ## 2. Code-Stil (PHP)
 
@@ -32,6 +38,10 @@ Ergänzend gilt [.github/Programmierleitfaden_Module.md](../../../../../.github/
 - Dateien enthalten **UTF-8**, Einrückung mit Tabs wie im Bestand.
 
 ## 3. Container (`$C`)
+
+- Modul-Eltern werden ausschliesslich ueber `composer.json` mit `extra.module-parent` deklariert; das Elternpaket muss auch unter `require` stehen. Dies gilt fuer Templates und Funktionsmodule. Paketnamen (`__` eingeschlossen) definieren keine Vererbung mehr. Elternreihenfolge und Aktivstatus folgen dieser Beziehung; Dienste und globale Patterns bleiben unveraendert.
+
+- Die Theme-Auswahl speichert Template-Herkunft und Theme gemeinsam (`<template-id>:<theme>`). Nur die gewaehlte Ableitung und deren Eltern erweitern TPL/PHP und Assets; aktivierte Geschwister nicht. Theme-only-Children sind erlaubt. Fehlende gespeicherte Auswahlen fallen erst bei der Aufloesung auf ein verfuegbares Eltern-Haupttheme zurueck, ohne UI-Meldung oder Schreibzugriff, mit PHP-Loghinweis. Andere Theme-Fehler nicht pauschal abfangen.
 
 - Dienste sind **modulgebunden** oder **global**:
   - Global: `$C->set('Smarty', ...)`, Zugriff `$C['Smarty']`.
@@ -89,7 +99,7 @@ Ergänzend gilt [.github/Programmierleitfaden_Module.md](../../../../../.github/
 ## 8. Smarty-Templates
 
 - Template-/Theme-Verhalten und Regeln sind in [Konzept_Template_Theme.md](Konzept_Template_Theme.md) beschrieben. Bei Umsetzung oder Aenderungen dieses Systemteils das Konzept im selben Arbeitsschritt aktualisieren; geplanten und implementierten Stand klar trennen.
-- Theme-Anbieter sind nur `type: template` und Core als Basis-Ausnahme. Nur Template-Module verwenden `<parent>__<child>` als Anbieter-Ableitung; normale Funktionsmodule liefern keine Themes.
+- Theme-Anbieter sind nur `type: template` und Core als Basis-Ausnahme. Anbieter-Ableitungen verwenden `extra.module-parent` aus `composer.json`; normale Funktionsmodule liefern keine Themes.
 - Die Smarty-Security erlaubt nur freigegebene PHP-Funktionen (Liste in `start.php`). **`min()`, `max()`-Varianten und andere fehlende Funktionen nicht im Template aufrufen**: Wert in der PHP-Seite vorbereiten oder mit `{if}` lösen (`{if $level < 6}{$next = $level + 1}{else}{$next = 6}{/if}`).
 - `{function}` für wiederkehrende/rekursive Darstellung. Parameter explizit übergeben (Funktionen erben keine Variablen), Standardwerte im Kopf.
 - Funktionen aus `input.tpl` sind im Template verfügbar, weil die Seitentemplates in der Kette stehen. Zum Testen mit Smarty den Text von `input.tpl` und `{input ...}` in **ein** Template schreiben (`{include}` registriert die Funktionen erst zur Laufzeit).

@@ -14,37 +14,30 @@ class Template {
 
 	// CData setzt den referenzierten Datenbaum waehrend einer Abfrage kurz auf null.
 	private ?array $D;
+	private array $themeFallbacks = [];
 
 	public function __construct(private Container $C, array &$D) {
 		$this->D = &$D;
 	}
 
-	public function getThemeModules(?array $modules = null): array {
+	public function getModuleInheritance(?array $modules = null, bool $activeOnly = true): array {
 		$providers = [];
 		foreach ($modules ?? $this->D['MODULE']['D'] as $id => $module) {
 			$type = $module['INFO']['Type'] ?? $module['Type'] ?? 'library';
-			if (in_array($type, ['core', 'template'], true)) {
+			if (in_array($type, ['core', 'template', 'module'], true)) {
 				$providers[$id] = ['Directory' => str_replace('\\', '/', $module['INFO']['ModulDir']), 'Type' => $type, 'Parent' => null];
 			}
 		}
 		foreach ($providers as $id => &$provider) {
-			[$vendor, $package] = explode('/', $id, 2);
-			if ($provider['Type'] !== 'template' || !str_contains($package, '__')) {
-				continue;
+			$file = $provider['Directory'] . '/composer.json';
+			$meta = is_file($file) ? json_decode(file_get_contents($file), true, 512, JSON_THROW_ON_ERROR) : [];
+			$parent = $meta['extra']['module-parent'] ?? null;
+			if ($parent === null) continue;
+			if (!is_string($parent) || !isset($providers[$parent]) || !isset($meta['require'][$parent])
+				|| ($provider['Type'] === 'template' && !in_array($providers[$parent]['Type'], ['core', 'template'], true))) {
+				throw new RuntimeException("Module-Elternmodul fehlt, ist ungueltig oder nicht unter require angegeben: $id");
 			}
-			$parts = explode('__', $package);
-			if (count($parts) !== 2 || in_array('', $parts, true)) {
-				throw new RuntimeException("Ungueltige Template-Ableitung: $id");
-			}
-			$parents = array_filter(array_keys($providers), static function ($candidate) use ($id, $vendor, $parts) {
-				[$parentVendor, $parentPackage] = explode('/', $candidate, 2);
-				$names = explode('__', $parentPackage);
-				return $candidate !== $id && $parentVendor === $vendor && end($names) === $parts[0];
-			});
-			if (count($parents) !== 1) {
-				throw new RuntimeException("Template-Elternmodul fehlt oder ist mehrdeutig: $id");
-			}
-			$provider['Parent'] = reset($parents);
+			$provider['Parent'] = $parent;
 		}
 		unset($provider);
 
@@ -52,7 +45,7 @@ class Template {
 			$chain = [];
 			for ($current = $id; $current !== null; $current = $providers[$current]['Parent']) {
 				if (in_array($current, $chain, true)) {
-					throw new RuntimeException("Zyklische Template-Vererbung: $id");
+					throw new RuntimeException("Zyklische Module-Vererbung: $id");
 				}
 				$chain[] = $current;
 			}
@@ -62,11 +55,15 @@ class Template {
 		unset($provider);
 		uasort($providers, fn ($a, $b) => $a['Depth'] <=> $b['Depth']);
 		$modules ??= $this->D['MODULE']['D'];
-		return array_filter($providers, static fn ($provider) => !array_filter($provider['Chain'], static fn ($id) => $providers[$id]['Type'] !== 'core' && (int)($modules[$id]['Active'] ?? 1) !== 1));
+		return $activeOnly ? array_filter($providers, static fn ($provider) => !array_filter($provider['Chain'], static fn ($id) => $providers[$id]['Type'] !== 'core' && (int)($modules[$id]['Active'] ?? 1) !== 1)) : $providers;
 	}
 
-	public function getThemes(string $provider, ?array $contributors = null): array {
-		$modules = $this->getThemeModules();
+	public function getThemeModules(?array $modules = null): array {
+		return array_filter($this->getModuleInheritance($modules), static fn ($module) => in_array($module['Type'], ['core', 'template'], true));
+	}
+
+	public function getThemes(string $provider, ?array $contributors = null, ?array $moduleRows = null): array {
+		$modules = $this->getThemeModules($moduleRows);
 		if (!isset($modules[$provider])) {
 			throw new RuntimeException("Unbekannter Theme-Anbieter: $provider");
 		}
@@ -120,6 +117,87 @@ class Template {
 		return $themes;
 	}
 
+	public function getThemeChoices(string $provider, ?array $moduleRows = null): array {
+		$modules = $this->getThemeModules($moduleRows);
+		if (!isset($modules[$provider])) {
+			throw new RuntimeException("Unbekannter Theme-Anbieter: $provider");
+		}
+		$choices = [];
+		foreach ($modules as $id => $module) {
+			if (!in_array($provider, $module['Chain'], true)) continue;
+			$themes = $this->getThemes($module['Chain'][0], $module['Chain'], $moduleRows);
+			foreach ($themes as $name => $theme) {
+				$directory = $module['Directory'] . '/system/template/theme/' . $name;
+				if (!in_array($directory, $theme['Directories'], true)) continue;
+				$choices["$id:$name"] = [
+					'Template' => $id, 'Name' => $name, 'Templates' => $module['Chain'],
+					'Theme' => $theme, 'Themes' => $themes,
+				];
+			}
+		}
+		return $choices;
+	}
+
+	public function getThemeOptions(string $provider): array {
+		$options = [];
+		foreach ($this->getThemeChoices($provider) as $key => $choice) {
+			$options[] = $key . '|' . $choice['Template'] . ' : ' . $choice['Name'];
+		}
+		return $options;
+	}
+
+	public function getThemeSelection(string $provider, ?array $moduleRows = null): array {
+		$choices = $this->getThemeChoices($provider, $moduleRows);
+		$selected = (string)($this->C['Setting']->get($provider, 'theme') ?? 'basic');
+		if (isset($choices[$selected])) return ['Key' => $selected] + $choices[$selected];
+		// Alte Theme-Namen bevorzugen das Elternlayout; eindeutige Child-Themes bleiben kompatibel.
+		if (!str_contains($selected, ':')) {
+			$key = "$provider:$selected";
+			if (isset($choices[$key])) return ['Key' => $key] + $choices[$key];
+			$matches = array_filter($choices, static fn ($choice) => $choice['Name'] === $selected);
+			if (count($matches) > 1) {
+				throw new RuntimeException("Mehrdeutige Theme-Auswahl fuer $provider: $selected");
+			}
+			if ($matches) {
+				$key = array_key_first($matches);
+				return ['Key' => $key] + $matches[$key];
+			}
+		}
+		// Nicht mehr verfuegbare Auswahlen fallen zurueck, nicht fehlerhafte Theme-Manifeste.
+		$name = str_contains($selected, ':') ? explode(':', $selected, 2)[1] : $selected;
+		$main = explode('__', $name, 2)[0];
+		$fallbackProvider = $provider;
+		if (str_contains($selected, ':')) {
+			$origin = explode(':', $selected, 2)[0];
+			$inheritance = $this->getModuleInheritance($moduleRows, false);
+			foreach (array_reverse($inheritance[$origin]['Chain'] ?? []) as $id) {
+				if ($id !== $origin && isset($choices["$id:$main"]) && in_array($provider, $inheritance[$id]['Chain'], true)) {
+					$fallbackProvider = $id;
+					break;
+				}
+			}
+		}
+		$key = "$fallbackProvider:$main";
+		if (!isset($choices[$key]) || $choices[$key]['Theme']['Parent'] !== null) {
+			$key = "$fallbackProvider:basic";
+		}
+		if (!isset($choices[$key])) {
+			$mainThemes = array_filter($choices, static fn ($choice) => $choice['Template'] === $fallbackProvider && $choice['Theme']['Parent'] === null);
+			if (!$mainThemes) {
+				$mainThemes = array_filter($choices, static fn ($choice) => $choice['Template'] === $provider && $choice['Theme']['Parent'] === null);
+			}
+			$key = array_key_first($mainThemes);
+		}
+		if ($key === null) {
+			throw new RuntimeException("Kein gueltiges Basis-Theme fuer $fallbackProvider");
+		}
+		if (!isset($this->themeFallbacks["$provider:$selected"])) {
+			error_log("Theme-Auswahl $provider / $selected nicht verfuegbar; verwende $key.");
+			$this->themeFallbacks["$provider:$selected"] = true;
+		}
+		return ['Key' => $key] + $choices[$key];
+	}
+
 	public function resolveTheme(array $tpl): array {
 		if (!$tpl) {
 			return [];
@@ -128,14 +206,12 @@ class Template {
 		$root = pathinfo($tpl[0], PATHINFO_FILENAME);
 		$branch = null;
 		$owners = [];
-		$active = [];
 		foreach ($tpl as $file) {
 			$file = str_replace('\\', '/', $file);
 			foreach ($modules as $id => $module) {
 				if (!str_starts_with($file, $module['Directory'] . '/system/template/')) {
 					continue;
 				}
-				$active[$id] = true;
 				$parts = explode('__', pathinfo($file, PATHINFO_FILENAME));
 				if (count($parts) === 2 && $parts[0] === $root && $parts[1] !== $root) {
 					if ($branch !== null && $branch !== $parts[1]) {
@@ -155,32 +231,18 @@ class Template {
 			throw new RuntimeException("Mehrdeutiger Theme-Anbieter fuer den Zweig $branch");
 		}
 		$provider = reset($roots);
-		$contributors = array_keys(array_filter($modules, fn ($module, $id) => isset($active[$id]) && in_array($provider, $module['Chain'], true), ARRAY_FILTER_USE_BOTH));
-		$last = $provider;
-		foreach ($contributors as $id) {
-			if (!in_array($last, $modules[$id]['Chain'], true)) {
-				throw new RuntimeException('Aktive Template-Erweiterungen muessen eine eindeutige Vererbungskette bilden.');
-			}
-			foreach ($modules[$id]['Chain'] as $parent) {
-				if (!isset($active[$parent])) {
-					throw new RuntimeException("Template-Elternmodul fehlt in der aktiven Kette: $parent");
-				}
-			}
-			$last = $id;
-		}
-		$themes = $this->getThemes($provider, $contributors);
-		$selected = (string)($this->C['Setting']->get($provider, 'theme') ?? 'basic');
-		if (!isset($themes[$selected])) {
-			throw new RuntimeException("Unbekanntes Theme fuer $provider: $selected");
-		}
-		$main = $themes[$selected]['Root'];
+		$selection = $this->getThemeSelection($provider);
+		$themes = $selection['Themes'];
+		$selected = $selection['Name'];
+		$main = $selection['Theme']['Root'];
 		$variant = $selected === $main ? '' : $selected;
 		$layers = [];
 		foreach ($themes[$selected]['Chain'] as $name) {
 			array_push($layers, ...$themes[$name]['Directories']);
 		}
 		return [
-			'Provider' => $provider, 'Branch' => $branch, 'Main' => $main, 'Variant' => $variant,
+			'Provider' => $provider, 'Template' => $selection['Template'], 'Selection' => $selection['Key'],
+			'Branch' => $branch, 'Main' => $main, 'Variant' => $variant,
 			'Chain' => $themes[$selected]['Chain'], 'Layers' => $layers,
 			'CustomCss' => (string)($this->C['Setting']->get($provider, "theme_css_$main") ?? ''),
 		];
@@ -510,9 +572,19 @@ class Template {
 	{
 		// Bibliotheken (type "library", z.B. phploader/cdata, symfony/*) enthalten keine Templates und werden nicht durchsucht
 		$providers = $this->getThemeModules($modules);
+		$inheritance = $this->getModuleInheritance($modules);
+		$selectedTemplates = [];
+		foreach ($providers as $id => $provider) {
+			if ($provider['Parent'] !== null) continue;
+			// Layouts ohne Themes behalten die bestehende strukturelle Vererbung.
+			if (!$this->getThemeChoices($id, $modules)) continue;
+			$selectedTemplates[$id] = $this->getThemeSelection($id, $modules)['Templates'];
+		}
 		$modules = array_filter($modules, static fn ($m, $id) => ($m['INFO']['Type'] ?? $m['Type'] ?? 'module') !== 'library'
+			&& isset($inheritance[$id])
 			&& (($m['INFO']['Type'] ?? $m['Type'] ?? '') === 'core' || (int)($m['Active'] ?? 1) === 1)
-			&& (($m['INFO']['Type'] ?? $m['Type'] ?? '') !== 'template' || isset($providers[$id])), ARRAY_FILTER_USE_BOTH);
+			&& (($m['INFO']['Type'] ?? $m['Type'] ?? '') !== 'template' || (isset($providers[$id])
+				&& (!isset($selectedTemplates[$providers[$id]['Chain'][0]]) || in_array($id, $selectedTemplates[$providers[$id]['Chain'][0]], true)))), ARRAY_FILTER_USE_BOTH);
 
 		// Modul muss existieren
 		if (!isset($modules[$activeModuleId])) {
@@ -526,9 +598,8 @@ class Template {
 		// Die Kette wird am Ende umgedreht, dadurch ergibt sich core -> template -> module.
 		$rank = ['core' => 0, 'template' => 1, 'module' => 2];
 		$typeOf = fn(array $m): string => $m['INFO']['Type'] ?? $m['Type'] ?? 'module';
-		$providers = $this->getThemeModules($modules);
 		$depth = [];
-		foreach ($providers as $provider) {
+		foreach ($inheritance as $provider) {
 			$depth[$provider['Directory']] = $provider['Depth'];
 		}
 		$depthOf = fn (array $m): int => $depth[str_replace('\\', '/', $m['INFO']['ModulDir'])] ?? 0;

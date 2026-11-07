@@ -153,7 +153,12 @@ class ModuleListTest extends TestCase {
 		$fs = new Filesystem();
 		foreach (['core' => 'core', 'frontend' => 'template', 'frontend__child' => 'template', 'shop' => 'module', 'page' => 'module'] as $name => $type) {
 			$dir = "$root/system/vendor/test/$name";
-			$fs->dumpFile("$dir/composer.json", json_encode(['type' => $type]));
+			$meta = ['type' => $type];
+			if ($name === 'frontend__child') {
+				$meta['extra']['module-parent'] = 'test/frontend';
+				$meta['require']['test/frontend'] = '*';
+			}
+			$fs->dumpFile("$dir/composer.json", json_encode($meta));
 			$fs->dumpFile("$dir/init.php", '<?php $GLOBALS["loaded"][] = ' . var_export($name, true) . ';');
 			$fs->dumpFile("$dir/cli.php", '<?php $GLOBALS["cliLoaded"][] = ' . var_export($name, true) . ';');
 		}

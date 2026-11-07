@@ -6,7 +6,15 @@ Die bisherige Funktion liegt als Methode in
 `getExtends()` gibt es nicht mehr. Grundalgorithmus und Rueckgabeformat bleiben erhalten.
 Seit der Theme-Integration wird der Modultyp aus `INFO.Type` gelesen
 (bisherige flache Metadaten bleiben unterstuetzt). Bibliotheken werden ausgeschlossen;
-Template-Modul-Ableitungen werden anhand ihrer Elternbeziehung einsortiert.
+Modul-Ableitungen werden ausschliesslich anhand von `extra.module-parent`
+in `composer.json` einsortiert; der Elternname muss auch unter `require` stehen.
+`__` in Paketnamen wird nicht mehr ausgewertet. `__` in TPL-Dateinamen und
+Theme-Ordnern bleibt unveraendert.
+Bei Anbietern mit Themes bestimmt die gewaehlte Herkunft (`<template-id>:<theme>`)
+die zugelassenen Template-Module: nur diese Ableitung und ihre Eltern werden
+nach TPL/PHP durchsucht. Aktivierte Geschwister bleiben ausserhalb der Kette.
+Theme-only-Children erben die vorhandenen Elternvorlagen. Layouts ohne Themes
+behalten die bisherige strukturelle Vererbung.
 Die bisherige Root-Auswahl ist nicht eingeschraenkt.
 Der weitere Ausbau ist im [Template-/Theme-Konzept](Konzept_Template_Theme.md)
 beschrieben.

@@ -44,6 +44,7 @@ class ThemeTest extends TestCase {
 			$this->fs->dumpFile("{$this->tmp}/$module/system/template/$name.tpl", $content);
 		}
 		$this->theme('core', 'basic', ['color_scheme' => 'light', 'css' => ['css/base.css']], ['css/base.css' => 'body { color: black; }']);
+		$this->theme('other', 'basic', [], []);
 		$this->theme('core', 'basic__dark_mode', ['color_scheme' => 'dark', 'css' => ['css/dark.css']], ['css/dark.css' => 'body { color: white; }']);
 		$this->theme('frontend', 'basic', ['color_scheme' => 'light', 'css' => ['css/base.css'], 'head_js' => ['js/base.js']], [
 			'css/base.css' => 'body { background: url(../images/background.png); }',
@@ -71,6 +72,17 @@ class ThemeTest extends TestCase {
 		$dir = "{$this->tmp}/$name";
 		$this->fs->mkdir("$dir/system/template");
 		$this->D['MODULE']['D']["test/$name"] = ['INFO' => ['Type' => $type, 'ModulDir' => $dir]];
+		$parent = [
+			'frontend__addon' => 'test/frontend', 'addon__customer' => 'test/frontend__addon',
+			'frontend__sibling' => 'test/frontend', 'frontend__second' => 'test/frontend',
+			'missing__child' => 'test/missing',
+		][$name] ?? null;
+		$meta = ['name' => "test/$name", 'type' => $type];
+		if ($parent !== null) {
+			$meta['extra']['module-parent'] = $parent;
+			$meta['require'][$parent] = '*';
+		}
+		$this->fs->dumpFile("$dir/composer.json", json_encode($meta, JSON_THROW_ON_ERROR));
 		if (!in_array($type, ['core', 'template'], true)) {
 			return;
 		}
@@ -112,7 +124,7 @@ class ThemeTest extends TestCase {
 		$frontend = $this->resolve();
 		$this->assertSame('test/frontend', $frontend['Provider']);
 		$this->assertSame('frontend', $frontend['Branch']);
-		$this->assertCount(2, $frontend['Layers']);
+		$this->assertCount(1, $frontend['Layers']);
 		$admin = $this->resolve('admin__article');
 		$this->assertSame('test/core', $admin['Provider']);
 		$this->assertSame('admin', $admin['Branch']);
@@ -122,7 +134,8 @@ class ThemeTest extends TestCase {
 	}
 
 	public function testOnlySelectedAncestorsAreLoadedInLevelThenProviderOrder(): void {
-		$this->C['Setting']->set('test/frontend', 'theme', 'dark_mode__contrast');
+		$this->theme('frontend__addon', 'dark_mode__contrast', [], []);
+		$this->C['Setting']->set('test/frontend', 'theme', 'test/frontend__addon:dark_mode__contrast');
 		$theme = $this->resolve();
 		$this->assertSame(['basic', 'basic__dark_mode', 'dark_mode__contrast'], $theme['Chain']);
 		$this->assertSame([
@@ -131,6 +144,7 @@ class ThemeTest extends TestCase {
 			"{$this->tmp}/frontend/system/template/theme/basic__dark_mode",
 			"{$this->tmp}/frontend__addon/system/template/theme/basic__dark_mode",
 			"{$this->tmp}/frontend/system/template/theme/dark_mode__contrast",
+			"{$this->tmp}/frontend__addon/system/template/theme/dark_mode__contrast",
 		], $theme['Layers']);
 		$result = $this->publish($theme);
 		$this->assertSame('dark', $result['ColorScheme']);
@@ -157,6 +171,7 @@ class ThemeTest extends TestCase {
 	}
 
 	public function testPublicationPreservesRelativePathsOverridesFilesAndReusesItsHash(): void {
+		$this->C['Setting']->set('test/frontend', 'theme', 'test/frontend__addon:basic');
 		$this->fs->dumpFile("{$this->tmp}/frontend__addon/system/template/theme/basic/css/base.css", 'body { color: green; }');
 		$result = $this->publish($this->resolve());
 		$path = $this->diskPath($result['Assets']['css'][0]['Url']);
@@ -219,11 +234,65 @@ class ThemeTest extends TestCase {
 		$this->publish($this->resolve());
 	}
 
-	public function testUnknownThemeSelectionIsRejected(): void {
+	public function testUnavailableThemeSelectionFallsBackToParentMainTheme(): void {
 		$this->C['Setting']->set('test/frontend', 'theme', 'missing');
-		$this->expectException(RuntimeException::class);
-		$this->expectExceptionMessage('Unbekanntes Theme');
-		$this->resolve();
+		$this->assertSame('test/frontend:basic', $this->resolve()['Selection']);
+	}
+
+	public function testThemeOriginSelectsTplPhpAndAssetsTogether(): void {
+		$php = "{$this->tmp}/frontend__addon/system/frontend__frontend.php";
+		$this->fs->dumpFile($php, '<?php $R["addon"] = true;');
+		$this->assertContains('test/frontend__addon:basic|test/frontend__addon : basic', $this->template->getThemeOptions('test/frontend'));
+		$this->assertContains('test/frontend:basic|test/frontend : basic', $this->template->getThemeOptions('test/frontend'));
+		$parent = $this->template->getExtends($this->D['MODULE']['D'], 'test/page', 'frontend__article');
+		$this->assertNotContains($php, $parent['php']);
+		$this->assertStringNotContainsString('frontend__addon', $parent['extends']);
+		$this->C['Setting']->set('test/frontend', 'theme', 'test/frontend__addon:basic');
+		$child = $this->template->getExtends($this->D['MODULE']['D'], 'test/page', 'frontend__article');
+		$this->assertContains($php, $child['php']);
+		$this->assertStringContainsString('frontend__addon', $child['extends']);
+		$theme = $this->template->resolveTheme($child['tpl']);
+		$this->assertSame('test/frontend__addon', $theme['Template']);
+		$this->assertCount(2, $theme['Layers']);
+	}
+
+	public function testThemeOnlyChildAndIndependentSiblingThemes(): void {
+		$this->fs->remove("{$this->tmp}/frontend__addon/system/template/frontend__frontend.tpl");
+		$this->theme('frontend__addon', 'basic__photo', [], []);
+		$this->addModule('frontend__sibling', 'template');
+		$this->theme('frontend__sibling', 'basic__photo', ['css' => ['css/sibling.css']], ['css/sibling.css' => 'body {}']);
+		$this->fs->dumpFile("{$this->tmp}/frontend__sibling/system/template/frontend__frontend.tpl", '{block name="body"}sibling{/block}');
+		$this->C['Setting']->set('test/frontend', 'theme', 'test/frontend__addon:basic__photo');
+		$chain = $this->template->getExtends($this->D['MODULE']['D'], 'test/page', 'frontend__article');
+		$this->assertStringNotContainsString('frontend__sibling', $chain['extends']);
+		$theme = $this->template->resolveTheme($chain['tpl']);
+		$this->assertSame('test/frontend__addon', $theme['Template']);
+		$this->assertSame(['basic', 'basic__photo'], $theme['Chain']);
+		$this->assertStringNotContainsString('frontend__sibling', implode('|', $theme['Layers']));
+		$this->C['Setting']->set('test/frontend', 'theme', 'test/frontend__sibling:basic__photo');
+		$this->assertSame('test/frontend__sibling', $this->resolve()['Template']);
+	}
+
+	public function testDisabledOrRemovedChildFallsBackWithoutChangingStoredSelection(): void {
+		$this->theme('frontend__addon', 'basic__photo', [], []);
+		$key = 'test/frontend__addon:basic__photo';
+		$this->C['Setting']->set('test/frontend', 'theme', $key);
+		$this->D['MODULE']['D']['test/frontend__addon']['Active'] = 0;
+		$this->assertSame('test/frontend:basic', $this->resolve()['Selection']);
+		$this->assertArrayNotHasKey($key, $this->template->getThemeChoices('test/frontend'));
+		$this->assertSame($key, $this->C['Setting']->get('test/frontend', 'theme'));
+		unset($this->D['MODULE']['D']['test/frontend__addon']);
+		$this->assertSame('test/frontend:basic', $this->resolve()['Selection']);
+	}
+
+	public function testNestedChildFallsBackToAvailableImmediateParent(): void {
+		$this->addModule('addon__customer', 'template');
+		$this->theme('addon__customer', 'basic__photo', [], []);
+		$this->C['Setting']->set('test/frontend', 'theme', 'test/addon__customer:basic__photo');
+		$this->D['MODULE']['D']['test/addon__customer']['Active'] = 0;
+		$this->assertSame('test/frontend__addon:basic', $this->resolve()['Selection']);
+		unset($this->D['MODULE']['D']['test/addon__customer']);
+		$this->assertSame('test/frontend:basic', $this->resolve()['Selection']);
 	}
 
 	public function testThemeCyclesAreRejected(): void {
@@ -245,6 +314,7 @@ class ThemeTest extends TestCase {
 		$this->addModule('addon__customer', 'template');
 		$this->fs->dumpFile("{$this->tmp}/addon__customer/system/template/frontend__frontend.tpl", '{block name="body" append}customer{/block}');
 		$this->theme('addon__customer', 'basic', ['css' => ['css/customer.css']], ['css/customer.css' => 'body { padding: 0; }']);
+		$this->C['Setting']->set('test/frontend', 'theme', 'test/addon__customer:basic');
 		$this->D['MODULE']['D'] = array_reverse($this->D['MODULE']['D'], true);
 		$chain = $this->template->getExtends($this->D['MODULE']['D'], 'test/page', 'frontend__article');
 		$addon = array_search("{$this->tmp}/frontend__addon/system/template/frontend__frontend.tpl", $chain['tpl'], true);
@@ -260,8 +330,73 @@ class ThemeTest extends TestCase {
 	public function testMissingTemplateParentsAreRejected(): void {
 		$this->addModule('missing__child', 'template');
 		$this->expectException(RuntimeException::class);
-		$this->expectExceptionMessage('Template-Elternmodul fehlt');
+		$this->expectExceptionMessage('Module-Elternmodul fehlt');
 		$this->template->getThemeModules();
+	}
+
+	public function testCrossVendorTemplateParentComesFromExplicitComposerMetadata(): void {
+		$dir = "{$this->tmp}/external";
+		$this->fs->dumpFile("$dir/composer.json", json_encode([
+			'name' => 'nirgendheim/frontend__focusbox', 'type' => 'template',
+			'require' => ['test/frontend' => '>=0.1 <1.0'],
+			'extra' => ['module-parent' => 'test/frontend'],
+		], JSON_THROW_ON_ERROR));
+		$this->D['MODULE']['D']['nirgendheim/frontend__focusbox'] = ['INFO' => ['Type' => 'template', 'ModulDir' => $dir]];
+		$this->fs->dumpFile("$dir/system/template/theme/basic__photo/theme.json", '{}');
+		$this->fs->dumpFile("$dir/system/template/frontend__frontend.tpl", '{block name="body" append}external{/block}');
+		$providers = $this->template->getThemeModules();
+		$this->assertSame('test/frontend', $providers['nirgendheim/frontend__focusbox']['Parent']);
+		$this->C['Setting']->set('test/frontend', 'theme', 'nirgendheim/frontend__focusbox:basic__photo');
+		$this->assertSame('nirgendheim/frontend__focusbox', $this->resolve()['Template']);
+		$chain = $this->template->getExtends($this->D['MODULE']['D'], 'test/page', 'frontend__article');
+		$this->assertContains("$dir/system/template/frontend__frontend.tpl", $chain['tpl']);
+		$this->D['MODULE']['D']['test/frontend']['Active'] = 0;
+		$this->assertArrayNotHasKey('nirgendheim/frontend__focusbox', $this->template->getThemeModules());
+	}
+
+	public function testPackageNameNoLongerDefinesParentAndRequireAloneDoesNotEither(): void {
+		$this->fs->dumpFile("{$this->tmp}/frontend__addon/composer.json", json_encode([
+			'require' => ['test/frontend' => '*'],
+		]));
+		$this->assertNull($this->template->getThemeModules()['test/frontend__addon']['Parent']);
+	}
+
+	public function testModuleParentMustBeRequiredAndCyclesAreRejected(): void {
+		$file = "{$this->tmp}/frontend__addon/composer.json";
+		$this->fs->dumpFile($file, json_encode(['extra' => ['module-parent' => 'test/frontend']]));
+		try {
+			$this->template->getModuleInheritance();
+			$this->fail('Missing require must be rejected.');
+		} catch (RuntimeException $e) {
+			$this->assertStringContainsString('require', $e->getMessage());
+		}
+		$this->fs->dumpFile($file, json_encode([
+			'extra' => ['module-parent' => 'test/frontend__addon'],
+			'require' => ['test/frontend__addon' => '*'],
+		]));
+		$this->expectException(RuntimeException::class);
+		$this->expectExceptionMessage('Zyklische Module-Vererbung');
+		$this->template->getModuleInheritance();
+	}
+
+	public function testNormalModuleParentControlsOrderWithoutInheritingPatterns(): void {
+		$this->addModule('extension', 'module');
+		$this->fs->dumpFile("{$this->tmp}/extension/composer.json", json_encode([
+			'extra' => ['module-parent' => 'test/page'], 'require' => ['test/page' => '*'],
+		]));
+		$this->fs->dumpFile("{$this->tmp}/page/system/template/frontend__frontend.tpl", '');
+		$this->fs->dumpFile("{$this->tmp}/extension/system/template/frontend__frontend.tpl", '');
+		$this->fs->dumpFile("{$this->tmp}/extension/system/frontend__frontend.php", '<?php');
+		$chain = $this->template->getExtends($this->D['MODULE']['D'], 'test/page', 'frontend__article');
+		$parent = array_search("{$this->tmp}/page/system/template/frontend__frontend.tpl", $chain['tpl'], true);
+		$child = array_search("{$this->tmp}/extension/system/template/frontend__frontend.tpl", $chain['tpl'], true);
+		$this->assertIsInt($parent);
+		$this->assertIsInt($child);
+		$this->assertLessThan($child, $parent);
+		$this->assertContains("{$this->tmp}/extension/system/frontend__frontend.php", $chain['php']);
+		$this->assertArrayNotHasKey('test/extension', $this->template->getThemeModules());
+		$this->D['MODULE']['D']['test/page']['Active'] = 0;
+		$this->assertArrayNotHasKey('test/extension', $this->template->getModuleInheritance());
 	}
 
 	public function testIndependentLayoutProvidersAreRejected(): void {
@@ -271,12 +406,12 @@ class ThemeTest extends TestCase {
 		$this->resolve();
 	}
 
-	public function testSiblingExtensionsRequireAnExplicitChain(): void {
+	public function testUnselectedSiblingExtensionsDoNotEnterLayoutChain(): void {
 		$this->addModule('frontend__second', 'template');
 		$this->fs->dumpFile("{$this->tmp}/frontend__second/system/template/frontend__frontend.tpl", '');
-		$this->expectException(RuntimeException::class);
-		$this->expectExceptionMessage('eindeutige Vererbungskette');
-		$this->resolve();
+		$this->assertSame('test/frontend', $this->resolve()['Template']);
+		$chain = $this->template->getExtends($this->D['MODULE']['D'], 'test/page', 'frontend__article');
+		$this->assertStringNotContainsString('frontend__second', $chain['extends']);
 	}
 
 	public function testOtherBranchesAndBackendExtractionNeedNoSpecialCase(): void {
@@ -335,7 +470,7 @@ class ThemeTest extends TestCase {
 			}
 		}
 		$this->assertSame([], $R['SettingError']);
-		$this->assertSame('basic__dark_mode', $C['Setting']->get('test/frontend', 'theme'));
+		$this->assertSame('test/frontend:basic__dark_mode', $C['Setting']->get('test/frontend', 'theme'));
 		$this->assertSame('body { color: red; }', $C['Setting']->get('test/frontend', 'theme_css_basic'));
 		$this->assertSame('basic', $C['Setting']->get('test/core', 'theme'));
 		$this->assertNull($C['Setting']->get('test/frontend', 'not_declared'));
@@ -416,9 +551,9 @@ class ThemeTest extends TestCase {
 		$save(['theme' => ['Value' => 'basic__dark_mode']], 'GET');
 		$this->assertSame('basic', $this->C['Setting']->get('test/frontend', 'theme'));
 		$save(['theme' => ['Value' => 'basic__dark_mode']]);
-		$this->assertSame('basic__dark_mode', $this->C['Setting']->get('test/frontend', 'theme'));
+		$this->assertSame('test/frontend:basic__dark_mode', $this->C['Setting']->get('test/frontend', 'theme'));
 		$save(['theme' => ['Value' => '']]);
-		$this->assertSame('basic__dark_mode', $this->C['Setting']->get('test/frontend', 'theme'));
+		$this->assertSame('test/frontend:basic__dark_mode', $this->C['Setting']->get('test/frontend', 'theme'));
 		$this->C['Setting']->set('test/frontend', 'theme_variant', 'basic__white');
 		$this->assertSame('basic__white', $this->C['Setting']->get('test/frontend', 'theme'));
 		$this->assertSame('basic', $this->resolve()['Main']);
@@ -428,6 +563,10 @@ class ThemeTest extends TestCase {
 		$this->assertArrayNotHasKey('theme_variant', $data['SETTING']['D'] ?? []);
 		$this->assertArrayNotHasKey('theme', $data['SETTING']['D'] ?? []);
 		$this->assertSame('basic', $this->C['Setting']->get('test/frontend', 'theme'));
+		$result = $save(['theme' => ['Value' => 'test/frontend__addon:basic__dark_mode']]);
+		$this->assertSame([], $result['SettingError']);
+		$this->assertSame('test/frontend__addon:basic__dark_mode', $this->C['Setting']->get('test/frontend', 'theme'));
+		$this->assertSame('test/frontend__addon', $this->resolve()['Template']);
 	}
 
 	public function testConcurrentRequestsPublishOneCompleteVersion(): void {
@@ -473,7 +612,7 @@ class ThemeTest extends TestCase {
 			'js/base.js' => "/* removable comment */\nfunction themeTest(value) {\n    return value + 1;\n}\n",
 			'js/ready.min.js' => 'window.ready=themeTest(1);',
 		]);
-		$this->C['Setting']->set('test/frontend', 'theme', 'basic__dark_mode');
+		$this->C['Setting']->set('test/frontend', 'theme', 'test/frontend__addon:basic__dark_mode');
 		$this->C['Setting']->set('test/frontend', 'theme_css_basic', 'body { color: purple; }');
 		$hashes = [];
 		for ($mask = 0; $mask < 8; $mask++) {
@@ -646,7 +785,7 @@ class ThemeTest extends TestCase {
 		$html = $smarty->fetch($chain['extends']);
 		$this->assertStringContainsString('data-bs-theme="dark"', $html);
 		$this->assertStringContainsString('/application/file/theme/', $html);
-		$this->assertStringContainsString('frontendaddonarticle', $html);
+		$this->assertStringContainsString('frontendarticle', $html);
 	}
 
 	#[\PHPUnit\Framework\Attributes\WithoutErrorHandler]
@@ -684,7 +823,7 @@ class ThemeTest extends TestCase {
 			}
 			$C['Setting']->set('fremeo/frontend', 'theme_variant', 'basic__dark_mode');
 			include __DIR__ . '/../system/admin__setting.list.php';
-			$this->assertSame('basic__dark_mode', $R['SETTING_VIEW']['Template']['Children']['Frontend']['Items'][0]['Value']);
+			$this->assertSame('fremeo/frontend:basic__dark_mode', $R['SETTING_VIEW']['Template']['Children']['Frontend']['Items'][0]['Value']);
 			$smarty = new \Smarty();
 			$smarty->setCompileDir("{$this->tmp}/real/compile");
 			$smarty->addTemplateDir(__DIR__ . '/../system/template');
@@ -741,8 +880,8 @@ class ThemeTest extends TestCase {
 					foreach ($selects as $select) {
 						$this->assertStringNotContainsString('>---</option>', $select[2]);
 						$this->assertSame(0, substr_count($select[2], 'value=""'));
-						$this->assertStringContainsString('value="basic"', $select[2]);
-						$this->assertStringContainsString('value="basic__dark_mode"', $select[2]);
+						$this->assertMatchesRegularExpression('/value="fremeo\/(?:core|frontend):basic"/', $select[2]);
+						$this->assertMatchesRegularExpression('/value="fremeo\/(?:core|frontend):basic__dark_mode"/', $select[2]);
 					}
 					$this->assertStringContainsString('basic__dark_mode', $html);
 					$this->assertStringContainsString('css/admin.css', $html);

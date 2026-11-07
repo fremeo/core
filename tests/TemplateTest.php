@@ -109,6 +109,9 @@ class TemplateTest extends TestCase {
 		$chain = $this->template->getExtends($this->modules, 'test/page', 'frontend__article');
 		$this->assertNotContains("{$this->tmp}/frontend/system/template/index__frontend.tpl", $chain['tpl']);
 		$this->modules['test/frontend__child'] = ['Active' => 1, 'INFO' => ['Type' => 'template', 'ModulDir' => "{$this->tmp}/child"]];
+		(new Filesystem())->dumpFile("{$this->tmp}/child/composer.json", json_encode([
+			'extra' => ['module-parent' => 'test/frontend'], 'require' => ['test/frontend' => '*'],
+		]));
 		$this->assertArrayNotHasKey('test/frontend__child', $this->template->getThemeModules($this->modules));
 		$this->modules['test/core']['Active'] = 0;
 		$this->assertArrayHasKey('test/core', $this->template->getThemeModules($this->modules));
@@ -228,6 +231,9 @@ class TemplateTest extends TestCase {
 	}
 
 	public function testRealCoreAndFrontendModulePathsResolveWithoutChangingTheirMetadata(): void {
+		$this->C->set('Setting', new class {
+			public function get(string $module, string $key): string { return 'basic'; }
+		});
 		$vendor = str_replace('\\', '/', dirname(__DIR__, 3));
 		$modules = [];
 		foreach (glob("$vendor/*/*", GLOB_ONLYDIR) as $dir) {

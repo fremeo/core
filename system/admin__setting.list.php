@@ -35,11 +35,16 @@ foreach ($D['MODULE']['D'] as $kMOD => $MOD) {
 		}
 		$valid = true;
 		if (isset($aSetting['theme'], $posted['theme'])) {
-			$themes = $C['Template']->getThemes($kMOD);
-			$valid = isset($themes[(string)$posted['theme']['Value']]);
+			$themes = $C['Template']->getThemeChoices($kMOD);
+			$themeKey = (string)$posted['theme']['Value'];
+			if (!str_contains($themeKey, ':')) $themeKey = "$kMOD:$themeKey";
+			$valid = isset($themes[$themeKey]);
 			if (!$valid) {
 				$R['SettingError'][] = "Theme-Auswahl fuer $kMOD wurde nicht gespeichert: Unbekanntes Theme.";
 			} else {
+				$defaultTheme = (string)($aSetting['theme']['Value'] ?? 'basic');
+				if (!str_contains($defaultTheme, ':')) $defaultTheme = "$kMOD:$defaultTheme";
+				$update['SETTING']['D']['theme'] = $themeKey === $defaultTheme ? '__DELETE__' : ['Value' => $themeKey];
 				$update['SETTING']['D']['theme_variant'] = '__DELETE__';
 			}
 		}
@@ -55,7 +60,7 @@ foreach ($D['MODULE']['D'] as $kMOD => $MOD) {
 		'Module' => $kMOD,
 		'Key' => $key,
 		'Meta' => array_map(fn ($v) => $v instanceof Closure ? $v($C) : $v, $aSetting[$key]), # Closure in der Config (z.B. 'Options' => fn ($C) => [...]) = dynamischer Wert
-		'Value' => $key === 'theme' ? $C['Setting']->get($kMOD, $key) : ($D['MODULE']['D'][$kMOD]['SETTING']['D'][$key]['Value'] ?? ($aSetting[$key]['Value'] ?? null)),
+		'Value' => $key === 'theme' ? $C['Template']->getThemeSelection($kMOD)['Key'] : ($D['MODULE']['D'][$kMOD]['SETTING']['D'][$key]['Value'] ?? ($aSetting[$key]['Value'] ?? null)),
 	];
 
 	$assigned = [];

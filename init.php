@@ -96,9 +96,9 @@ foreach ($D['MODULE']['D'] as $_id => &$_module) {
 	$_module['Active'] = $_module['INFO']['Type'] === 'core' ? 1 : (int)($_activeModules['MODULE']['D'][$_id]['Active'] ?? 1);
 }
 unset($_module, $_activeModules, $_activeFilter);
-$_themeModules = $C['Template']->getThemeModules();
+$_themeModules = $C['Template']->getModuleInheritance();
 foreach ($D['MODULE']['D'] as $_id => &$_module) {
-	if ($_module['INFO']['Type'] === 'template' && !isset($_themeModules[$_id])) $_module['Active'] = 0;
+	if (in_array($_module['INFO']['Type'], ['template', 'module'], true) && !isset($_themeModules[$_id])) $_module['Active'] = 0;
 }
 unset($_module, $_themeModules);
 

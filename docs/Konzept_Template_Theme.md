@@ -11,6 +11,10 @@ Vererbung, Anbieter und Theme-Kette und veroeffentlicht lokale Assets.
 Core und Frontend besitzen jeweils `basic` und die auswaehlbare Ableitung
 `basic__dark_mode`. Die Administration bietet eine gemeinsame Theme-Auswahl und Custom CSS.
 CSS-/JS-Minimierung und CSS-Buendelung sind getrennt schaltbar.
+Die gemeinsame Theme-Auswahl enthaelt die Template-Herkunft und bestimmt
+die aktive TPL-/PHP- und Asset-Kette zusammen.
+Die Auswahl wird vor den Seiten-PHP-Dateien aufgeloest und fuer diesen Request
+beibehalten; gespeicherte Theme-Aenderungen gelten beim naechsten Seitenaufruf.
 Die Besucherwahl ist noch nicht implementiert.
 
 Ziel ist ein allgemeiner Mechanismus fuer beliebige Template-Zweige, vererbbare
@@ -86,25 +90,32 @@ braucht dafuer keine neue Backend-Sonderregel.
 
 ## 4. Template-Erweiterungen
 
-Nur Erweiterungen, die zur aufgeloesten aktiven Template-Vererbung gehoeren, liefern
-Theme-Beitraege. Die blosse Installation eines unabhaengigen Template-Moduls reicht
-nicht aus.
+Aktivierte Erweiterungen stellen ihre eigenen Theme-Ordner zur Auswahl.
+Erst die gewaehlte Kombination aus Template-Herkunft und Theme bestimmt, welche
+Erweiterung und deren Eltern TPL-/PHP-Dateien und Theme-Beitraege liefern.
+Die blosse Aktivierung eines Child-Templates veraendert kein Layout.
 
 Die Reihenfolge folgt der Template-Vererbung: Eltern-Template vor Kind-Template.
 Gleichnamige Theme-Ordner werden nur innerhalb dieser Kette zusammengefuehrt.
 
-Verbindliche Namenskonvention fuer Module mit Typ `template`:
-`<parent>__<child>`, beispielsweise `fremeo/frontend__shop`. Weitere Ableitungen
-koennen `fremeo/shop__customer` heissen. Der Elternname bezeichnet den letzten
-Namensbestandteil eines Anbieters desselben Herstellers. Er muss eindeutig sein.
+Modul-Eltern werden ausschliesslich in `composer.json` deklariert:
+`"extra": {"module-parent": "fremeo/frontend"}`.
+Das Elternpaket muss auch unter `require` stehen. Beispielsweise leitet
+`nirgendheim/frontend-focusbox` so herstelleruebergreifend vom Frontend ab.
+Paketnamen besitzen keine Vererbungsbedeutung mehr; es gibt keinen Legacy-Fallback
+fuer `__` in Modulnamen. Fehlende Eltern, fehlendes `require`, ungueltige
+Template-Elterntypen und Zyklen werden explizit abgelehnt.
+Die Metadaten gelten auch fuer normale Funktionsmodule: Elternreihenfolge und
+Verfuegbarkeit folgen `module-parent`, die bestehende TPL-/Seiten-PHP-Suche
+bleibt erhalten. Dienste und globale Patterns werden nicht neu vererbt.
 Ein normales Funktionsmodul `fremeo/shop` wird dabei nicht als Theme-Anbieter
 beruecksichtigt.
 
-Die Modul-Ableitung wird geprueft und in der TPL-/PHP-Vererbung in Elternreihenfolge
-verarbeitet. Theme-Beitraege werden nur fuer Anbieter aufgenommen, die tatsaechlich
-in der aktuellen TPL-Kette vorkommen. Die Namen allein aktivieren keinen Beitrag.
-Zwei gleichzeitig beitragende Geschwister-Erweiterungen werden nicht willkuerlich
-sortiert: Wenn beide erforderlich sind, muessen sie eine eindeutige Kette bilden.
+Die gewaehlte Modul-Ableitung wird in der TPL-/PHP-Vererbung in Elternreihenfolge
+verarbeitet. Geschwister sind getrennte Auswahlmoeglichkeiten und werden nicht
+zusammen geladen. Ein Child darf ausschliesslich Themes liefern, ohne eigene
+TPL-/PHP-Dateien: das Elternlayout wird dann unveraendert geerbt, waehrend die
+Assets aus der gewaehlten Template-Kette zusammengefuehrt werden.
 
 ## 5. Theme-Verzeichnisse und Ableitungen
 
@@ -228,7 +239,7 @@ Es wird ausschliesslich die vorhandene Einstellungsverwaltung verwendet:
 
 | Einstellung | Ablage |
 |---|---|
-| Template-uebergreifende Auswahl und Zuordnungen | Core-Datenbank |
+| Gemeinsame Template-/Theme-Auswahl | Datenbank des Haupt-Theme-Anbieters |
 | Performance-Schalter je Theme-Anbieter | Datenbank dieses Anbieters |
 | Gewaehltes Theme inklusive optionaler Ableitung eines Template-Anbieters, bei Bedarf je Zweig | Datenbank dieses Anbieters |
 | Template-spezifische Gestaltungsoptionen | Datenbank dieses Template-Moduls |
@@ -254,8 +265,11 @@ Seine Bearbeitung ist auf entsprechend berechtigte Benutzer beschraenkt.
 
 Unter **Einstellungen -> Template -> Core / Frontend** stehen je Anbieter:
 
-- `theme`: Konkretes Theme; Standard `basic`. Die Liste enthaelt Familien und
-  Ableitungen gemeinsam, beispielsweise `basic`, `basic__dark_mode` und `classic`.
+- `theme`: Gemeinsame Auswahl von Template-Herkunft und Theme; Standard `basic`
+  des Hauptanbieters. Anzeige beispielsweise
+  `fremeo/frontend : basic` oder `nirgendheim/frontend-focusbox : basic__nocturne`.
+  Gespeichert wird `<template-id>:<theme-name>`, damit gleichnamige Themes
+  verschiedener Child-Templates eindeutig bleiben.
   Die Haupt-Familie wird aus der Theme-Abstammung ermittelt, nicht separat gewaehlt.
 - `theme_css_<haupt-theme>`: Custom CSS dieser Familie, beispielsweise
   `theme_css_basic`. Felder werden fuer die Haupt-Theme-Ordner des Anbieters erzeugt.
@@ -270,6 +284,23 @@ Bestehende Datenbanken mit `theme_variant` bleiben kompatibel: `Setting::get()`
 liefert fuer `theme` die bisher gewaehlte Ableitung. Beim expliziten Speichern
 von `theme` wird der alte Eintrag geloescht; kuenftig ist nur `theme` massgeblich.
 Es erfolgt keine Schreibmigration bei einem reinen Seitenaufruf.
+
+Alte gespeicherte Theme-Namen ohne Herkunft bleiben lesbar: zuerst wird das
+Theme des Hauptanbieters verwendet, sonst eine eindeutige Child-Herkunft.
+Mehrdeutige alte Namen muessen explizit neu ausgewaehlt werden.
+
+Fehlt die gespeicherte Kombination (z.B. Child deaktiviert/deinstalliert),
+erfolgt erst bei der gemeinsamen Aufloesung ein Rueckfall auf das verfuegbare
+Elterntemplate und ein Haupt-Theme (Familie, sonst `basic`, sonst erstes
+verfuegbares Haupt-Theme).
+Bei deaktivierten Modulen bleibt die Elternbeziehung aus `module-parent`
+verfuegbar; bei vollstaendig entfernten Metadaten wird der Hauptanbieter verwendet.
+Es gibt keine Deaktivierungs-/Deinstallationspruefung, keine UI-Meldung und
+keinen Datenbank-Schreibzugriff beim Lesen. Ein Hinweis
+wird einmal je Anfrage im PHP-Fehlerlog protokolliert. Die Dropdown-Auswahl zeigt
+die effektive Kombination; beim Speichern wird sie uebernommen.
+Defekte Manifeste, fehlende Assets und Vererbungsfehler bleiben ausdrueckliche
+Fehler und werden nicht pauschal abgefangen.
 
 Die Optionen werden aus den Theme-Ordnern ermittelt. Die Auswahl gilt derzeit
 anbieterweit; Core-Layouts wie Admin und Login teilen die Core-Auswahl. Das
