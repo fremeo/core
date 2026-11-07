@@ -26,5 +26,8 @@ return [
 	'ACCOUNT' => [ #Kunden Accounts
 			'Active'		=> ['Type' => 'checkbox'],
 			'Name'			=> ['Type' => 'text'], #??
-	]
+	],
+	'MODULE' => [ # Module management
+		'Active'		=> ['Type' => 'checkbox'],
+	],
 ];

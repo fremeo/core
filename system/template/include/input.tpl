@@ -279,14 +279,15 @@
 				{/if}
 			</div>
 		{elseif $p.type == 'select'}
+			{* allow_empty=false unterdrueckt die automatische Leeroption; explizite Optionen bleiben erhalten. *}
 			<div class="input-group mb-0 {if $p.required}{if !$p.name}has-error{else}has-success{/if}{/if}">
-				<select {if $p.readonly}readonly{/if} class="form-control {if $p.required} border-danger{/if}" ischanged="0" 
+				<select {if $p.form|default:''}form="{$p.form|escape}"{/if} {if $p.readonly}readonly{/if} class="form-control {if $p.required} border-danger{/if}" ischanged="0"
 				{if $p.onchange}onchange="{$p.onchange}"{/if}
 				{*onmouseout="input_onmouseout(this);" 
 				onfocusout="input_onmouseout(this);"*}
 				onchange="input_onmouseout(this);" 
 				style="width:100%;" name="{$D.C.Security->registerSecurityD($p.name)}">
-					<option value="">---</option>
+					{if !isset($p.allow_empty) || $p.allow_empty}<option value="">---</option>{/if}
 					{$FIND = 0}
 					
 					{foreach name=nVAL from=$p.option key="kVAL" item="VAL"}
@@ -307,7 +308,7 @@
 						{if $p.option[$smarty.foreach.nVAL.index]|strstr:"["}
 							<optgroup label="{$value}">
 						{else}
-							<option {if $valueKey == $p.value}selected{/if} value="{$valueKey}">{$value}</option>
+							<option {if $valueKey == $p.value}selected{/if} {if in_array($valueKey, $p.disabled_options|default:[])}disabled{/if} value="{$valueKey}">{$value}</option>
 							{if $valueKey == $p.value}{$FIND = 1}{/if}
 						{/if}
 						{if $p.option[$smarty.foreach.nVAL.index]|strstr:"["}

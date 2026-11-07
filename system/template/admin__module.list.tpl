@@ -3,15 +3,23 @@
 	<form method="post" id="modForm">
 		<input type="hidden" name="R[ACTION]" value='save'>
 		<input type="hidden" name="R[Module][Id]" value=''>
-		{if $D.R.ComposerOutput}
+		{if $D.R.ComposerOutput|default:null}
 			<div class="alert {if $D.R.ComposerOutput.success}alert-success{else}alert-danger{/if}">
 				<pre class="mb-0" style="white-space:pre-wrap;">{$D.R.ComposerOutput.output|escape}</pre>
 			</div>
 		{/if}
-		
-
+		<ul class="nav nav-tabs mb-3" role="tablist">
+			{foreach $D.R.ModuleTabs as $tabId => $tab}
+				<li class="nav-item" role="presentation"><button class="nav-link{if $tabId == 'active'} active{/if}" id="modules-{$tabId}-tab" data-bs-toggle="tab" data-bs-target="#modules-{$tabId}" type="button" role="tab" aria-controls="modules-{$tabId}" aria-selected="{if $tabId == 'active'}true{else}false{/if}">{$tab.Label|escape} <span class="badge text-bg-secondary">{count($tab.Items)}</span></button></li>
+			{/foreach}
+		</ul>
+		<div class="tab-content">
+		{foreach $D.R.ModuleTabs as $tabId => $tab}
+		<div class="tab-pane{if $tabId == 'active'} show active{/if}" id="modules-{$tabId}" role="tabpanel" aria-labelledby="modules-{$tabId}-tab">
+		{$_sum_size = 0}{$_sum_size_cache = 0}{$_sum_size_data = 0}
+		<div class="table-responsive">
 		<table class="table table-hover align-middle">
-			<thead class="sticky-top table-light">
+			<thead class="sticky-top bg-body-tertiary">
 				<tr>
 				<th></th><th>Module</th><th style="width: 60%">Beschreibung</th>
 				<th class="text-center">Module</th>
@@ -20,13 +28,13 @@
 				</tr>
 			</thead>
           	<tbody>
-				{foreach from=$D.R.Module.D key="kMOD" item="MOD"}
+				{foreach from=$tab.Items key="kMOD" item="MOD"}
 				{$_MOD = explode('/',$kMOD)}
 				<tr>
-				<td><input type="checkbox" class="form-check-input pkg-check"></td>
+				<td>{if $tabId != 'libraries'}{input p=['type' => 'checkbox', 'name' => "D[_MODULE_SELECTED][{$kMOD}]", 'value' => 0, 'title' => $kMOD|escape]}{/if}</td>
 				<td><div>{$kMOD}</div>
 				{*<a class="btn btn-outline-info btn-sm wiki-btn d-none" target="_blank" href="#">Wiki</a>*}</td>
-				<td><div class="fs-6">{$MOD.description}</div>
+				<td><div class="fs-6">{$MOD.description|escape}</div>
 				{if $MOD.type == 'library'}<i title="{$MOD.type}" class="fa-solid fa-book"></i>
 				{else if $MOD.type == 'template'}<i title="{$MOD.type}" class="fa-solid fa-palette"></i>
 				{else if $MOD.type == 'core'}<i title="{$MOD.type}" class="fa-solid fa-gear"></i>
@@ -34,7 +42,7 @@
 				{else}
 						{$MOD.type}
 				{/if}
-			| Version {$MOD.version} {if $MOD.version != $MOD.version_latest} <b>neu {$MOD.version_latest}</b>{/if} {if $MOD.url}| By <a class="pkg-link" target="_blank" href="{$MOD.url}">{$_MOD[0]}</a>{/if} | <a class="pkg-link" target="_blank" href="https://packagist.org/packages/{$kMOD}">deteils</a>
+			| Version {$MOD.version|escape} {if $MOD.version != $MOD.version_latest} <b>neu {$MOD.version_latest|escape}</b>{/if} {if $MOD.url|default:''}| By <a class="pkg-link" target="_blank" rel="noopener noreferrer" href="{$MOD.url|escape}">{$_MOD[0]|escape}</a>{/if} | <a class="pkg-link" target="_blank" rel="noopener noreferrer" href="https://packagist.org/packages/{$kMOD|escape}">Details</a>
 				{*if $MOD.url} | <a class="pkg-link" target="_blank" href="{$MOD.url}">repo</a>{/if*}
 				{*if $MOD.require}<br>Require: {foreach from=$MOD.require key="kR" item="R"}{$kR}:{$R}{/foreach}{/if*}
 					{if in_array($MOD.type, ['core','module','template'])}
@@ -52,6 +60,8 @@
 				<td class="text-end">{round($MOD.size_cache/1024/1024, 2)} MB</td>
 				<td class="text-end">{round($MOD.size_data/1024/1024, 2)} MB</td>
 				</tr>
+				{foreachelse}
+				<tr><td colspan="6" class="text-body-secondary">Keine Pakete in diesem Bereich.</td></tr>
 				{/foreach}
 			</tbody>
 			<tfoot>
@@ -65,12 +75,9 @@
 				</tr>
 			</tfoot>
         </table>
-		
-		{*<button type="submit" class="btn btn-primary btn-sm">Save</button>*}
-		<div class="table-footer sticky-bottom d-flex justify-content-between align-items-center px-3 py-2 bg-white border-top" style="width:stretch;">
-			<a class="btn btn-primary btn-sm" href="admin/module.store">Neues Module</a>
-			<button type="button" class="btn btn-primary btn-sm" onclick="modAction('update-all','','Alle Pakete aktualisieren?')">Alle aktualisieren</button>
-			<button type="button" class="btn btn-outline-secondary btn-sm" title="Wird nach Installation und Update automatisch ausgeführt, nur bei Bedarf erneut anstößen" onclick="modAction('migration-run','')">Migrationen ausführen</button>
+		</div>
+		</div>
+		{/foreach}
 		</div>
 	</form>
 	{literal}<script>
@@ -83,4 +90,21 @@
 			f.submit();
 		}
 	</script>{/literal}
+{/block}
+
+{block name="inner_footer"}
+	<div class="bg-body-tertiary border-top p-2 d-flex flex-wrap justify-content-between align-items-center gap-2">
+		<div class="d-flex flex-wrap gap-2">
+			<button type="submit" form="modForm" class="btn btn-primary btn-sm">Speichern</button>
+			<a class="btn btn-outline-secondary btn-sm" href="?R[Page]=admin__module.list&amp;R[ModuleId]=fremeo/core">Abbrechen</a>
+		</div>
+		<div class="d-flex flex-wrap align-items-center gap-2">
+			<div>
+				{input p=['type' => 'select', 'name' => 'D[_MODULE_ACTION]', 'form' => 'modForm', 'value' => '', 'option' => ['activate|Aktivieren', 'deactivate|Deaktivieren', 'clear-cache|Cache leeren', 'update|Update', 'reinstall|Reinstall', 'uninstall|Uninstall']]}
+			</div>
+			<a class="btn btn-outline-primary btn-sm" href="admin/module.store">Neues Modul</a>
+			<button type="button" class="btn btn-outline-primary btn-sm" onclick="modAction('update-all','','Alle Pakete aktualisieren?')">Alle aktualisieren</button>
+			<button type="button" class="btn btn-outline-secondary btn-sm" title="Wird nach Installation und Update automatisch ausgefuehrt" onclick="modAction('migration-run','')">Migrationen ausfuehren</button>
+		</div>
+	</div>
 {/block}

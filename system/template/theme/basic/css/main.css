@@ -1,0 +1,195 @@
+@keyframes blink { 50% { opacity: 0; } }
+.blink {animation: blink 1s linear infinite;}
+
+body    {font-family:Arial, FontAwesome;}
+body, table	{font-size:11px;}
+table		{background:#fff;}
+form	{margin:0;}
+
+
+/*button 			{height:20px;border:solid 1px #999;cursor:pointer;}*/
+button:hover	{border:solid 1px #ddd;}
+
+select,
+input 			{border:solid 1px #999;padding:1px 2px;font-size:10px;margin:1px; box-shadow: 1px 2px 4px rgba(0,0,0, .1);background: #fff;}
+
+textarea		{border:solid 1px #999;padding:1px 2px;font-size:11px;margin:1px; box-shadow: 1px 2px 4px rgba(0,0,0, .1);background: #fff;}
+
+ul.menu.h			{padding:0;list-style:none;}
+ul.menu.h li		{float:left; margin: 0 4px; padding:2px; border:solid 1px #999;}
+ul.menu.h li ul li	{margin:0;padding:0; border:none;}
+
+/*topbar*/
+.topbar								{background:#111;color:#fff;}
+
+
+.topbar ul.h						{padding:0;margin:0;list-style:none;}
+.topbar ul.h li						{float:left; margin: 0; padding:1px 1px 0px 1px;}
+.topbar ul.h li div					{text-align:center;cursor:pointer;border:solid 1px transparent;border-bottom:none;margin:0;padding: 2px 4px;}
+.topbar ul.h li:hover div .icon,
+.topbar ul.h li div .icon			{border:none;height:25px;}
+
+.topbar ul.h li:hover div			{background:#fff;color:#000;border-right:solid 1px #000;border-left:solid 1px #000;border-top:solid 1px #000;}
+.topbar ul.h li:hover ul			{display:block;}
+.topbar ul.h li	ul					{display:none;clear:both;padding:0px;margin:0px;background:#fff;position:absolute;border:solid 1px #000;border-top:none;z-index:999;}
+.topbar ul.h li	ul li				{clear:both;margin:0px;padding:0px; border:none;width:100%;list-style:none;}
+.topbar ul.h li:hover li div,
+.topbar ul.h li li div				{border:none;background:transparent;height:24px;line-height:24px;}
+.topbar ul.h li	ul li:hover			{background:#111;}
+.topbar ul.h li	ul li:hover div		{color:#fff;}
+.topbar ul.h li	ul li button		{width:100%;text-align:left;border:none;background:transparent;border-radius:0;box-shadow:none;}
+.topbar ul.h li	ul li button:hover	{color:#fff;}
+/*right*/
+.topbar ul.r.h							{padding:0;margin:0;list-style:none;float:right;margin-right:50px;}
+
+/*sub navigation je Platform ud window*/
+.navibar					{background:linear-gradient(#999, #eee);border-bottom:solid 1px #999; height:21px;}
+
+.navibar ul.h				{padding:0;margin:0;list-style:none;}
+.navibar ul.h li			{float:left; margin: 0; padding:1px 1px 0px 1px;}
+.navibar ul.h li div		{cursor:pointer;border:solid 1px transparent;border-bottom:none;margin:0;height:20px;padding: 0 4px;line-height:20px;}
+
+.navibar ul.h li:hover div	{background:#fff;border-right:solid 1px #999;border-left:solid 1px #999;border-top:solid 1px #999;}
+.navibar ul.h li:hover ul	{display:block;}
+.navibar ul.h li	ul		{display:none;clear:both;padding:0px;margin:0px;background:#fff;position:absolute;border:solid 1px #999;border-top:none;}
+.navibar ul.h li	ul li	{clear:both;margin:0px;padding:0px; border:none;width:100%;list-style:none;}
+.navibar ul.h li	ul li:hover	{background:#999;color:#fff;}
+.navibar ul.h li	ul li button	{width:100%;text-align:left;border:none;background:transparent;border-radius:0;box-shadow:none;}
+.navibar ul.h li	ul li button:hover	{color:#fff;}
+
+
+/*Navigation Vertikal*/
+.navibar.v			{border:none;background:transparent;}
+.navibar.v ul		{margin:0;padding:0;}
+.navibar.v ul li	{list-style:none;border-bottom:solid 1px #999;font-size:13px;}
+
+.navibar.v ul li div,
+.navibar.v ul li button			{cursor:pointer;color:#fff;margin:0;width:100%;text-align:left;border:none;background:#111;border-radius:0;box-shadow:none;}
+.navibar.v ul li div:hover,
+.navibar.v ul li button:hover	{color:#fff;background:#fff;color:#000;}
+.navibar.v ul li	ul li		{margin-left:10px;border:none;}
+
+
+
+table.list	{border-radius: 5px;}
+table.list thead tr,
+table.list tfoot tr,
+table.list tbody tr:nth-child(2n) {background:#eee;}
+
+
+/*PLATFORM Navi*/
+.pla_navi				{background:linear-gradient(to bottom, #8b8b8b, #717171 49%, #5e5e5e 50%, #787878);}
+.pla_navi button		{border-radius: 5px 5px 0 0;height:40px;color:#fff;text-shadow: 0 1px 0 rgba(0,0,0,.9);border:none;background:linear-gradient(to bottom, #8b8b8b, #717171 49%, #5e5e5e 50%, #787878);}
+.pla_navi button.active	{box-shadow:inset 0 5px 10px rgba(0,0,0,.8); background:linear-gradient(to bottom, #8b8b8b, #717171 49%, #5e5e5e 50%, #787878);}
+.pla_navi button:hover	{background: linear-gradient(to bottom,  #929292,  #535353);}
+
+
+/*ARTIKEL IMG LIST*/
+.img_list					{overflow-y:scroll;height:355px;}
+.img_list .list				{background:#ddd;margin:2px 0px; padding:2px;}
+.img_list ul				{list-style:none;padding:0;margin:0px;}
+.img_list ul li				{position:relative;overflow:hidden;background:#fff;float:left;border:solid 1px #999;margin-right:1px;border-radius:3px;}
+.img_list ul li img			{border-radius:2px;}
+.img_list ul li img:hover	{opacity:.50;}
+.img_list ul li .navi		{display:nonex;position:absolute;top:0px;width:100%;height:100%;}
+.img_list ul li:hover .navi	{display:block;}
+
+.img_list ul li .navi button		{padding:0;margin:0;height:auto;}
+.img_list ul li .navi button.del	{position:absolute;bottom:0px;right:0px;}
+
+
+/*Tree*/
+.tree						{min-width:100px;}
+.tree ul					{list-style:none;margin:0;padding:0;}
+.tree li					{}
+.tree li .node				{padding:1px;position:relative;}
+.tree li .node:hover		{background:#eee;}
+.tree .title				{float:left;cursor:pointer;width:10px;overflow:visible;}
+.tree .title:hover			{background:#fff;z-index:100;width:unset;position:absolute;}
+/*.tree li lnk				{display:inline-block;}*/
+
+
+
+
+/*contextmenu*/
+.contextmenu				{position:absolute;border:solid 1px #000;min-width:100px;background:#eee;}
+.contextmenu ul				{padding:0;margin:4px;}
+.contextmenu li				{cursor:pointer;height:20px;list-style:none;padding:2px 2px 2px 22px;line-height:20px;border:solid 1px transparent;}
+.contextmenu li:hover		{border:solid 1px blue;}
+
+/*Bootstrap Fix*/
+.table > thead > tr > th,
+.table > tbody > tr > th,
+.table > tfoot > tr > th,
+.table > thead > tr > td,
+.table > tbody > tr > td,
+.table > tfoot > tr > td 	{padding: 2px;}
+.table > thead > tr,
+.table > tfoot > tr,
+.table > tbody > tr:hover,
+.table > tfoot > tr:nth-child(2n) {background:#f5f5f5;}
+.table > tbody + tbody		{border-top:none;}
+.table						{margin-bottom:auto;}
+
+.form-control		{font-size:100%;padding:2px;border-radius:initial;margin-left:0px;height:unset;}
+.input-group .form-control  {margin:0px;}
+.input-group-xs .form-control  {padding:6px;}
+.input-group-addon  {padding:2px 5px;border-radius:initial;}
+
+.alert				{margin-bottom:auto;}
+
+.btn				{height:auto;padding:2px 6px;border-radius:initial;font-size:11px;}
+.btn-xs				{padding:0px;line-height:normal;}
+
+.nav > li > a		{padding: 4px 10px;line-height:normal;text-align:center;}
+.navbar				{margin-bottom:auto;}
+
+.nav-pills > li > a {border-radius: 0;}
+
+
+
+/*Bootstrap 4*/
+.navbar											{padding-top:0px;padding-bottom:0px;}
+/*select.form-control:not([size]):not([multiple])	{height:auto;}*/
+select, input									{box-shadow: none;}
+
+.nav-link	{line-height: 1;cursor:pointer;padding:0.2rem 1rem;}
+.nav-link:hover {background:#007bff50;}
+.nav-pills .nav-link	{border-radius: 0;}
+
+
+.dropdown-menu	{padding:0px;margin:0;cursor:pointer;}
+
+.input-group-text	{line-height:0.5;}
+
+.m-05  {margin:.125rem!important}
+.mt-05 {margin-top:.125rem!important}
+.mr-05 {margin-right:.125rem!important}
+.ml-05 {margin-left:.125rem!important}
+.mb-05 {margin-bottom:.125rem!important}
+
+/*Bootstrap 4 Erweiterung xxs*/
+.input-group-xxs>.custom-select, .input-group-xxs>.form-control, .input-group-xxs>.input-group-append>.btn, 
+.input-group-xxs>.input-group-append>.input-group-text, 
+.input-group-xxs>.input-group-prepend>.btn, .input-group-xxs>.input-group-prepend>.input-group-text
+{FONT-VARIANT: JIS90;padding:0.015rem .25rem;font-size: 0.700rem;line-height:1.5;border-radius:.1rem;}
+.input-group-xxs>.custom-select, .input-group-xxs>.form-control:not(textarea)
+{height: calc(1.5em + .25rem + 2px)}
+
+/*select2*/
+.select2-container {z-index:3000;padding:0;}
+.select2-container--default .select2-selection--single,
+.select2-container--default .select2-selection--multiple	{border-radius:unset;border:unset;min-height:20px;}
+.select2-container--default .select2-selection--multiple .select2-selection__choice {padding:0 2px;margin-right:2px;margin-top:0px;border-radius:unset;}
+/*.select2-container	{width: 100% !important;}*/
+
+
+.select2-container .select2-selection--single				{min-height:20px;}
+
+.select2-container--default .select2-selection--single .select2-selection__rendered		{line-height: 20px;padding: 1px;}
+.select2-container--default .select2-selection--multiple .select2-selection__rendered	{padding:1px;display:block;}
+.select2-container .select2-search--inline .select2-search__field						{margin:0px;}
+
+.select2-container--default.select2-container--focus .select2-selection--multiple		{border:none;}
+
+.select2-results__option		{padding: 1px 4px;}

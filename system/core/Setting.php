@@ -3,7 +3,8 @@ namespace fremeo\core;
 
 class Setting {
     private Container $C;
-    private array $D;
+    // CData setzt den referenzierten Datenbaum waehrend einer Abfrage kurz auf null.
+    private ?array $D;
 
     public function __construct(Container $C, array &$D) {
         $this->C = $C;
@@ -21,7 +22,11 @@ class Setting {
 		$f['SETTING'] = [];
 		$this->C[$moduleId]['CData']->get_object($d, $f);
 
-		if ($d['SETTING']['D'][$settingId]['Value'] ?? null) {
+		// Bestehende getrennte Theme-Auswahl bis zum naechsten Speichern uebernehmen.
+		if ($settingId === 'theme' && ($d['SETTING']['D']['theme_variant']['Value'] ?? '') !== '') {
+			return $d['SETTING']['D']['theme_variant']['Value'];
+		}
+		if (isset($d['SETTING']['D'][$settingId]) && array_key_exists('Value', $d['SETTING']['D'][$settingId])) {
 			return $d['SETTING']['D'][$settingId]['Value'];
 		}
         
@@ -41,6 +46,9 @@ class Setting {
         }
 
         $d['SETTING']['D'][$settingId]['Value'] = $value;
+		if ($settingId === 'theme') {
+			$d['SETTING']['D']['theme_variant'] = '__DELETE__';
+		}
 
         $this->C[$moduleId]['CData']->set_object($d);
         return true;

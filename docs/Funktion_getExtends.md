@@ -1,9 +1,13 @@
 # Template- & PHP-Vererbungssystem (`Template::getExtends()`)
 
-Die bisherige Funktion liegt unveraendert als Methode in
+Die bisherige Funktion liegt als Methode in
 [`fremeo\core\Template`](../system/core/Template.php). Der globale Dienst wird in
 `init.php` registriert und ueber `$C['Template']` verwendet; eine globale Funktion
-`getExtends()` gibt es nicht mehr. Algorithmus und Rueckgabeformat bleiben erhalten.
+`getExtends()` gibt es nicht mehr. Grundalgorithmus und Rueckgabeformat bleiben erhalten.
+Seit der Theme-Integration wird der Modultyp aus `INFO.Type` gelesen
+(bisherige flache Metadaten bleiben unterstuetzt). Bibliotheken werden ausgeschlossen;
+Template-Modul-Ableitungen werden anhand ihrer Elternbeziehung einsortiert.
+Die bisherige Root-Auswahl ist nicht eingeschraenkt.
 Der weitere Ausbau ist im [Template-/Theme-Konzept](Konzept_Template_Theme.md)
 beschrieben.
 

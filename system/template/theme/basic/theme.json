@@ -1,0 +1,26 @@
+{
+	"color_scheme": "light",
+	"css": [
+		"vendor/jquery-ui/1.14.2/jquery-ui.css",
+		"vendor/datatables/1.10.16/datatables.min.css",
+		"vendor/jquery-upload-file/4.0.11/uploadfile.css",
+		"vendor/bootstrap/5.3.8/css/bootstrap.min.css",
+		"vendor/font-awesome/7.0.1/css/all.min.css",
+		"vendor/select2/4.0.7/css/select2.min.css",
+		{"path": "css/main.css", "media": "bogus"},
+		{"path": "css/admin.css", "branches": ["admin"]}
+	],
+	"head_js": [
+		"vendor/jquery/3.7.1/jquery.min.js",
+		"vendor/jquery-md5/1.2.1/jquery.md5.js",
+		"vendor/datatables/1.10.16/datatables.min.js",
+		"vendor/chart.js/3.7.1/chart.min.js",
+		"vendor/select2/4.0.7/js/select2.min.js",
+		"js/wp.js",
+		"js/ejs.js"
+	],
+	"body_js": [
+		"vendor/bootstrap/5.3.8/js/bootstrap.bundle.min.js",
+		{"path": "js/admin.js", "branches": ["admin"]}
+	]
+}

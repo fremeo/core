@@ -1,19 +1,12 @@
 <?php
-if (($R['ACTION'] ?? null) == 'save') {
-	foreach ($D['MODULE']['D'] as $kMOD => $MOD) {
-		if (in_array($MOD['INFO']['Type'], ['module', 'template', 'core'])) {
-			$C[$kMOD]['CData']->set_object($MOD);
-		}
-	}
-}
-
 # Defaults aus allen default.config.php laden, Werte aus der jeweiligen Modul-DB.
 # Ergebnis: $R['SETTING_VIEW'][Section][] = ['Module','Key','Meta','Value']
 # Eine Section darf Einstellungen mehrerer Module enthalten, eine Einstellung erscheint nur in den Sections, die ihr eigenes Modul nennt.
 $F['SETTING'] = [];
 $view = [];
+$R['SettingError'] = [];
 foreach ($D['MODULE']['D'] as $kMOD => $MOD) {
-	if (!in_array($MOD['INFO']['Type'], ['module', 'template', 'core'])) {
+	if (!in_array($MOD['INFO']['Type'], ['module', 'template', 'core']) || (int)($MOD['Active'] ?? 1) !== 1) {
 		continue;
 	}
 
@@ -27,6 +20,34 @@ foreach ($D['MODULE']['D'] as $kMOD => $MOD) {
 	$aSetting = (array)($aConf['SETTING'] ?? []);
 	$aSection = (array)($aConf['SECTION'] ?? []);
 
+	if (($_SERVER['REQUEST_METHOD'] ?? '') === 'POST' && ($R['ACTION'] ?? null) === 'save') {
+		$posted = (array)($MOD['SETTING']['D'] ?? []);
+		$update = [];
+		foreach ($aSetting as $key => $meta) {
+			if (array_key_exists('Value', (array)($posted[$key] ?? []))) {
+				$value = $posted[$key]['Value'];
+				if (!is_scalar($value)) {
+					throw new RuntimeException("Ungueltiger Einstellungswert: $kMOD/$key");
+				}
+				$update['SETTING']['D'][$key] = (string)$value === (string)($meta['Value'] ?? '')
+					? '__DELETE__' : ['Value' => $value];
+			}
+		}
+		$valid = true;
+		if (isset($aSetting['theme'], $posted['theme'])) {
+			$themes = $C['Template']->getThemes($kMOD);
+			$valid = isset($themes[(string)$posted['theme']['Value']]);
+			if (!$valid) {
+				$R['SettingError'][] = "Theme-Auswahl fuer $kMOD wurde nicht gespeichert: Unbekanntes Theme.";
+			} else {
+				$update['SETTING']['D']['theme_variant'] = '__DELETE__';
+			}
+		}
+		if ($valid && $update) {
+			$C[$kMOD]['CData']->set_object($update);
+		}
+	}
+	unset($D['MODULE']['D'][$kMOD]['SETTING']);
 	$C[$kMOD]['CData']->get_object($D['MODULE']['D'][$kMOD], $F);
 
 	# Eintrag einer Einstellung: Wert aus der Modul-DB, sonst Standardwert aus der Datei
@@ -34,7 +55,7 @@ foreach ($D['MODULE']['D'] as $kMOD => $MOD) {
 		'Module' => $kMOD,
 		'Key' => $key,
 		'Meta' => array_map(fn ($v) => $v instanceof Closure ? $v($C) : $v, $aSetting[$key]), # Closure in der Config (z.B. 'Options' => fn ($C) => [...]) = dynamischer Wert
-		'Value' => $D['MODULE']['D'][$kMOD]['SETTING']['D'][$key]['Value'] ?? ($aSetting[$key]['Value'] ?? null),
+		'Value' => $key === 'theme' ? $C['Setting']->get($kMOD, $key) : ($D['MODULE']['D'][$kMOD]['SETTING']['D'][$key]['Value'] ?? ($aSetting[$key]['Value'] ?? null)),
 	];
 
 	$assigned = [];
@@ -62,5 +83,3 @@ ksort($view);
 $R['SETTING_VIEW'] = $view;
 
 	
-
-

@@ -22,14 +22,14 @@ $C->set('Filesystem', fn () => new Filesystem() );
 $C->set('ImageManager', fn () => new ImageManager( Driver::class ) );
 $C->set('Finder', fn () => new Finder() );
 $C->set('Smarty', fn () => new Smarty() );
-$C->set('Template', fn () => new \fremeo\core\Template() );
-$C->set('Setting', fn () => new \fremeo\core\Setting($C, $D) );
+$C->set('Template', function () use ($C, &$D) { return new \fremeo\core\Template($C, $D); });
+$C->set('Setting', function () use ($C, &$D) { return new \fremeo\core\Setting($C, $D); });
 
 $C->set('CCache', fn () => new \phploader\CCache([ 'DB' => ['FILENAME' => PROJECT_ROOT.'data_c/fremeo~core/cache.cache' ] ]), 'fremeo/core');
 
 
 #DB-----------------
-#Todo: weil die untere Schleife core nicht priorisiert lädt, muss core hier zuerst initialisiert werden.
+# Core-Datenbank vor dem Modulscan fuer Security-Einstellungen bereitstellen.
 $C->set('CData', new \phploader\CData( [ 'DB' => ['FILENAME' => PROJECT_ROOT.'data/fremeo~core/data.db', 'FILENAME_C' => PROJECT_ROOT.'data_c/fremeo~core/data.db' ] ] ), 'fremeo/core');
 if(is_file(__dir__ . '/system/default/default.global.pattern.php') ) {
 	$globalPattern = include __dir__ . '/system/default/default.global.pattern.php';
@@ -62,6 +62,7 @@ $D['SESSION'] = $_SESSION;
 
 
 // 1. Module scannen und Metadaten sammeln # Todo: Cachen
+$modules = [];
 foreach (glob(PROJECT_ROOT . '/system/vendor/' . '/*/*', GLOB_ONLYDIR) as $moduleDir) {
 	$path = realpath($moduleDir); // Pfad zum Projektordner
 	$parts = explode(DIRECTORY_SEPARATOR, $path);
@@ -72,7 +73,7 @@ foreach (glob(PROJECT_ROOT . '/system/vendor/' . '/*/*', GLOB_ONLYDIR) as $modul
 	# Typ aus der composer.json des Moduls (core | template | module)
 	$type = (string)(json_decode((string)@file_get_contents("{$moduleDir}/composer.json"), true)['type'] ?? 'library');
 	
-	$D['MODULE']['D'][ $Id ]['INFO'] = [ #Todo: in ['INFO'] ändern, damit Module Array für anhänge anderer Module daten möglich ist.
+	$modules[$Id] = ['INFO' => [
 		'Id'			=> $Id,
 		'Type'			=> $type,
 		'ModulDir'		=> $moduleDir,
@@ -80,16 +81,32 @@ foreach (glob(PROJECT_ROOT . '/system/vendor/' . '/*/*', GLOB_ONLYDIR) as $modul
 		'PackageName'	=> $package,
 		'CacheDir'		=> "data_c/{$vendor}~{$package}/",
 		'DataDir'		=> "data/{$vendor}~{$package}/",
-	];
+	]] + ($D['MODULE']['D'][$Id] ?? []);
 }
 
+# Formularfelder duerfen die Lade- und Anzeigereihenfolge nicht bestimmen.
+$moduleTypes = ['core' => 0, 'template' => 1, 'module' => 2];
+uasort($modules, static fn ($a, $b) => ($moduleTypes[$a['INFO']['Type']] ?? 3) <=> ($moduleTypes[$b['INFO']['Type']] ?? 3));
+$D['MODULE']['D'] = $modules;
+unset($modules, $moduleTypes);
 
-#Todo: inaktive Module nicht laden
+$_activeFilter['MODULE'] = [];
+$C['fremeo/core']['CData']->get_object($_activeModules, $_activeFilter);
+foreach ($D['MODULE']['D'] as $_id => &$_module) {
+	$_module['Active'] = $_module['INFO']['Type'] === 'core' ? 1 : (int)($_activeModules['MODULE']['D'][$_id]['Active'] ?? 1);
+}
+unset($_module, $_activeModules, $_activeFilter);
+$_themeModules = $C['Template']->getThemeModules();
+foreach ($D['MODULE']['D'] as $_id => &$_module) {
+	if ($_module['INFO']['Type'] === 'template' && !isset($_themeModules[$_id])) $_module['Active'] = 0;
+}
+unset($_module, $_themeModules);
+
 # 2. Phase: alle init.php laden 
 foreach ($D['MODULE']['D'] as $moduleDir => $info) {
 
 	# Überspringe libery und core type
-	if ( in_array($info['INFO']['Type'], ['library', 'core']) === false) {
+	if ($info['Active'] && in_array($info['INFO']['Type'], ['library', 'core']) === false) {
 	
 		$_modulePath = str_replace( '/', '~', $moduleDir);
 		$C->set('CData', new \phploader\CData( [ 'DB' => ['FILENAME' => PROJECT_ROOT.'data/'.$_modulePath.'/data.db', 'FILENAME_C' => PROJECT_ROOT.'data_c/'.$_modulePath.'/data.db' ] ] ), $moduleDir);
@@ -106,6 +123,7 @@ $C['fremeo/core']['CData']->registerPattern($Pattern);
 # 3. Phase: alle cli.php laden, wenn CLI Modus
 if (PHP_SAPI === 'cli') {
 	foreach ($D['MODULE']['D'] as $moduleDir => $info) {
+		if (!$info['Active']) continue;
 		$init = $info['INFO']['ModulDir'] . '/cli.php';
 		if (is_file($init)) {
 			require_once $init;

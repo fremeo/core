@@ -36,7 +36,7 @@ if( isset($R['SEO_URL']) ) {
 		foreach((array)($D['MODULE']['D'] ?? []) AS $kMOD => $MOD) {
 
             # keine libery
-            if($MOD['INFO']['Type'] === 'library') {
+            if($MOD['INFO']['Type'] === 'library' || !$MOD['Active']) {
                 continue;
             }
 			if(!isset($C[$kMOD]['CData'])) continue;
@@ -70,6 +70,12 @@ if( isset($R['SEO_URL']) ) {
 }
 
 
+if (isset($R['ModuleId']) && (!isset($D['MODULE']['D'][$R['ModuleId']]) || !$D['MODULE']['D'][$R['ModuleId']]['Active'])) {
+	http_response_code(404);
+	$R['Page'] = 'error.404';
+	$R['ModuleId'] = 'fremeo/core';
+}
+
 if($D['R']['ModuleId']) {
 	
     #Todo: Prüfen ob es so richtig ist, dass link für fremeo/core gesetzt wird, oder ob es dynamisch für das aktive Modul gesetzt werden sollte.
@@ -80,12 +86,23 @@ if($D['R']['ModuleId']) {
 
 	#Template und php Verkettung
 	$_tpl = $C['Template']->getExtends($D['MODULE']['D'], $D['R']['ModuleId'], $D['R']['Page']);
+	$_theme = $C['Template']->resolveTheme($_tpl['tpl']);
+	if (($_theme['Branch'] ?? '') === 'frontend' && !array_filter($D['MODULE']['D'], static fn ($module) => $module['INFO']['Type'] === 'template' && $module['Active'])) {
+		http_response_code(503);
+		echo 'Das Frontend ist deaktiviert. Die Administration bleibt erreichbar.';
+		return;
+	}
 
 
 	foreach($_tpl['php'] AS $kFile) {
 		include_once ($kFile);
 	}
 	$C['fremeo/core']['CData']->get_object($D,$F); #Datenbank Abfrage
+	$R['Theme'] = $C['Template']->publishTheme(
+		$C['Template']->resolveTheme($_tpl['tpl']),
+		PROJECT_ROOT . 'data_c/public/theme',
+		SCRIPT_NAME
+	);
 	
 	/* # Diesen Code nicht löschen, dient zur Debugging-Ausgabe der Template-Kette
 	echo "<pre>";
@@ -95,4 +112,3 @@ if($D['R']['ModuleId']) {
 	*/
 	$C['Smarty']->assign('D',$D);
 	$C['Smarty']->display($_tpl['extends']."|include/input.tpl");
-

@@ -9,9 +9,60 @@ $_action = $R['ACTION'] ?? null;
 $_id     = (string)($R['Module']['Id'] ?? '');
 $_idOk   = (bool)preg_match('#^[a-z0-9_.-]+/[a-z0-9_.-]+$#i', $_id); # nur gültige Paketnamen, der Wert landet in einer Composer-Kommandozeile
 $_result = null;
+$_moduleRows = $D['MODULE']['D'];
+$_moduleFilter['MODULE'] = [];
+$C['fremeo/core']['CData']->get_object($_moduleState, $_moduleFilter);
 
 # Aktionen ändern das System: nur per POST (nicht per Link/GET). Migrationen laufen nach install/update/remove automatisch (Composer-Skripte der composer.json)
 if($_SERVER['REQUEST_METHOD'] !== 'POST') {
+	$_action = null;
+}
+
+if ($_action === 'save') {
+	$_selected = array_keys(array_filter((array)($D['_MODULE_SELECTED'] ?? []), static fn ($value) => $value === '1' || $value === 1));
+	$_bulkAction = $D['_MODULE_ACTION'] ?? '';
+	$_invalid = array_filter($_selected, static fn ($id) => !preg_match('#^[a-z0-9_.-]+/[a-z0-9_.-]+$#i', $id) || !isset($_moduleRows[$id]) || !in_array($_moduleRows[$id]['INFO']['Type'], ['core', 'template', 'module'], true));
+	if (!in_array($_bulkAction, ['activate', 'deactivate', 'update', 'reinstall', 'uninstall', 'clear-cache'], true)) {
+		$R['ComposerOutput'] = ['success' => false, 'output' => 'Bitte eine Aktion waehlen.'];
+	} elseif (!$_selected || $_invalid) {
+		$R['ComposerOutput'] = ['success' => false, 'output' => 'Bitte vorhandene Module auswaehlen. Fuer Libraries sind keine Aktionen erlaubt.'];
+	} elseif (in_array($_bulkAction, ['deactivate', 'uninstall'], true) && array_filter($_selected, static fn ($id) => $id === 'fremeo/core' || $_moduleRows[$id]['INFO']['Type'] === 'core')) {
+		$R['ComposerOutput'] = ['success' => false, 'output' => 'Core darf nicht deaktiviert oder deinstalliert werden. Bitte die Auswahl anpassen.'];
+	} elseif ($_bulkAction === 'clear-cache') {
+		$_cacheLines = [];
+		$_cacheSuccess = true;
+		foreach ($_selected as $_moduleId) {
+			// Nur den kanonischen Modulordner loeschen, niemals einen uebergebenen Pfad.
+			$_cachePath = PROJECT_ROOT . 'data_c/' . str_replace('/', '~', $_moduleId);
+			try {
+				$C['Filesystem']->remove($_cachePath);
+				$_cacheLines[] = "Cache fuer $_moduleId geleert.";
+			} catch (\Symfony\Component\Filesystem\Exception\IOExceptionInterface $e) {
+				$_cacheSuccess = false;
+				$_cacheLines[] = "Cache fuer $_moduleId konnte nicht vollstaendig geleert werden: " . $e->getMessage();
+			}
+		}
+		$R['ComposerOutput'] = ['success' => $_cacheSuccess, 'output' => implode("\n", $_cacheLines)];
+	} elseif (in_array($_bulkAction, ['activate', 'deactivate'], true)) {
+		$_update = [];
+		foreach ($_selected as $_moduleId) {
+			$_update['MODULE']['D'][$_moduleId]['Active'] = $_bulkAction === 'activate' ? 1 : 0;
+		}
+		$C['fremeo/core']['CData']->set_object($_update);
+		$_moduleState = null;
+		$C['fremeo/core']['CData']->get_object($_moduleState, $_moduleFilter);
+		$R['ComposerOutput'] = ['success' => true, 'output' => count($_selected) . ' Modulstatus gespeichert. Die Aenderung gilt ab der naechsten Anfrage.'];
+	} else {
+		$_command = ['update' => 'update', 'reinstall' => 'reinstall', 'uninstall' => 'remove'][$_bulkAction];
+		$_result = $C['Composer']->run($_command . ' ' . implode(' ', array_map('escapeshellarg', $_selected)) . ($_bulkAction === 'update' ? ' --with-dependencies' : ''));
+	}
+}
+
+# Einzelaktionen bleiben erhalten; Libraries und der Core-Uninstall sind auch serverseitig gesperrt.
+if (in_array($_action, ['update-module', 'reinstall-module', 'remove-module', 'uninstall-module'], true)
+	&& (!$_idOk || !isset($_moduleRows[$_id]) || !in_array($_moduleRows[$_id]['INFO']['Type'], ['core', 'template', 'module'], true)
+		|| (in_array($_action, ['remove-module', 'uninstall-module'], true) && ($_id === 'fremeo/core' || $_moduleRows[$_id]['INFO']['Type'] === 'core')))) {
+	$R['ComposerOutput'] = ['success' => false, 'output' => 'Diese Aktion ist fuer das ausgewaehlte Paket nicht erlaubt. Core kann nicht deinstalliert werden; Libraries werden ueber ihre abhaengigen Module verwaltet.'];
 	$_action = null;
 }
 
@@ -97,7 +148,16 @@ foreach( $D['R']['Module']['D'] AS $kMOD => $MOD) {
 	
 }
 
-
-
-
-
+// Lokale Modultypen und gespeicherter Status duerfen nicht aus dem Paket-Cache stammen.
+$R['ModuleTabs'] = [
+	'active' => ['Label' => 'Aktive Module', 'Items' => []],
+	'inactive' => ['Label' => 'Inaktive Module', 'Items' => []],
+	'libraries' => ['Label' => 'Libraries', 'Items' => []],
+];
+foreach ($D['R']['Module']['D'] as $_moduleId => &$_package) {
+	$_package['type'] = $_moduleRows[$_moduleId]['INFO']['Type'] ?? $_package['type'];
+	$_package['Active'] = $_package['type'] === 'core' ? 1 : (int)($_moduleState['MODULE']['D'][$_moduleId]['Active'] ?? 1);
+	$_group = !in_array($_package['type'], ['core', 'template', 'module'], true) ? 'libraries' : ($_package['Active'] ? 'active' : 'inactive');
+	$R['ModuleTabs'][$_group]['Items'][$_moduleId] = $_package;
+}
+unset($_package);

@@ -3,7 +3,7 @@
 # Id einer Variable = Schlüssel aus der Sprachdatei (die Gruppe, z.B. index__login, gehört nicht zur Id).
 # Angezeigte Sprachen: Einstellung fremeo/core enable_languages, z.B. "DE|EN"
 $isos = array_values(array_unique(array_filter(array_map(fn ($i) => strtoupper(trim($i)), explode('|', (string)$C['Setting']->get('fremeo/core', 'enable_languages')))))) ?: ['DE'];
-$mods = array_filter($D['MODULE']['D'], fn ($M) => in_array($M['INFO']['Type'], ['module', 'template', 'core']) );
+$mods = array_filter($D['MODULE']['D'], fn ($M) => in_array($M['INFO']['Type'], ['module', 'template', 'core']) && (int)($M['Active'] ?? 1) === 1);
 
 $defaults = [];
 foreach ($mods as $kMOD => $MOD) {
@@ -17,40 +17,46 @@ foreach ($mods as $kMOD => $MOD) {
 	}
 }
 
-$F['LANGUAGE']['I18N'] = []; # Kind-Typ muss mitgeladen werden
+$f = ['LANGUAGE' => ['I18N' => []]];
 
-if (($R['ACTION'] ?? null) == 'save') {
+if (($_SERVER['REQUEST_METHOD'] ?? '') === 'POST' && ($D['ACTION'] ?? null) === 'save') {
 	foreach ($mods as $kMOD => $MOD) {
+		$update = [];
 		# Wert gleich dem Standard: nicht speichern, eine bereits gespeicherte Abweichung wird entfernt
 		$del = [];
 		foreach ($isos as $iso) {
 			foreach ((array)($MOD['LANGUAGE']['D'][$iso]['I18N']['D'] ?? []) as $id => $row) {
 				if ($row === '__DELETE__') {
 					$del[] = $id;
-				} elseif (($row['Value'] ?? '') === ($defaults[$kMOD][$iso][$id] ?? '')) {
-					$D['MODULE']['D'][$kMOD]['LANGUAGE']['D'][$iso]['I18N']['D'][$id] = '__DELETE__';
+				} elseif (is_array($row) && array_key_exists('Value', $row)) {
+					if (!is_scalar($row['Value'])) {
+						throw new RuntimeException("Ungueltiger Sprachvariablenwert: $kMOD/$iso/$id");
+					}
+					$update['LANGUAGE']['D'][$iso]['I18N']['D'][$id] = (string)$row['Value'] === (string)($defaults[$kMOD][$iso][$id] ?? '')
+						? '__DELETE__' : ['Value' => (string)$row['Value']];
 				}
 			}
 		}
 		# Gelöschte Variablen: in allen Sprachen der Modul-DB entfernen
 		if ($del) {
 			$all = [];
-			$C[$kMOD]['CData']->get_object($all, $F);
+			$C[$kMOD]['CData']->get_object($all, $f);
 			foreach (array_unique([...$isos, ...array_keys($all['LANGUAGE']['D'] ?? [])]) as $lang) {
 				foreach ($del as $id) {
-					$D['MODULE']['D'][$kMOD]['LANGUAGE']['D'][$lang]['I18N']['D'][$id] = '__DELETE__';
+					$update['LANGUAGE']['D'][$lang]['I18N']['D'][$id] = '__DELETE__';
 				}
 			}
 		}
-		$C[$kMOD]['CData']->set_object($D['MODULE']['D'][$kMOD]);
-		unset($D['MODULE']['D'][$kMOD]['LANGUAGE']); # gespeicherte/gelöschte Post-Daten verwerfen, Anzeige lädt neu aus der DB
+		if ($update) $C[$kMOD]['CData']->set_object($update);
 	}
 }
 
 # Anzeige: Wert aus der Modul-DB, sonst Standard aus der Sprachdatei. $R['LanguageRows'][<modul>][<id>][<iso>]
 $R['LanguageIsos'] = $isos;
+$R['LanguageRows'] = [];
 foreach ($mods as $kMOD => $MOD) {
-	$C[$kMOD]['CData']->get_object($D['MODULE']['D'][$kMOD], $F);
+	unset($D['MODULE']['D'][$kMOD]['LANGUAGE']);
+	$C[$kMOD]['CData']->get_object($D['MODULE']['D'][$kMOD], $f);
 	$R['LanguageRows'][$kMOD] = [];
 	foreach ($isos as $iso) {
 		$db = $D['MODULE']['D'][$kMOD]['LANGUAGE']['D'][$iso]['I18N']['D'] ?? [];

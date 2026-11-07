@@ -83,4 +83,36 @@ class AdminLinkListTest extends TestCase {
 
 		$this->assertSame(['sicher'], $this->seoList('fremeo/a'));
 	}
+
+	#[\PHPUnit\Framework\Attributes\WithoutErrorHandler]
+	public function testTemplateUsesThemeColorsAndSeparateFooter(): void {
+		if (!defined('SCRIPT_NAME')) define('SCRIPT_NAME', '/test/');
+		$C = new \fremeo\core\Container();
+		$security = new \fremeo\core\Security();
+		$security->SecurityActive = false;
+		$C->set('Security', $security);
+		$smarty = new \Smarty();
+		$smarty->setCompileDir($this->tmp);
+		$smarty->error_reporting = E_ALL & ~E_WARNING & ~E_NOTICE & ~E_DEPRECATED & ~E_USER_DEPRECATED;
+		$smarty->assign('D', [
+			'C' => $C, 'R' => ['LinkModules' => ['fremeo/a', 'fremeo/b']],
+			'MODULE' => ['D' => [
+				'fremeo/a' => ['LINK' => ['COUNT' => 1, 'D' => ['test' => ['Active' => 1, 'FromURL' => '<test>', 'ToURL' => 'R[Page]=test']]]],
+				'fremeo/b' => ['LINK' => ['COUNT' => 0, 'D' => []]],
+			]],
+		]);
+		$tpl = __DIR__ . '/../system/template/';
+		$html = $smarty->fetch("extends:{$tpl}index__index.tpl|{$tpl}index__admin.tpl|{$tpl}admin__link.list.tpl|{$tpl}include/input.tpl");
+		$smarty->clearAllAssign();
+		$this->assertStringNotContainsString('bg-white', $html);
+		$this->assertStringNotContainsString('bg-light', $html);
+		$this->assertStringNotContainsString('background:#eee', $html);
+		$this->assertStringContainsString('form="link-list-form"', $html);
+		$this->assertStringContainsString('>Abbrechen</a>', $html);
+		$this->assertStringContainsString('Anzahl: 1', $html);
+		$this->assertStringContainsString('tab-pane fade show active', $html);
+		$this->assertStringContainsString('Keine Links vorhanden.', $html);
+		$this->assertStringContainsString('&lt;test&gt;', $html);
+		$this->assertLessThan(strpos($html, 'form="link-list-form"'), strpos($html, '</form>'));
+	}
 }

@@ -26,6 +26,8 @@ Ergänzend gilt [.github/Programmierleitfaden_Module.md](../../../../../.github/
 - Kleine Closures statt Wiederholung (`$item = fn ($key) => [...]`), `??` und `??=` statt verschachtelter `isset`, `array_diff_key` statt `if` in der Schleife, rekursive Closures mit `use (&$walk)`.
 - Kommentare erklären das **Warum**, deutsch, einzeilig. Kein Kommentar zu Selbstverständlichem.
 - Seiten laufen im gemeinsamen Scope von `start.php`: eigene Variablen am Anfang initialisieren, Namen mit Präfix oder in Closures kapseln, eigene Abfragefilter in `$F`-Unterschlüsseln pro Seite nur bewusst verwenden (am Ende fragt `start.php` mit `$F` die Core-Datenbank ab).
+- Die Modulliste wird in `init.php` aus dem Verzeichnisscan aufgebaut: Core, Templates, Module, übrige Typen; innerhalb eines Typs bleibt die Scanreihenfolge erhalten. POST-Daten werden je Modul übernommen, dürfen aber niemals die Lade- oder Einstellungsreihenfolge bestimmen.
+- `admin__module.list` speichert den Aktivstatus je installiertem Core-/Template-/Module-Paket in der Core-Datenbank unter `MODULE.D[<paket>].Active` (0/1; ohne Eintrag aktiv). Deaktivierte Module werden ab der naechsten Anfrage weder initialisiert noch fuer Routing, CLI, Einstellungen oder Template-/Theme-Erweiterungen geladen; Template-Ableitungen eines deaktivierten Elternmoduls entfallen ebenfalls. Core bleibt immer aktiv. Tabs trennen aktive/inaktive Module und Libraries; lokale Typen sind massgeblich. Sammelaktionen Update/Reinstall/Uninstall laufen ueber Composer mit validierten Paketnamen. Libraries sind nicht direkt bearbeitbar, Core ist weder deaktivierbar noch deinstallierbar. Die Aktionsauswahl startet mit `---` ohne Schreibaktion.
 - **Konfigurationsdateien (`return [...]`) immer in isolierter Closure laden**: `(static fn (string $f): array => (array)include $f)($file)`. Sonst bleiben `$section`/`$setting` einer Datei im Scope und tauchen in der nächsten Datei auf (Fehler: Einstellung eines Moduls erschien bei einem anderen).
 - Dateien enthalten **UTF-8**, Einrückung mit Tabs wie im Bestand.
 
@@ -38,9 +40,11 @@ Ergänzend gilt [.github/Programmierleitfaden_Module.md](../../../../../.github/
 - Alle Module eines Dienstes: `$C->getAll('CData')` (liefert `[ModulId => Dienst]`, Libraries fehlen). Damit prüfen Funktionen modulübergreifend (z.B. SEO-Links in allen Datenbanken), geschrieben wird in die Datenbank des **aktiven** Moduls.
 - `$C` ist ein `Container`-Objekt, kein Array: kein `array_filter($C, ...)`, `foreach` nur über `getIterator()`/`getAll()`.
 - Einstellungen lesen/schreiben über `$C['Setting']->get('<vendor/modul>', '<id>')` bzw. `->set(...)`.
+- Dienste mit Referenz auf den spaeter gefuellten Datenbaum registrieren ihre Closure mit `use ($C, &$D)`, nicht mit einer Arrow-Function, die `$D` kopiert. Referenzierte Datenbaum-Eigenschaften erlauben `null`, weil `CData::get_object()` den Baum voruebergehend zuruecksetzt.
 
 ## 4. Daten und Datenbank (`CData`)
 
+- Die Modulaktion `Cache leeren` entfernt ausschliesslich `data_c/<vendor>~<paket>` fuer validierte, ausgewaehlte Module ueber den Filesystem-Dienst. Daten unter `data/`, andere Module und `data_c/public` bleiben erhalten. Gesperrte Dateien oder fehlende Rechte werden als Fehler angezeigt; benoetigte Cache-Dateien entstehen bei folgenden Zugriffen neu.
 - Jedes Modul hat eine eigene Datenbank. In `init.php` wird das **globale Pattern** (`system/default/default.global.pattern.php`) bei **jedem** Modul registriert, auch beim Core (fehlt z.B. `LINK`, entsteht bei gelöschtem Cache ein SQL-Syntaxfehler).
 - Globales Pattern (aktuell): `LINK`, `FILE`, `MIGRATION`, `SETTING` (`Value`), `LANGUAGE.D[<ISO2>].I18N.D[<id>].Value`.
 - Speichern immer mit `set_object($Baum)`: eine **Variable** übergeben (Referenzparameter, kein Ausdruck). Löschen mit dem Wert `'__DELETE__'` an der Stelle des Datensatzes (`...['I18N']['D'][$id] = '__DELETE__'`), `set_object` entfernt Datensatz samt Unterdaten.
@@ -52,15 +56,18 @@ Ergänzend gilt [.github/Programmierleitfaden_Module.md](../../../../../.github/
 
 ## 5. Formulare und `input.tpl` (Pflicht)
 
-- **Jedes Eingabefeld** wird mit `{input p=[...]}` aus `system/template/include/input.tpl` gerendert. Kein eigenes `<input>`/`<select>`/`<textarea>`, außer es gibt den Typ dort nicht. Fehlt ein Typ, wird er in `input.tpl` ergänzt, nicht in der Seite nachgebaut.
+- **Formularelemente bevorzugt mit `{input p=[...]}`** aus `system/template/include/input.tpl` rendern. Fehlt ein Element oder erfordert es eine Erweiterung, vor Aenderungen an `input.tpl` oder einer eigenen Ersatzloesung den Benutzer nach dem gewuenschten Vorgehen fragen.
 - Feldname = Pfad im Datenbaum: `D[MODULE][D][<modulid>][LANGUAGE][D][<ISO2>][I18N][D][<id>][Value]`, `D[MODULE][D][<modulid>][SETTING][D][<id>][Value]`.
 - `input.tpl` ruft für jeden Namen `$D.C.Security->registerSecurityD(...)` auf (Namen werden bei aktivem `security_enable_hash_input_names` gehasht). **Selbst geschriebene Namen im Format `D[...]` immer ebenfalls durch `registerSecurityD` führen**, auch bei zusätzlichen Hidden-Feldern. Bei Pfaden mit Id: Präfix registrieren und `[{$id|escape}]` anhängen (wie `img-delflag` in `input.tpl`).
 - Typen und ihre Besonderheiten (Auszug, Details im Kommentar von `input.tpl`):
   - `text`, `checkbox`, `select`, `radio`, `textarea`: Optionen als `option`.
+  - `select`: `allow_empty=false` unterdrueckt die automatisch erzeugte `---`-Option (Standard: sichtbar). In Einstellungskonfigurationen wird dies als `AllowEmpty => false` angegeben; explizite Optionen wie `|Standard` bleiben erhalten.
+  - `select`: `form` ordnet das Feld einem Formular ausserhalb seines DOM-Elternbaums zu (z.B. Aktionsleiste); `disabled_options` sperrt einzelne Optionswerte. Serverseitige Aktionspruefung bleibt erforderlich.
   - `multiselect`: Parameter `option` als **Liste** `'DE|Deutsch'` (nicht assoziativ, `input.tpl` liest per Index), Wert `DE|EN` mit `|`.
   - `image`: `value` ist ein **Array** `Id => ['FileId' => ...]`, kein String (ein String führt zu `Cannot access offset of type string on string`). Einzelbild: `max=1`, `mainname` (Feld der Datei-Id), `main`, `upload` (Name in `$_FILES`).
 - Optionen und Parameter eines Typs kommen aus der Config/dem Pattern und werden von der Seite **an `input` durchgereicht** (z.B. `'option' => $item.Meta.Options`).
 - Das Formular sendet nur geänderte Felder (`ischanged`). Fehlende Felder bedeuten "unverändert". Eine nicht angehakte Checkbox wird nicht gesendet.
+- **Backend-Aktionsleiste (Pflicht fuer Tabellen, Listen und Formulare):** im Block `inner_footer` ausserhalb des scrollbaren `inner-frame`, dauerhaft sichtbar und mit eigenem Platz ohne Inhaltsueberdeckung, wie bei `admin__menu.list.tpl`. Links stehen Speichern und Abbrechen, rechts bei Bedarf Paging, Filter oder Zusatzaktionen; auf schmalen Ansichten umbrechen. Theme-faehige Bootstrap-Klassen verwenden. Externe Submit-Buttons ueber `form="<formular-id>"` zuordnen; Abbrechen verwirft ohne Schreibaktion. Details: Programmierleitfaden, Abschnitt 6.
 
 ## 6. Löschen in Listen
 
@@ -82,6 +89,7 @@ Ergänzend gilt [.github/Programmierleitfaden_Module.md](../../../../../.github/
 ## 8. Smarty-Templates
 
 - Template-/Theme-Verhalten und Regeln sind in [Konzept_Template_Theme.md](Konzept_Template_Theme.md) beschrieben. Bei Umsetzung oder Aenderungen dieses Systemteils das Konzept im selben Arbeitsschritt aktualisieren; geplanten und implementierten Stand klar trennen.
+- Theme-Anbieter sind nur `type: template` und Core als Basis-Ausnahme. Nur Template-Module verwenden `<parent>__<child>` als Anbieter-Ableitung; normale Funktionsmodule liefern keine Themes.
 - Die Smarty-Security erlaubt nur freigegebene PHP-Funktionen (Liste in `start.php`). **`min()`, `max()`-Varianten und andere fehlende Funktionen nicht im Template aufrufen**: Wert in der PHP-Seite vorbereiten oder mit `{if}` lösen (`{if $level < 6}{$next = $level + 1}{else}{$next = 6}{/if}`).
 - `{function}` für wiederkehrende/rekursive Darstellung. Parameter explizit übergeben (Funktionen erben keine Variablen), Standardwerte im Kopf.
 - Funktionen aus `input.tpl` sind im Template verfügbar, weil die Seitentemplates in der Kette stehen. Zum Testen mit Smarty den Text von `input.tpl` und `{input ...}` in **ein** Template schreiben (`{include}` registriert die Funktionen erst zur Laufzeit).
