@@ -58,6 +58,10 @@ Für PHP-Dateien gilt dasselbe Prinzip. Wird eine `index__admin.php` definiert, 
 * **library:** Bietet wiederverwendbare Hilfsfunktionen, Dienstprogramme oder Klassen, die von anderen Modulen konsumiert werden können.
 
 ### Richtlinien für Keywords
+Der Module Store zeigt Pakete nur mit dem Keyword `"fremeo"` an.
+Anbietername und Pakettyp schraenken die Treffer nicht ein; auch Core- und
+Projektpakete mit diesem Keyword sind sichtbar.
+
 Keywords steuern das Filtern und Suchen im **Module Store**. Sie müssen in exakt dieser Reihenfolge vergeben werden:
 1. **Keyword 1:** `"fremeo"` – Kennzeichnet die Zugehörigkeit zur Plattform.
 2. **Keyword 2:** `"fremeo-[Type]"` – Kennzeichnet den Typ des Moduls (z. B. `fremeo-module`).

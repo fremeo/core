@@ -25,14 +25,13 @@ if (isset($R['Search']) && in_array($_action ?? ($D['R']['Action'] ?? null), ['s
         }
     }
 
-    # Nur installierbare fremeo-Pakete (Module, Templates, auch ältere Typen wie fremeo-module / fremeo-frontend), nicht Core, Loader und fremde Pakete
+    # Das Keyword fremeo bestimmt die Zugehoerigkeit, unabhaengig von Anbieter und Pakettyp.
     $_words  = preg_split('/\s+/', mb_strtolower(trim((string)$R['Search'])), -1, PREG_SPLIT_NO_EMPTY);
     $_result = [];
     foreach ($_all as $_name => $_p) {
         $_keywords = array_map('strtolower', (array)($_p['keywords'] ?? []));
         $_type     = strtolower((string)($_p['type'] ?? ''));
-        $_isSystem = in_array($_type, ['core', 'fremeo-core', 'project'], true) || in_array('fremeo-core', $_keywords, true);
-        if (!str_starts_with($_name, 'fremeo/') || $_isSystem) {
+        if (!in_array('fremeo', $_keywords, true)) {
             continue;
         }
 
