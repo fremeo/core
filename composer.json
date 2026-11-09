@@ -1,6 +1,6 @@
 {
     "name": "fremeo/core",
-    "version": "0.0.7",
+    "version": "0.0.8",
     "description": "core framework for fremeo",
     "license": "MIT",
     "type": "core",

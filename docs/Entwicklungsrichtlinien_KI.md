@@ -23,10 +23,13 @@ Ergänzend gilt [.github/Programmierleitfaden_Module.md](../../../../../.github/
 ### Modulversionen und Releases
 
 - Die Modulversion im Feld `version` der jeweiligen `composer.json` pflegen. Bei Tag-Releases muss der Release-Ablauf die Version automatisch vor dem Taggen erhoehen und committen; Version und Tag muessen uebereinstimmen (`0.1.5` / `v0.1.5`). SemVer verwenden; Kompatibilitaetsgrenzen bei `0.x` ausdruecklich pruefen. Bestehende Tags nicht verschieben.
+- Bei jeder Modulaenderung automatisch den zugehoerigen Changelog pflegen; fehlt er, `CHANGELOG.md` im Modul anlegen. Unveroeffentlichte Aenderungen unter `Unreleased` sammeln; beim Versions-/Release-Schritt automatisch der passenden Version mit Datum zuordnen und gemeinsam vor dem Taggen committen. Vorhandenes Changelog-Format beibehalten; nur tatsaechliche Aenderungen dokumentieren.
 - Nutzt eine Aenderung neue Funktionen, Datenstrukturen oder Template-Bloecke eines anderen Moduls oder des Cores, dessen benoetigte Mindestversion unter `require` im abhaengigen Modul anheben. Erst die Abhaengigkeit veroeffentlichen, dann das abhaengige Modul; kompatible Obergrenzen beibehalten.
 - Vor Releases sicherstellen, dass Constraints keine funktional unzureichenden Versionen erlauben. Vorhandene Lock-Dateien passend aktualisieren und pruefen; `composer install` aktualisiert einen veralteten Lock-Stand nicht automatisch.
 
 ## 2. Code-Stil (PHP)
+
+- Builder-Architektur und offene Entscheidungen stehen in [Konzept_Page_Builder.md](Konzept_Page_Builder.md). Bei jeder Builder-Aenderung oder -Erweiterung dieses Konzept im selben Arbeitsschritt korrigieren oder erweitern. Eine Core-Klasse `Builder` nur bei Bedarf; keine einmalig verwendeten oder trivialen internen Hilfsmethoden auslagern.
 
 - Kurz und lesbar, wie von einem Menschen geschrieben: kein Over-Engineering, keine Hilfsfunktionen für Einmaliges, keine Fehlerbehandlung für Fälle, die nicht vorkommen. Geprüft wird nur an den Grenzen (Formular, Dateien, Netz).
 - Kleine Closures statt Wiederholung (`$item = fn ($key) => [...]`), `??` und `??=` statt verschachtelter `isset`, `array_diff_key` statt `if` in der Schleife, rekursive Closures mit `use (&$walk)`.

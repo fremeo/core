@@ -1,4 +1,12 @@
 # Changelog
+#0.0.8 (2026-11-09, unveroeffentlicht)
++ Allgemeines Smarty-Plugin component fuer aktive Core-, Template- und Funktionsmodule mit expliziter Modul-ID und Komponententyp; keine Vererbung oder gegenseitige Ueberschreibung.
++ Manifestpruefung, Standardoptionen und Variantenvalidierung; lokale Uebergabe Pattern-konformer Daten und Darstellungsoptionen.
++ Komponenten-Container mit eindeutiger bzw. expliziter ID, gemeinsamen CSS-Klassen und Modulzuordnung.
++ Komponenten- und Integrationstests sowie Dokumentation des Komponentenvertrags.
++ Page-Builder-Konzept im Core dokumentiert: feste kompilierbare Smarty-Templates, Pattern-basierte Speicherung, Sprachstaende unter LANGUAGE mit ausschliesslich englischem Fallback, Admin-Middleware und autorisierte Vorschau, Konfliktdeaktivierung durch Active=0.
++ Optionale gleichnamige Komponenten-PHP-Dateien und weitere Builder-Schnittstellen im Konzept vorgesehen; Builder und PHP-Unterstuetzung noch nicht implementiert.
+~ Entwicklungsregeln: Builder-Konzept bei Aenderungen mitpflegen; Changelog bei Modulaenderungen automatisch aktualisieren bzw. anlegen und Releases zuordnen.
 #0.0.7
 + Performance: LazyProxy Classe, verbessert die Ladezeiten bis zu 50%
 #0.0.6

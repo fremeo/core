@@ -777,6 +777,7 @@ class ThemeTest extends TestCase {
 		$theme = $this->publish($this->resolve());
 		$chain = $this->template->getExtends($this->D['MODULE']['D'], 'test/page', 'frontend__article');
 		$smarty = new \Smarty();
+		$smarty->addPluginsDir(__DIR__ . '/../system/core/smarty_plugin');
 		$smarty->setCompileDir("{$this->tmp}/compile");
 		$policy = new \Smarty_Security($smarty);
 		$policy->secure_dir = [$this->tmp];

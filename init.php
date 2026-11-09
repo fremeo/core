@@ -21,7 +21,7 @@ $C->set('Composer', fn () => new Composer(__DIR__.'/system/core/composer.phar', 
 $C->set('Filesystem', fn () => new Filesystem() );
 $C->set('ImageManager', fn () => new ImageManager( Driver::class ) );
 $C->set('Finder', fn () => new Finder() );
-$C->set('Smarty', fn () => new Smarty() );
+$C->set('Smarty', fn () => (new Smarty())->addPluginsDir(__DIR__ . '/system/core/smarty_plugin'));
 $C->set('Template', function () use ($C, &$D) { return new \fremeo\core\Template($C, $D); });
 $C->set('Setting', function () use ($C, &$D) { return new \fremeo\core\Setting($C, $D); });
 
