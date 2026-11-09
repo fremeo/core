@@ -102,6 +102,26 @@ Festgelegt sind Regionen vor und nach dem bestehenden Seiteninhalt
 (`before_content` und `after_content`). Der bestehende Inhalt bleibt erhalten.
 Container werden als Stapel sowie ein- und zweispaltig vorgesehen.
 
+Die Einfuegestellen werden ausschliesslich durch `{builder name="..."}` im
+Template gesetzt. Keine zusaetzliche Regionsdatei, Beschriftung oder manuell
+geschriebenen Drop-Divs im Seitentemplate verlangen. Der stabile Name
+unterscheidet mehrere Stellen derselben Seite.
+
+Im autorisierten Editormodus erzeugt der Renderer selbst die Drop-Divs mit
+`data-builder-*`-Attributen. Das Editor-JavaScript erkennt diese automatisch und
+markiert ihre Flaechen gruen; auch leere Bereiche erhalten eine anklickbare bzw.
+belegbare Mindesthoehe. Im Besuchermodus entfallen Markierungen und Drop-Ziele.
+Die vom Server beim Rendern ermittelten Stellen sind massgeblich; vom Client
+uebermittelte DOM-Attribute allein autorisieren keinen Speicherort.
+
+Eindeutige HTML-IDs werden deterministisch aus Ziel-Modul-ID, Route/PageId,
+optionaler Datensatz-ID, Regionsname und bei Unterelementen stabilen Container-/
+Komponenten-Instanz-IDs gebildet. Bei Bedarf kommt die Template-Zuordnung hinzu.
+Werte kollisionsfrei kodieren oder einen Hash einer strukturierten Identitaet
+verwenden, nicht nur Sonderzeichen durch Bindestriche ersetzen. Sprache gehoert
+zur Auswahl des gespeicherten Sprachstands. Gleiche Stellen duerfen innerhalb
+einer Seite nicht mit derselben Identitaet mehrfach ausgegeben werden.
+
 ## 5. Editor und Vorschau
 
 Links erscheint die Komponentenbibliothek nach Modul gruppiert, beispielsweise
@@ -233,9 +253,9 @@ Smarty-Datei. Bestehende Modul-Templates bleiben bei ihrem Anbieter.
 Ein moeglicher, noch nicht implementierter Layout-Aufruf:
 
 ```smarty
-{builder_region name="before_content"}
+{builder name="before_content"}
 {block name="inner_body"}{/block}
-{builder_region name="after_content"}
+{builder name="after_content"}
 ```
 
 PHP laedt das veroeffentlichte Dokument und seine Datenquellen. Ein gemeinsamer

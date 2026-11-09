@@ -1,5 +1,6 @@
 # Changelog
 #0.0.8 (2026-11-09, unveroeffentlicht)
++ Builder-Konzept: Aufruf builder statt builder_region, automatisch erkannte und gruen markierte Drop-Flaechen ohne zusaetzliche Regionsdatei sowie deterministische zusammengesetzte IDs festgelegt.
 + Allgemeines Smarty-Plugin component fuer aktive Core-, Template- und Funktionsmodule mit expliziter Modul-ID und Komponententyp; keine Vererbung oder gegenseitige Ueberschreibung.
 + Manifestpruefung, Standardoptionen und Variantenvalidierung; lokale Uebergabe Pattern-konformer Daten und Darstellungsoptionen.
 + Komponenten-Container mit eindeutiger bzw. expliziter ID, gemeinsamen CSS-Klassen und Modulzuordnung.
