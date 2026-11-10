@@ -1,5 +1,6 @@
 # Changelog
 #0.0.8 (unveroeffentlicht)
+~ Eigenes Versionsfeld aus composer.json entfernt; Paketversion aus Git/VCS, Release-Regel entsprechend korrigiert.
 + Bild-Hinzufuegen-Kachel explizit mit Datei-Eingabe verknuepft, damit der neue Fortschrittsbalken nicht die Aktivierung des Dateidialogs uebernimmt.
 + Bild-Upload-Fortschritt ersetzt waehrend des Uploads das Plus-Symbol mittig in der Hinzufuegen-Kachel; schmaler Fortschrittsbalken am unteren Rand, Fehlermeldungen separat.
 + SEO-Routing setzt HTTP-Status ueber http_response_code statt rohem HTTP-Header; spaetere JSON-Antworten (z.B. Galerie-Uploads) werden nicht durch PHP-Warnungen verunreinigt.
