@@ -1,0 +1,9 @@
+{
+    "type": "text",
+    "name": "Text",
+    "editorLanguage": "DE",
+    "defaults": {"text": ""},
+    "settings": {
+        "text": {"type": "string", "input": "wysiwyg", "label": "Text (DE)", "translatable": true}
+    }
+}

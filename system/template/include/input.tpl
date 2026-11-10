@@ -329,7 +329,7 @@
 			<textarea id="{md5($p.name)}" ischanged="0" onmouseout="input_onmouseout(this);" onfocusout="input_onmouseout(this);" {if $p.maxlength}maxlength='{$p.maxlength}'{/if} placeholder="{$p.placeholder}" class="form-control" style="{$p.style}" name="{$D.C.Security->registerSecurityD($p.name)}">{$p.value}</textarea>
 		{elseif $p.type == 'wysiwyg'}
 		{*https://developer.mozilla.org/en-US/docs/Web/API/Document/execCommand*}
-			<div style="background:#eee;">
+			<div class="wysiwyg-toolbar" role="toolbar" aria-label="Textformatierung">
 				
 				<div class="btn-group Only4Editor {md5($p.name)}_Only4Editor">
 					<button type="button" class="btn" onclick="document.getElementById('{$p.name}edit').contentWindow.document.execCommand('undo', false, null);"><i class="fa fa-undo" ></i></button>
@@ -338,10 +338,10 @@
 				
 				
 				<div class="btn-group Only4Editor {md5($p.name)}_Only4Editor">
-					<button type="button" class="btn" style="height:max-content;padding:0 auto;" onclick="document.getElementById('{$p.name}edit').contentWindow.document.execCommand('bold', false, null);"><i class="fa fa-bold" ></i></button>
-					<button type="button" class="btn" style="height:max-content;padding:0 auto;" onclick="document.getElementById('{$p.name}edit').contentWindow.document.execCommand('italic', false, null);"><i class="fa fa-italic" ></i></button>
-					<button type="button" class="btn" style="height:max-content;padding:0 auto;" onclick="document.getElementById('{$p.name}edit').contentWindow.document.execCommand('underline', false, null);"><i class="fa fa-underline"></i></button>
-					<button type="button" class="btn" style="height:max-content;padding:0 auto;" onclick="document.getElementById('{$p.name}edit').contentWindow.document.execCommand('strikeThrough', false, null);"><i class="fa fa-strikethrough"></i></button>
+					<button type="button" class="btn" title="Fett" aria-label="Fett" onclick="document.getElementById('{$p.name}edit').contentWindow.document.execCommand('bold', false, null);"><i class="fa fa-bold" ></i></button>
+					<button type="button" class="btn" title="Kursiv" aria-label="Kursiv" onclick="document.getElementById('{$p.name}edit').contentWindow.document.execCommand('italic', false, null);"><i class="fa fa-italic" ></i></button>
+					<button type="button" class="btn" title="Unterstrichen" aria-label="Unterstrichen" onclick="document.getElementById('{$p.name}edit').contentWindow.document.execCommand('underline', false, null);"><i class="fa fa-underline"></i></button>
+					<button type="button" class="btn" title="Durchgestrichen" aria-label="Durchgestrichen" onclick="document.getElementById('{$p.name}edit').contentWindow.document.execCommand('strikeThrough', false, null);"><i class="fa fa-strikethrough"></i></button>
 				</div>
 				
 				<div class="btn-group Only4Editor {md5($p.name)}_Only4Editor">
@@ -357,7 +357,7 @@
 				</div>
 
 				<div class="btn-group Only4Editor {md5($p.name)}_Only4Editor">
-					<button class="btn btn-secondary btn-sm dropdown-toggle" type="button" data-bs-toggle="dropdown"" aria-haspopup="true" aria-expanded="false">
+					<button class="btn btn-secondary btn-sm dropdown-toggle" type="button" data-bs-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
 						<i class='fa fa-indent'></i>
 					</button>
 					<div class="dropdown-menu text-center">
@@ -380,17 +380,17 @@
 			
 
 				<div class="btn-group">
-					<button type="button" class="btn" style="height:max-content;padding:0 auto;"  onclick="$('.{md5($p.name)}_Only4Editor').toggle();$('.{md5($p.name)}_edit').toggle();$('.{md5($p.name)}_code').toggle();"><i class="fa fa-code"></i></button>
+					<button type="button" class="btn" title="HTML-Quelltext" aria-label="HTML-Quelltext" onclick="$('.{md5($p.name)}_Only4Editor').toggle();$('.{md5($p.name)}_edit').toggle();$('.{md5($p.name)}_code').toggle();"><i class="fa fa-code"></i></button>
 				</div>
 
 				{if $p.help}
 				<span class="btn" title="{$p.help}">&#xf128;</span>
 				{/if}
 			</div>
-			<div class="resizable" style="padding:0px;margin:0px;height:100px;position:relative;{if $p.style}{$p.style}{/if}">
+			<div class="resizable wysiwyg-content" style="padding:0px;margin:0px;height:100px;position:relative;{if $p.style}{$p.style}{/if}">
 				
-				<iframe style="min-height:100px;height:100%;display:;width:100%;overflow:auto;" width="100%" height="100%" scrolling="auto" id="{$p.name}edit" class="form-control code {md5($p.name)}_edit" onload="this.contentWindow.document.write('<body style=\'background:#fff;\' contenteditable onkeyup=&quot;parent.document.getElementById(\'{$p.name}\').value = this.innerHTML;&quot;>{str_replace(['"',"'","\r","\n"],['&quot;',"\\'",'\\r','\\n'],$p.value)}</body>')"></iframe>
-				<textarea style="min-height:100px;width:100%;height:100%;display:none;background-color:#ffe;color:blue;" {if $p.maxlength}maxlength='{$p.maxlength}'{/if} class="form-control preview {md5($p.name)}_code" onkeyup="document.getElementById('{$p.name}edit').contentWindow.document.body.innerHTML = this.value;" id="{$p.name}"  name="{$p.name}">{$p.value}</textarea>
+				<iframe style="min-height:100px;height:100%;display:;width:100%;overflow:auto;" width="100%" height="100%" scrolling="auto" id="{$p.name}edit" class="form-control code {md5($p.name)}_edit" onload="this.contentWindow.document.write('<body contenteditable onkeyup=&quot;parent.document.getElementById(\'{$p.name}\').value = this.innerHTML;&quot;>{str_replace(['"',"'","\r","\n"],['&quot;',"\\'",'\\r','\\n'],$p.value)}</body>');var colors = getComputedStyle(this);Object.assign(this.contentDocument.body.style, { backgroundColor: colors.backgroundColor, color: colors.color, colorScheme: colors.colorScheme, fontFamily: colors.fontFamily, fontSize: '14px' });"></iframe>
+				<textarea style="min-height:100px;width:100%;height:100%;display:none;" {if $p.maxlength}maxlength='{$p.maxlength}'{/if} class="form-control preview {md5($p.name)}_code" onkeyup="document.getElementById('{$p.name}edit').contentWindow.document.body.innerHTML = this.value;" id="{$p.name}"  name="{$p.name}">{$p.value}</textarea>
 
 			</div>
 			<script>

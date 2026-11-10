@@ -43,6 +43,7 @@
 				<div class="collapse ps-3" id="submenu5">
 					<ul class="nav flex-column">
 						{block name="sidebar_system"}
+						<li class="nav-item"><a class="nav-link" href="?R[Page]=admin__builder&R[ModuleId]=fremeo/core#submenu5"><i class="fas fa-th-large"></i> Page Builder</a></li>
 						<li class="nav-item"><a class="nav-link" href="?R[Page]=admin__user.list&R[ModuleId]=fremeo/core#submenu5"><i class="fa-solid fa-puzzle-piece"></i> Benutzer</a></li>
 						<li class="nav-item"><a class="nav-link" href="?R[Page]=admin__user_group.list&R[ModuleId]=fremeo/core#submenu5"><i class="fa-solid fa-puzzle-piece"></i> Gruppen</a></li>
 						

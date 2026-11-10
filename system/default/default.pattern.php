@@ -1,5 +1,21 @@
 <?php
 return [
+	'BUILDER' => [
+		'Active'		=> ['Type' => 'checkbox'],	#Aktiviert oder deaktiviert Builder komplett
+		'ModuleId'		=> ['Type' => 'text'],
+		'PageId'		=> ['Type' => 'text'],
+		'EntityId'		=> ['Type' => 'text'],
+		'Region'		=> ['Type' => 'text'],
+		'Scope'			=> ['Type' => 'text'],
+		'Branch'		=> ['Type' => 'text'],
+		'DraftJson'		=> ['Type' => 'text'],
+		'PublishedJson' => ['Type' => 'text'],
+		'D' => ['LANGUAGE' => [
+			'Active' => ['Type' => 'checkbox'],
+			'DraftJson' => ['Type' => 'text'],
+			'PublishedJson' => ['Type' => 'text'],
+		]],
+	],
     'USER' => [
 			'Active'		=> ['Type' => 'checkbox'],
 			'Name'			=> ['Type' => 'text'],

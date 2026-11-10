@@ -1,0 +1,3 @@
+<div id="{$builderId|escape}" class="builder-region{if $builderPreview} builder-dropzone{/if}"{if $builderPreview} data-builder-region="{$builderRegion|escape}" data-builder-scope="{$builderScope|escape}" data-builder-exists="{if $builderExists}1{else}0{/if}" data-builder-deleted="{if $builderDeleted}1{else}0{/if}"{if !$builderVisible} hidden{/if} data-builder-active="{if $builderActive}1{else}0{/if}" data-builder-draft-revision="{$builderDraftRevision|default:''|escape}" data-builder-target="{$builderTargetJson|escape}" data-builder-token="{$builderTargetToken|escape}" style="outline: 2px dashed #198754; outline-offset: -2px; padding: 12px; margin-block: 12px;"{/if}>
+	{include file="./nodes.tpl"}
+</div>

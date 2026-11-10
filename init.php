@@ -24,6 +24,7 @@ $C->set('Finder', fn () => new Finder() );
 $C->set('Smarty', fn () => (new Smarty())->addPluginsDir(__DIR__ . '/system/core/smarty_plugin'));
 $C->set('Template', function () use ($C, &$D) { return new \fremeo\core\Template($C, $D); });
 $C->set('Setting', function () use ($C, &$D) { return new \fremeo\core\Setting($C, $D); });
+$C->set('Builder', fn () => new \fremeo\core\Builder($C['fremeo/core']['CData']));
 
 $C->set('CCache', fn () => new \phploader\CCache([ 'DB' => ['FILENAME' => PROJECT_ROOT.'data_c/fremeo~core/cache.cache' ] ]), 'fremeo/core');
 

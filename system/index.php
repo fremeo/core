@@ -20,6 +20,24 @@ if(!check_user_page_right(['guest',(isset($D['SESSION']['UserId']))?'user':null,
 
 $F['SETTING'] = [];
 
+// Frontend-Rechte allein erlauben keine Einsicht in Builder-Entwuerfe.
+if (isset($R['BuilderPreview'])) {
+	if (!isset($D['SESSION']['UserId']) || !check_user_page_right(
+		[$D['SESSION']['UserId']], 'admin__builder', $C
+	)) {
+		http_response_code(403);
+		echo 'Keine Berechtigung fuer die Builder-Vorschau.';
+		exit;
+	}
+	if (!is_string($R['BuilderLanguage'] ?? null) || !preg_match('/^[A-Z]{2}$/D', $R['BuilderLanguage'])) {
+		http_response_code(400);
+		echo 'Ungueltige Builder-Vorschausprache.';
+		exit;
+	}
+	$C['Builder']->enablePreview($R['BuilderLanguage']);
+	header('Cache-Control: private, no-store');
+}
+
 
 
 
@@ -96,5 +114,3 @@ function check_user_page_right($userId, $page, &$C)
 
     return false;
 }
-
-

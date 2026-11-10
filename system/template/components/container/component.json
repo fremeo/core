@@ -1,0 +1,17 @@
+{
+    "type": "container",
+    "name": "Grid",
+    "builder": "container",
+    "defaults": {"columns": "12", "xs": "", "sm": "", "md": "", "lg": "", "activeXs": true, "activeSm": true, "activeMd": true, "activeLg": true},
+    "settings": {
+        "columns": {"type": "string", "label": "Spalten allgemein (z. B. 8+4 oder 3+6+3)"},
+        "xs": {"type": "string", "label": "XS (<576px; leer: untereinander)"},
+        "sm": {"type": "string", "label": "SM (ab 576px; leer: XS erben)"},
+        "md": {"type": "string", "label": "MD (ab 768px; leer: erben, sonst allgemein)"},
+        "lg": {"type": "string", "label": "LG (ab 992px; leer: MD erben)"},
+        "activeXs": {"type": "boolean", "label": "XS Active"},
+        "activeSm": {"type": "boolean", "label": "SM Active"},
+        "activeMd": {"type": "boolean", "label": "MD Active"},
+        "activeLg": {"type": "boolean", "label": "LG Active"}
+    }
+}

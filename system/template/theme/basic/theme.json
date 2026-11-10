@@ -7,6 +7,7 @@
 		"vendor/bootstrap/5.3.8/css/bootstrap.min.css",
 		"vendor/font-awesome/7.0.1/css/all.min.css",
 		"vendor/select2/4.0.7/css/select2.min.css",
+		"css/inputs.css",
 		{"path": "css/main.css", "media": "bogus"},
 		{"path": "css/admin.css", "branches": ["admin"]}
 	],

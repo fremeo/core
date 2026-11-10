@@ -10,31 +10,11 @@ function smarty_function_component(array $params, Smarty_Internal_Template $temp
 		throw new RuntimeException('component erwartet module, type, einen Daten-Teilbaum als data und optionale options.');
 	}
 	$D = $template->getTemplateVars('D');
-	$provider = $D['MODULE']['D'][$module] ?? null;
-	if (!$provider || (int)($provider['Active'] ?? 0) !== 1
-		|| !in_array($provider['INFO']['Type'] ?? '', ['core', 'template', 'module'], true)) {
-		throw new RuntimeException("Komponenten-Modul nicht verfuegbar: $module");
-	}
-	$root = realpath($provider['INFO']['ModulDir']);
-	$directory = $root === false ? false : realpath($root . '/system/template/components/' . $type);
-	if ($directory === false || !str_starts_with($directory . DIRECTORY_SEPARATOR, $root . DIRECTORY_SEPARATOR)) {
-		throw new RuntimeException("Komponente nicht gefunden: $module:$type");
-	}
-	$manifestFile = realpath($directory . '/component.json');
-	$file = realpath($directory . '/' . $type . '.tpl');
-	foreach ([$manifestFile, $file] as $path) {
-		if ($path === false || !is_file($path) || !str_starts_with($path, $directory . DIRECTORY_SEPARATOR)) {
-			throw new RuntimeException("Komponenten-Dateien fehlen oder liegen ausserhalb der Komponente: $module:$type");
-		}
-	}
-	$manifest = json_decode(file_get_contents($manifestFile), true, 512, JSON_THROW_ON_ERROR);
-	if (!is_array($manifest) || ($manifest['type'] ?? null) !== $type || !is_array($manifest['defaults'] ?? [])) {
-		throw new RuntimeException("Ungueltiges Komponenten-Manifest: $module:$type");
-	}
-	$options = array_replace($manifest['defaults'] ?? [], $options);
-	if (isset($manifest['variants']) && (!is_array($manifest['variants'])
-		|| !in_array($options['variant'] ?? null, $manifest['variants'], true))) {
-		throw new RuntimeException("Ungueltige Komponenten-Variante: $module:$type");
+	$definition = \fremeo\core\Component::load($module, $type, $D['MODULE']['D'][$module] ?? [], $D);
+	$options = \fremeo\core\Component::options($definition['manifest'], $options);
+	if ($definition['data'] !== null) {
+		$data = ($definition['data'])($options, $data);
+		if (!is_array($data)) throw new RuntimeException('Komponenten-Datenaufbereitung muss ein Array liefern.');
 	}
 
 	// Ein Renderer kann mehrfach und verschachtelt Komponenten ausgeben.
@@ -52,7 +32,7 @@ function smarty_function_component(array $params, Smarty_Internal_Template $temp
 	}
 	$state['ids'][$id] = true;
 	$instances[$template->smarty] = $state;
-	$component = $template->smarty->createTemplate($file, null, null, $template);
+	$component = $template->smarty->createTemplate($definition['file'], null, null, $template);
 	$component->assign([
 		'data' => $data,
 		'options' => $options,

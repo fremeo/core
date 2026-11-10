@@ -88,6 +88,7 @@ class ThemeTest extends TestCase {
 		}
 		$db = new CData(['DB' => ['FILENAME' => "$dir/data.db", 'FILENAME_C' => "$dir/cache.db"]]);
 		$db->registerPattern(include __DIR__ . '/../system/default/default.global.pattern.php');
+		$db->registerPattern(include __DIR__ . '/../system/default/default.pattern.php');
 		$this->C->set('CData', $db, "test/$name");
 		$config = ['SETTING' => [
 			'theme' => ['Value' => 'basic', 'InputType' => 'select'],
@@ -807,6 +808,7 @@ class ThemeTest extends TestCase {
 		$template = new Template($C, $D);
 		$C->set('Template', $template);
 		$C->set('Setting', new Setting($C, $D));
+		$C->set('Builder', fn () => new \fremeo\core\Builder($C['fremeo/core']['CData']));
 		$C->set('Security', new class extends \fremeo\core\Security {
 			public function __construct() { $this->SecurityActive = false; }
 		});
@@ -838,6 +840,8 @@ class ThemeTest extends TestCase {
 				define('SCRIPT_NAME', '/application/');
 			}
 			foreach (['fremeo/core' => 'admin__setting.list', 'fremeo/frontend' => 'index__frontend'] as $id => $page) {
+				$R['ModuleId'] = $id;
+				$R['Page'] = $page;
 				$this->assertSame($id === 'fremeo/frontend' ? 'basic__dark_mode' : 'basic', $C['Setting']->get($id, 'theme'));
 				$themes = $template->getThemes($id);
 				$this->assertSame(['basic', 'basic__dark_mode'], $themes['basic__dark_mode']['Chain']);
@@ -923,6 +927,7 @@ class ThemeTest extends TestCase {
 				}
 			}
 		} finally {
+			unset($C['Builder']);
 			foreach (array_keys($C->getAll('CData')) as $id) {
 				unset($C[$id]['CData']);
 			}

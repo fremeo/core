@@ -97,6 +97,9 @@ if($D['R']['ModuleId']) {
 	foreach($_tpl['php'] AS $kFile) {
 		include_once ($kFile);
 	}
+	if (isset($R['BuilderPreview'])) {
+		$R['Frontend']['language'] = $C['Builder']->getPreviewLanguage();
+	}
 	$C['fremeo/core']['CData']->get_object($D,$F); #Datenbank Abfrage
 	$R['Theme'] = $C['Template']->publishTheme(
 		$_theme,

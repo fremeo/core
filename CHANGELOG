@@ -1,12 +1,67 @@
 # Changelog
-#0.0.8 (2026-11-09, unveroeffentlicht)
+#0.0.8 (unveroeffentlicht)
++ Builder-Ebenen: einheitlicher Stift zum Bearbeiten/Anlegen und Papierkorb mit Bestaetigung. Loeschungen bleiben rueckgaengig machbare Entwuerfe und entfernen erst beim Veroeffentlichen die ganze Ebene samt Sprachstaenden.
++ Builder-Bereichsvererbung: aktive individuelle Seite (Page+Id) vor Seitentyp (Page) vor allgemeinem Inhalt, ohne ModuleId-Filter und getrennt nach Frontend/Admin. Deaktivierte Ebenen erben weiter; aktive leere Ebenen bleiben leer.
++ Aufklappbare Bereichsebenen mit Herkunftsanzeige, Aktivierung und ausdruecklicher Bearbeitung; keine individuelle Zeile ohne Id, echte Id 0 bleibt gueltig. Unabhaengige Inhaltskopien statt Ueberschreiben vorhandener gemeinsamer Ebenen.
++ Ebenenwahl, Undo/Redo, Entwurfsspeicherung, signierte Speicherziele und Veroeffentlichung verbunden; keine Migration alter Builder-Schluessel.
++ Grid-Editor vereinfacht: keine doppelte Spalten-Zustandshaltung oder ungenutztes Hidden-Feld; Bildschirmvorgaben zusammengefasst und Platzhalter direkt aus der bestehenden Vererbung abgeleitet. Verhalten und Darstellung unveraendert.
++ Grid-Vorschauen mit abgestuften Bildschirmbreiten und Smartphone-Hochformat fuer XS; LG/MD/SM-Beschriftungen mit > statt ab, Bootstrap-Grenzen unveraendert.
++ WYSIWYG-Feld als beschriftete Gruppe statt umfassendem Label: Klicks in die Schreibflaeche aktivieren nicht mehr den ersten Toolbar-Button.
++ WYSIWYG-Werkzeugleiste mit kompakten 24px-Buttons und Theme-Farben; Schreibflaeche und HTML-Quelltext folgen Hell-/Dunkelmodus, auch im Builder.
++ Builder-Formulare serverseitig aus gemeinsamen TPL-Vorlagen mit vorhandenen input.tpl-Controls; optionale lokale <type>.settings.tpl fuer komponenteneigene Formulare. JavaScript bindet Werte/Interaktionen statt Felder zu erzeugen; input.tpl bleibt unveraendert.
++ Core-Komponente Text mit vorhandenem WYSIWYG und HTML-Quelltextansicht, vorerst fester Bearbeitungssprache DE und vorhandenen Sprach-Snapshots. Komponentenlokale Validierung erlaubt sichere Formatierung und lehnt ausfuehrbaren HTML-/CSS-Code explizit ab.
++ Manifestangaben input:textarea/wysiwyg fuer String-Felder und optionale editorLanguage; eindeutige lokale Controls ohne native Submit-Handler, getrennte Entwurfsspeicherung und Veroeffentlichung unveraendert.
++ Grid-Spalten nehmen mehrere Elemente mit Ablageflaechen oberhalb, dazwischen und darunter auf; Reihenfolge und gemeinsame Spaltenzuordnung bleiben in Entwurf, Veroeffentlichung und Undo/Redo erhalten.
++ Alle Editor-Ablageflaechen textlos mit zugaenglicher Beschriftung, dezenter gelb-transparenter Fuellung und kleineren Abstaenden; Spaltensichtbarkeit beruecksichtigt alle enthaltenen Elemente.
++ Core-Komponente Grid (technischer Typ container) ersetzt die drei festen Bibliothekseintraege. Spaltendropdown, gleichmaessige Vorgaben, Live-Vorschauen LG bis XS, eigene Breitenfelder und Active je Ansicht.
++ Grid unterstuetzt bis zu 12 Spalten mit jeweils 1-12 Rastereinheiten und mehrzeiligem Umbruch (z. B. 12+12+12). Passend viele Drop-Felder auch ohne Inhalt; sparse Ablagepositionen bleiben beim Speichern/Neuladen erhalten. Weniger Spalten loeschen keine Inhalte.
++ Container-Manifest, Rastervalidierung, TPL und Editor-JavaScript im Komponentenordner; generischer Loader fuer lokalen Editorcode und PHP-Optionsvalidator. Editor und Besucherausgabe nutzen dasselbe Bootstrap-Raster.
++ Alte Containerlayouts bleiben lesbar und werden beim Bearbeiten ohne Verlust der Kinder in Optionen ueberfuehrt. Breitenwechsel, Verschieben, Undo/Redo, Entwurf und Veroeffentlichung erhalten verschachtelte Inhalte.
++ Builder Etappe 6: separater kleiner Veroeffentlichen-Button fuer gespeicherte Seitenbereiche samt allen Sprachstaenden und Aktivierungen; Speichern bleibt reine Entwurfssicherung.
++ Veroeffentlichung per Admin-/POST-/CSRF-geschuetzter Aktion mit signierten Zielen und Fingerabdruck des geprueften Entwurfsstands; aktuelle Komponentenvalidierung aller Bereiche vor gemeinsamem Update, anschliessend Ruecklesen.
++ Ungespeicherte Aenderungen blockieren Veroeffentlichen; laufende Veroeffentlichung sperrt Bearbeitung und Abbrechen. Sichtbare Fehler, Wiederholung und erhaltenes Undo/Redo; keine weitere Versionserhoehung.
++ Builder Etappe 5: versioniertes gemeinsames Layout in BUILDER.DraftJson/PublishedJson; nur translatable-String-Einstellungen liegen pro Instanz in Sprach-Snapshots. Navigation bleibt sprachunabhaengig.
++ Bereichsaktivierung in der Bibliothek und Sprachaktivierung/eigene Uebersetzung im Komponenten-Popup; Undo/Redo, saubere Vorschau und Speichern erhalten die getrennten Werte.
++ EN-Fallback nur bei aktiver Zielsprache ohne gespeicherte Uebersetzung; bewusst leere Inhalte und deaktivierte Sprachen loesen keinen Fallback aus.
++ Interne Veroeffentlichung uebernimmt gemeinsamen Stand, Sprachwerte und globale Aktivierung; Entwurfsspeichern veraendert die Besucherausgabe nicht. Veroeffentlichungsoberflaeche folgt separat.
++ Alte Sprachlayouts bleiben lesbar; identische sprachunabhaengige Staende werden beim Speichern in einen gemeinsamen Entwurf ueberfuehrt. Abweichende Altlayouts oder nachtraeglich uebersetzbar markierte Altinstanzen blockieren den gesamten Speicherauftrag vor dem Update statt Daten stillschweigend zu ersetzen.
++ Einstellungsfenster mit echten Reitern, per Titelleiste verschiebbar und rotem Schliessen-X. Uebernehmen aktualisiert die Vorschau ohne Schliessen; OK uebernimmt und schliesst.
++ Generische beschriftete choices-Auswahl und optionale gleichnamige Komponenten-PHP fuer lesende Einstellungen/Datenaufbereitung; Navigationslogik bleibt im Frontend-Komponentenordner.
++ Page Builder Etappe 4: oberer Speichern-Button sichert alle aktuellen Seitenbereiche als Entwurf in Core BUILDER, inklusive leerer Bereiche, Containerreihenfolge, Komponentenoptionen und Allgemeineinstellungen; keine automatische Veroeffentlichung.
++ Signierte, sitzungsgebundene Zielzuordnung und Admin-/POST-/CSRF-Pruefung; vollstaendige Validierung vor gemeinsamem CData-Update und Ruecklesen der Entwuerfe. Datenquellen bleiben Referenzen statt kopierter Vorschaudaten.
++ Gespeicherten Bearbeitungsstand erkennen, Undo/Redo erhalten, Fehler mit Wiederholungsmoeglichkeit anzeigen; Speichern nach erneutem Edit wieder laden. Version bleibt bis zum naechsten Tag unveraendert.
++ Kompaktes Einstellungsfenster mit festem Kopf/Fuss, scrollbarem Inhalt und Tabs fuer Komponente/Allgemein; dynamische Felder aus TPL-Vorlagen, input.tpl bleibt unveraendert.
++ Instanzweite CSS-Klassen, lokale CSS-Deklarationen, Active und Bildschirmgroessen XS/SM/MD/LG fuer Komponenten und Container; Vorschau und oeffentliches Rendering beruecksichtigen Sichtbarkeit, der Editor behaelt alle Elemente.
++ Vorschau-Schalter neben Next zeigt den aktuellen ungespeicherten Seitenstand ohne Editorrahmen, Drop-Ziele oder Werkzeugleisten in voller iframe-Breite; Bearbeiten kehrt ohne Neuladen und ohne Verlust der Undo-/Redo-Historie zurueck.
++ Manifest-Feldtyp tree fuer rekursive Listen im Einstellungs-Popup: Punkte/Unterpunkte anlegen, bearbeiten, sortieren und entfernen; strukturierte serverseitige Validierung und sichere Linkformate.
++ Prev/Next fuer Rueckgaengig/Wiederholen aller temporaeren Layout- und Einstellungsaktionen; Hover-/Fokusleiste mit Elementname und Icons fuer Verschieben, Einstellungen und Entfernen.
++ Manifest-basierte Popup-Einstellungen (string, boolean, integer, number, enum, min/max), gemeinsame Komponentenvalidierung und autorisiertes Neurendern ohne Datenbankschreibzugriff.
+! Einfuegeflaechen sind ausschliesslich Drop-Ziele; Klick-Wiederholung des zuletzt eingefuegten Elements entfernt.
+! Unveroeffentlichte Versionsspruenge zusammengefuehrt: eine naechste Version je Modul bis zum zugehoerigen Tag; Abhaengigkeiten und Dokumentation abgeglichen.
++ Page Builder Etappe 3: nach aktiven Modulen gruppierte Komponentenbibliothek und Stapel-/Ein-/Zweispaltencontainer. Einfuegen und Verschieben per Drag-and-drop auf automatisch erzeugte Einfuegeziele, Entfernen ueber die Elementleiste.
++ Standardvorschau neuer Komponenten ueber den vorhandenen Smarty-Renderer, mit Admin-Middleware, POST und sitzungsgebundenem CSRF-Token; keine PHP-Komponentenaktionen oder Speicherung.
++ Vorschau-Metadaten fuer vorhandene Knoten und Container, eindeutige neue Instanz-IDs, Zyklusschutz sowie sichtbare Katalog-/Renderfehler.
+~ Kompakte kleine Buttons rechts neben der Ueberschrift, kein Navigationstext im normalen Ansichtsmodus.
++ Tests fuer Katalogfilterung, geschuetztes Rendering, Verschieben/Entfernen, Containerzyklen und Abbrechen waehrend ausstehender Vorschauanfragen.
+~ Alle Editor-Aenderungen bleiben temporaer im iframe. Speichern bleibt bis zur freigegebenen Speicheretappe deaktiviert; Veroeffentlichung folgt getrennt.
+~ Page Builder startet direkt mit der normalen Frontend-Startseite ohne Zielmodul-, Routen- oder Sprachvorauswahl. Navigation im iframe bestimmt die zu bearbeitende Seite.
++ Werkzeugleiste mit Edit, Abbrechen und vorerst deaktiviertem Speichern. Erst Edit aktiviert die autorisierte Entwurfsvorschau in der aktuellen Seitensprache; Abbrechen kehrt zur normalen Zieladresse zurueck.
++ Tests fuer Startseite, automatische Sprache, Navigation, Moduswechsel, Fehler und unveraenderte Zielparameter.
++ Page Builder Etappe 2: Admin-Einstieg unter System -> Page Builder mit aktiven Zielmodulen, Frontend-Routen und Sprachwahl.
++ Autorisierte iframe-Vorschau ueber bestehende Benutzer-/Gruppenrechte; Frontend-Berechtigung allein erlaubt keine Entwurfseinsicht.
++ Entwurfsvorschau ohne Veroeffentlichung oder Konfliktdeaktivierung; leere Builder-Stellen werden gruen markiert und automatisch im Editor erkannt.
++ Tests fuer Middleware-Ablehnung von Gaesten/Benutzern, Adminfreigabe, Zielvalidierung, iframe-Rendering und leere Drop-Flaechen.
++ Page Builder Etappe 1: Core-Klasse Builder, CData-Pattern BUILDER mit Sprachstaenden, getrenntes Speichern von Entwurf und Veroeffentlichung sowie englischer Fallback.
++ Smarty-Plugin builder und feste kompilierbare Bereichs-/Container-Ausgabe ueber den vorhandenen Komponentenrenderer; stabile zusammengesetzte IDs.
++ Konfliktdeaktivierung durch Active=0 pro Builder-Stelle und Sprachstand mit PHP-Loghinweis; keine automatische englische Ersatzausgabe fuer deaktivierte Sprachstaende.
++ Tests fuer Speicherung, Sprachfallback, Seitenidentitaet, Konflikte, Rendering und Wiederverwendung kompilierter Templates; Konzept auf Etappenstand aktualisiert.
 + Builder-Konzept: Aufruf builder statt builder_region, automatisch erkannte und gruen markierte Drop-Flaechen ohne zusaetzliche Regionsdatei sowie deterministische zusammengesetzte IDs festgelegt.
 + Allgemeines Smarty-Plugin component fuer aktive Core-, Template- und Funktionsmodule mit expliziter Modul-ID und Komponententyp; keine Vererbung oder gegenseitige Ueberschreibung.
 + Manifestpruefung, Standardoptionen und Variantenvalidierung; lokale Uebergabe Pattern-konformer Daten und Darstellungsoptionen.
 + Komponenten-Container mit eindeutiger bzw. expliziter ID, gemeinsamen CSS-Klassen und Modulzuordnung.
 + Komponenten- und Integrationstests sowie Dokumentation des Komponentenvertrags.
 + Page-Builder-Konzept im Core dokumentiert: feste kompilierbare Smarty-Templates, Pattern-basierte Speicherung, Sprachstaende unter LANGUAGE mit ausschliesslich englischem Fallback, Admin-Middleware und autorisierte Vorschau, Konfliktdeaktivierung durch Active=0.
-+ Optionale gleichnamige Komponenten-PHP-Dateien und weitere Builder-Schnittstellen im Konzept vorgesehen; Builder und PHP-Unterstuetzung noch nicht implementiert.
++ Optionale gleichnamige Komponenten-PHP-Dateien und weitere Builder-Schnittstellen im Konzept vorgesehen; PHP-Unterstuetzung noch nicht implementiert.
 ~ Entwicklungsregeln: Builder-Konzept bei Aenderungen mitpflegen; Changelog bei Modulaenderungen automatisch aktualisieren bzw. anlegen und Releases zuordnen.
 #0.0.7
 + Performance: LazyProxy Classe, verbessert die Ladezeiten bis zu 50%

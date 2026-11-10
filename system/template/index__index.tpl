@@ -1,6 +1,6 @@
 {block name="page"}
 <!DOCTYPE html>
-<html lang="de" data-bs-theme="{$D.R.Theme.ColorScheme|default:'light'|escape}">
+<html lang="de" data-bs-theme="{$D.R.Theme.ColorScheme|default:'light'|escape}"{if ($D.R.Theme.Branch|default:'') == 'frontend'} data-builder-language="{$D.R.Frontend.language|default:'EN'|escape}"{/if}>
 	<head>
 		{block name="head"}
 			<base href="{SCRIPT_NAME}">
