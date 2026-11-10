@@ -3,13 +3,12 @@
 
 $_action  = $_SERVER['REQUEST_METHOD'] === 'POST' ? ($D['R']['Action'] ?? null) : null; # Installation ändert das System: nur per POST
 $_id      = (string)($R['Module']['Id'] ?? '');
-$_version = trim((string)($R['Module']['Version'] ?? ''));
-# Paketname und Version landen in einer Composer-Kommandozeile: nur gültige Werte zulassen
-$_ok      = preg_match('#^[a-z0-9_.-]+/[a-z0-9_.-]+$#i', $_id) === 1 && ($_version === '' || preg_match('#^[A-Za-z0-9._~^*-]+$#', $_version) === 1);
+# Die Versionsgrenzen definieren die Module selbst; das Hauptprojekt haelt nur die gewaehlten Pakete.
+$_ok      = preg_match('#^[a-z0-9_.-]+/[a-z0-9_.-]+$#i', $_id) === 1;
 
 if ($_action == 'install' && $_ok) {
     # installieren eines Moduls über Composer
-    $R['ComposerOutput'] = $C['Composer']->run('require ' . $_id . ($_version !== '' ? ':' . $_version : '')); # Migrationen laufen danach automatisch (Composer-Skripte)
+    $R['ComposerOutput'] = $C['Composer']->run('require ' . escapeshellarg($_id . ':*')); # Migrationen laufen danach automatisch (Composer-Skripte)
     $C['CCache']->flush(['Tag' => 'Package']); # Modulübersicht neu ermitteln
 }
 

@@ -39,7 +39,6 @@
                         <input type="hidden" name="R[Action]" value="install">
                         <input type="hidden" name="R[Search]" value="{$D.R.Search|escape}">
                         <input type="hidden" name="R[Module][Id]" value="{$module['name']|escape}">
-                        <input type="hidden" name="R[Module][Version]" value="{$module['version_latest']|escape}">
                         <button type="submit" class="btn btn-success btn-sm">Installieren</button>
                     </form>
                 {/if}

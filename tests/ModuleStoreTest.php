@@ -66,4 +66,31 @@ class ModuleStoreTest extends TestCase {
 		$this->assertTrue($result['nirgendheim/frontend-focusbox']['installed']);
 		$this->assertSame('0.1.1', $result['nirgendheim/frontend-focusbox']['installed_version']);
 	}
+
+	public function testInstallationAlwaysUsesWildcardInsteadOfPostedVersion(): void {
+		foreach (['', '0.1.1', 'v0.1.2'] as $version) {
+			$composer = new class {
+				public array $commands = [];
+				function run($command) {
+					$this->commands[] = $command;
+					return ['success' => true, 'output' => $command];
+				}
+				function getInstalledPackages() { return []; }
+			};
+			$C = ['Composer' => $composer, 'CCache' => new class {
+				function flush($filter) {}
+			}];
+			$R = ['Module' => ['Id' => 'nirgendheim/frontend-focusbox', 'Version' => $version]];
+			$D = ['R' => ['Action' => 'install']];
+			$server = $_SERVER;
+			$_SERVER['REQUEST_METHOD'] = 'POST';
+			try {
+				include __DIR__ . '/../system/admin__module.store.php';
+			} finally {
+				$_SERVER = $server;
+			}
+			$this->assertSame(['require ' . escapeshellarg('nirgendheim/frontend-focusbox:*')], $composer->commands);
+			$this->assertTrue($R['ComposerOutput']['success']);
+		}
+	}
 }
