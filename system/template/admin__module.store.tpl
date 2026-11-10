@@ -1,4 +1,5 @@
 {block name="inner_body"}
+    {if !$D.R.ComposerAvailable}<div class="alert alert-warning">Paketverwaltung nicht verfuegbar: setup/Composer.php oder setup/composer.phar fehlt oder ist nicht lesbar.</div>{/if}
     {*Todo: Eine Suche diese Packgist Classe verwendet um passende Module mit de Tag frfemeo zu suchen. Es muss ein Sch-text box sein und eine ausgabe der treffer*}
     <form method="post">
         <input type="hidden" name="R[Action]" value='search'>
@@ -39,7 +40,7 @@
                         <input type="hidden" name="R[Action]" value="install">
                         <input type="hidden" name="R[Search]" value="{$D.R.Search|escape}">
                         <input type="hidden" name="R[Module][Id]" value="{$module['name']|escape}">
-                        <button type="submit" class="btn btn-success btn-sm">Installieren</button>
+                        <button type="submit" class="btn btn-success btn-sm"{if !$D.R.ComposerAvailable} disabled{/if}>Installieren</button>
                     </form>
                 {/if}
                 </td>

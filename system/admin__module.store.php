@@ -2,11 +2,14 @@
 // Modul-Store: Suche in den fremeo-Modulen auf Packagist (Name, Beschreibung, Keywords) und Installation per Composer. Template: admin__module.store.tpl
 
 $_action  = $_SERVER['REQUEST_METHOD'] === 'POST' ? ($D['R']['Action'] ?? null) : null; # Installation ändert das System: nur per POST
+$R['ComposerAvailable'] = $C['Composer']->isAvailable();
 $_id      = (string)($R['Module']['Id'] ?? '');
 # Die Versionsgrenzen definieren die Module selbst; das Hauptprojekt haelt nur die gewaehlten Pakete.
 $_ok      = preg_match('#^[a-z0-9_.-]+/[a-z0-9_.-]+$#i', $_id) === 1;
 
-if ($_action == 'install' && $_ok) {
+if ($_action == 'install' && !$R['ComposerAvailable']) {
+    $R['ComposerOutput'] = ['success' => false, 'output' => \fremeo\core\PackageManager::UNAVAILABLE];
+} elseif ($_action == 'install' && $_ok) {
     # installieren eines Moduls über Composer
     $R['ComposerOutput'] = $C['Composer']->run('require ' . escapeshellarg($_id . ':*')); # Migrationen laufen danach automatisch (Composer-Skripte)
     $C['CCache']->flush(['Tag' => 'Package']); # Modulübersicht neu ermitteln

@@ -24,9 +24,11 @@ Flexible Verwaltung einzelner Softwaremodule ermöglicht eine einfache Erweiteru
 
 - Der Modul-Store fuegt ausgewaehlte Pakete dem Hauptprojekt mit `*` hinzu. Die angezeigte neueste Version wird nicht festgeschrieben; konkrete installierte Versionen stehen in `composer.lock`, Kompatibilitaetsgrenzen in den Modulmanifesten. Bestehende feste Root-Constraints werden nicht automatisch geaendert.
 - „Alle aktualisieren“ fuehrt `composer update` aus. Einzel- und Sammelaktionen nutzen ebenfalls Composer; es gibt keine vorgelagerte eigene Loeschroutine.
+- Composer-Klasse und PHAR liegen ausschliesslich im Loader unter `setup/Composer.php` und `setup/composer.phar`, ausserhalb von `vendor`. Der Core-Dienst `PackageManager` liest installierte Pakete selbst und delegiert Schreibaktionen an diese optionale Setup-Klasse. Es gibt keine Core-Kopie und keine Laufzeitkopien mehr.
+- Fehlt eine der beiden lesbaren Setup-Dateien, funktionieren Website, Modulliste, Suche, Aktivierung und Cacheleeren weiter. Installation, Update, Reinstall und Deinstallation sind mit sichtbarem Hinweis deaktiviert und serverseitig gesperrt. Das geschuetzte Setup kann zur Wiederfreigabe wieder bereitgestellt werden. Setup-Dateien niemals waehrend laufender Paketaktionen ersetzen oder entfernen.
 - Composer laedt die benoetigten Pakete vor dem Installationsschritt. Beim Ersetzen werden die alten Dateien entfernt; scheitert danach z.B. das Entpacken, kann ein Modul trotzdem fehlen. Composer-Updates sind keine atomare Transaktion und haben keinen vollstaendigen automatischen Rollback. Vorher Dateien und Datenbanken sichern.
 - Der Wrapper wertet Exitcodes und Skriptfehler aus, uebernimmt stdout/stderr in die Backend-Ausgabe und verhindert parallele Paketaktionen desselben Projekts. Er beendet einen Dateiaustausch nicht nach einem eigenen 300-Sekunden-Limit und laesst ihn bei einem Browserabbruch weiterlaufen. Harte Grenzen des Hosters, Speicher-/Platzmangel und externe SSH-Composer-Aufrufe bleiben davon unberuehrt.
-- `setup/Composer.php` im Loader und `system/core/Composer.php` im Core muessen identisch bleiben. Eine PHP-CLI der eingesetzten Hosting-Version verwenden; CloudLinux/alt-php wird bei der Erkennung beruecksichtigt.
+- Eine PHP-CLI der eingesetzten Hosting-Version verwenden; CloudLinux/alt-php wird bei der Erkennung beruecksichtigt.
 
 Fehlt nach einem abgebrochenen Update bereits `fremeo/core/init.php`, ist das Backend nicht mehr verwendbar. Nach einer Sicherung im Projektordner per SSH/Cron (mit der passenden PHP-CLI) reparieren:
 

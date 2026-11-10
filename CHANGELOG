@@ -1,5 +1,10 @@
 # Changelog
-#0.0.8 (unveroeffentlicht)
+#0.0.10 (unveroeffentlicht)
+! Composer-Klasse und PHAR aus dem Core entfernt: optionale Paketverwaltung ausschliesslich aus dem Loader-Setup ausserhalb von vendor, ohne Laufzeitkopien.
++ PackageManager liest installierte Pakete auch ohne Setup; Composer-Aktionen bei fehlendem Setup sichtbar deaktiviert und serverseitig gesperrt, Website, Suche und Modulstatus bleiben nutzbar.
+! Regressionstests fuer fehlendes Setup und Paketupdates, die die alte mitgelieferte PHAR entfernen, mit und ohne CLI-Prozess.
+
+#0.0.8
 ! Modul-Store installiert Pakete mit explizitem Root-Constraint * statt einer festgeschriebenen angezeigten Version; Kompatibilitaetsgrenzen bleiben in den Modulmanifesten.
 ! Composer-Exitcodes und Fehler nachgelagerter Skripte werden als Fehler gemeldet, Prozessausgaben auch bei CLI-Aufruf vollstaendig erfasst; kein eigener 300s-Prozessabbruch mehr waehrend eines Updates.
 ! Paketaktionen pro Projekt gegen parallele Ausfuehrung gesperrt und gegen Browserabbruch/PHP-Ausfuehrungslimit abgesichert (harte Hosterlimits bleiben bestehen); CloudLinux-PHP-CLI beruecksichtigt.

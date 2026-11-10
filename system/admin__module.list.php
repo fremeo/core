@@ -6,9 +6,14 @@ if(($R['ACTION']??null) == 'save') {
 */
 
 $_action = $R['ACTION'] ?? null;
+$R['ComposerAvailable'] = $C['Composer']->isAvailable();
 $_id     = (string)($R['Module']['Id'] ?? '');
 $_idOk   = (bool)preg_match('#^[a-z0-9_.-]+/[a-z0-9_.-]+$#i', $_id); # nur gültige Paketnamen, der Wert landet in einer Composer-Kommandozeile
 $_result = null;
+if (!$R['ComposerAvailable'] && in_array($_action, ['update-module', 'update-all', 'reinstall-module', 'remove-module', 'uninstall-module'], true)) {
+	$R['ComposerOutput'] = ['success' => false, 'output' => \fremeo\core\PackageManager::UNAVAILABLE];
+	$_action = null;
+}
 $_moduleRows = $D['MODULE']['D'];
 $_moduleFilter['MODULE'] = [];
 $C['fremeo/core']['CData']->get_object($_moduleState, $_moduleFilter);
@@ -52,6 +57,8 @@ if ($_action === 'save') {
 		$_moduleState = null;
 		$C['fremeo/core']['CData']->get_object($_moduleState, $_moduleFilter);
 		$R['ComposerOutput'] = ['success' => true, 'output' => count($_selected) . ' Modulstatus gespeichert. Die Aenderung gilt ab der naechsten Anfrage.'];
+	} elseif (!$R['ComposerAvailable']) {
+		$R['ComposerOutput'] = ['success' => false, 'output' => \fremeo\core\PackageManager::UNAVAILABLE];
 	} else {
 		$_command = ['update' => 'update', 'reinstall' => 'reinstall', 'uninstall' => 'remove'][$_bulkAction];
 		$_result = $C['Composer']->run($_command . ' ' . implode(' ', array_map('escapeshellarg', $_selected)) . ($_bulkAction === 'update' ? ' --with-dependencies' : ''));

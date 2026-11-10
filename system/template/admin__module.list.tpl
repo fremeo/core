@@ -1,4 +1,5 @@
 {block name="inner_body"}
+	{if !$D.R.ComposerAvailable}<div class="alert alert-warning">Paketverwaltung nicht verfuegbar: setup/Composer.php oder setup/composer.phar fehlt oder ist nicht lesbar.</div>{/if}
 
 	<form method="post" id="modForm">
 		<input type="hidden" name="R[ACTION]" value='save'>
@@ -6,7 +7,7 @@
 		{if $D.R.ComposerOutput|default:null}
 			<div class="alert {if $D.R.ComposerOutput.success}alert-success{else}alert-danger{/if}">
 				<pre class="mb-0" style="white-space:pre-wrap;">{$D.R.ComposerOutput.output|escape}</pre>
-			</div>
+			</fieldset>
 		{/if}
 		<ul class="nav nav-tabs mb-3" role="tablist">
 			{foreach $D.R.ModuleTabs as $tabId => $tab}
@@ -46,7 +47,7 @@
 				{*if $MOD.url} | <a class="pkg-link" target="_blank" href="{$MOD.url}">repo</a>{/if*}
 				{*if $MOD.require}<br>Require: {foreach from=$MOD.require key="kR" item="R"}{$kR}:{$R}{/foreach}{/if*}
 					{if in_array($MOD.type, ['core','module','template'])}
-					<div>
+					<fieldset{if !$D.R.ComposerAvailable} disabled{/if}>
 						{if $MOD.version != $MOD.version_latest}<button type="button" class="btn btn-primary btn-sm" onclick="modAction('update-module','{$kMOD|escape:'javascript'}')">Update</button>{/if}
 						<button type="button" class="btn btn-primary btn-sm" onclick="modAction('reinstall-module','{$kMOD|escape:'javascript'}','{$kMOD|escape:'javascript'} neu installieren?')">Reinstall</button>
 						{if $MOD.type != 'core'}<button type="button" class="btn btn-danger btn-sm" onclick="modAction('uninstall-module','{$kMOD|escape:'javascript'}','{$kMOD|escape:'javascript'} wirklich deinstallieren?')">Uninstall</button>{/if}
@@ -100,10 +101,14 @@
 		</div>
 		<div class="d-flex flex-wrap align-items-center gap-2">
 			<div>
-				{input p=['type' => 'select', 'name' => 'D[_MODULE_ACTION]', 'form' => 'modForm', 'value' => '', 'option' => ['activate|Aktivieren', 'deactivate|Deaktivieren', 'clear-cache|Cache leeren', 'update|Update', 'reinstall|Reinstall', 'uninstall|Uninstall']]}
+				{if $D.R.ComposerAvailable}
+					{input p=['type' => 'select', 'name' => 'D[_MODULE_ACTION]', 'form' => 'modForm', 'value' => '', 'option' => ['activate|Aktivieren', 'deactivate|Deaktivieren', 'clear-cache|Cache leeren', 'update|Update', 'reinstall|Reinstall', 'uninstall|Uninstall']]}
+				{else}
+					{input p=['type' => 'select', 'name' => 'D[_MODULE_ACTION]', 'form' => 'modForm', 'value' => '', 'option' => ['activate|Aktivieren', 'deactivate|Deaktivieren', 'clear-cache|Cache leeren']]}
+				{/if}
 			</div>
 			<a class="btn btn-outline-primary btn-sm" href="admin/module.store">Neues Modul</a>
-			<button type="button" class="btn btn-outline-primary btn-sm" onclick="modAction('update-all','','Alle Pakete aktualisieren?')">Alle aktualisieren</button>
+			<button type="button" class="btn btn-outline-primary btn-sm"{if !$D.R.ComposerAvailable} disabled{/if} onclick="modAction('update-all','','Alle Pakete aktualisieren?')">Alle aktualisieren</button>
 			<button type="button" class="btn btn-outline-secondary btn-sm" title="Wird nach Installation und Update automatisch ausgefuehrt" onclick="modAction('migration-run','')">Migrationen ausfuehren</button>
 		</div>
 	</div>

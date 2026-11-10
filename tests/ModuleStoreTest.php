@@ -32,6 +32,7 @@ class ModuleStoreTest extends TestCase {
 			'CCache' => $cache,
 			'Packagist' => $packagist,
 			'Composer' => new class {
+				function isAvailable() { return true; }
 				function getInstalledPackages() {
 					return ['nirgendheim/frontend-focusbox' => ['version' => '0.1.1']];
 				}
@@ -70,6 +71,7 @@ class ModuleStoreTest extends TestCase {
 	public function testInstallationAlwaysUsesWildcardInsteadOfPostedVersion(): void {
 		foreach (['', '0.1.1', 'v0.1.2'] as $version) {
 			$composer = new class {
+				function isAvailable() { return true; }
 				public array $commands = [];
 				function run($command) {
 					$this->commands[] = $command;
@@ -91,6 +93,50 @@ class ModuleStoreTest extends TestCase {
 			}
 			$this->assertSame(['require ' . escapeshellarg('nirgendheim/frontend-focusbox:*')], $composer->commands);
 			$this->assertTrue($R['ComposerOutput']['success']);
+		}
+	}
+
+	public function testMissingSetupRejectsInstallationWithoutCallingComposer(): void {
+		$composer = new class {
+			public array $commands = [];
+			function isAvailable() { return false; }
+			function run($command) { $this->commands[] = $command; }
+			function getInstalledPackages() { return []; }
+		};
+		$C = ['Composer' => $composer];
+		$R = ['Module' => ['Id' => 'nirgendheim/frontend-focusbox']];
+		$D = ['R' => ['Action' => 'install']];
+		$server = $_SERVER;
+		$_SERVER['REQUEST_METHOD'] = 'POST';
+		try {
+			include __DIR__ . '/../system/admin__module.store.php';
+		} finally {
+			$_SERVER = $server;
+		}
+		$this->assertFalse($R['ComposerAvailable']);
+		$this->assertFalse($R['ComposerOutput']['success']);
+		$this->assertSame([], $composer->commands);
+	}
+
+	public function testStoreTemplateDisablesInstallationButPreservesSearch(): void {
+		$tmp = sys_get_temp_dir() . '/fremeo_store_tpl_' . bin2hex(random_bytes(6));
+		mkdir($tmp);
+		try {
+			$smarty = new \Smarty();
+			$smarty->setCompileDir($tmp);
+			$smarty->assign('D', ['R' => [
+				'ComposerAvailable' => false, 'ComposerOutput' => null, 'Search' => '',
+				'Module' => ['D' => [[
+					'name' => 'test/module', 'description' => 'Test',
+					'version_latest' => 'v1.0.0', 'installed' => false,
+				]]],
+			]]);
+			$html = $smarty->fetch(__DIR__ . '/../system/template/admin__module.store.tpl');
+			$this->assertStringContainsString('Paketverwaltung nicht verfuegbar', $html);
+			$this->assertStringContainsString('disabled>Installieren', $html);
+			$this->assertStringContainsString('class="btn btn-primary">Suchen', $html);
+		} finally {
+			(new \Symfony\Component\Filesystem\Filesystem())->remove($tmp);
 		}
 	}
 }

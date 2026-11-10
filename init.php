@@ -8,7 +8,6 @@ define('SCRIPT_NAME',rtrim(dirname($_SERVER['SCRIPT_NAME']), '/').'/');
 
 require_once('system/vendor/autoload.php');
 
-include_once(__dir__.'/system/core/Composer.php'); #ToDo: Über autoloader laden # identisch mit setup/Composer.php (Setup kann den Core bei der Installation noch nicht laden), beide synchron halten
 include_once(__dir__.'/system/core/Packagist.php'); #Todo: Über autoloader laden 
 
 $D = [];
@@ -17,7 +16,7 @@ $C = new fremeo\core\Container(); # Klassen Instanz Array, für alle Module und 
 # Module Klassen Instanzen werden in $C['ModulId']['KlassenName'] gespeichert
 $C->set('Security', fn () => new \fremeo\core\Security());
 $C->set('Packagist', fn () => new Packagist() );
-$C->set('Composer', fn () => new Composer(__DIR__.'/system/core/composer.phar', PROJECT_ROOT) );
+$C->set('Composer', fn () => new \fremeo\core\PackageManager(PROJECT_ROOT) );
 $C->set('Filesystem', fn () => new Filesystem() );
 $C->set('ImageManager', fn () => new ImageManager( Driver::class ) );
 $C->set('Finder', fn () => new Finder() );

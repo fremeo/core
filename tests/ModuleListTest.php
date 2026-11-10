@@ -31,6 +31,8 @@ class ModuleListTest extends TestCase {
 		}
 		$this->C->set('Composer', new class($packages) {
 			public array $commands = [];
+			public bool $available = true;
+			function isAvailable() { return $this->available; }
 			function __construct(private array $packages) {}
 			function getInstalledPackages() { return $this->packages; }
 			function run($command) {
@@ -64,6 +66,24 @@ class ModuleListTest extends TestCase {
 
 	private function bulk(string $action, array $selected, string $method = 'POST'): array {
 		return $this->page(['ACTION' => 'save'], $method, ['_MODULE_ACTION' => $action, '_MODULE_SELECTED' => $selected]);
+	}
+
+	public function testMissingSetupBlocksComposerActionsButNotModuleActivation(): void {
+		$this->C['Composer']->available = false;
+		$data = $this->page([], 'GET');
+		$this->assertFalse($data['R']['ComposerAvailable']);
+		$this->assertCount(3, $data['R']['ModuleTabs']['active']['Items']);
+		foreach (['update-all', 'update-module', 'reinstall-module', 'uninstall-module'] as $action) {
+			$data = $this->page(['ACTION' => $action, 'Module' => ['Id' => 'fremeo/shop']]);
+			$this->assertFalse($data['R']['ComposerOutput']['success']);
+		}
+		foreach (['update', 'reinstall', 'uninstall'] as $action) {
+			$data = $this->bulk($action, ['fremeo/shop' => '1']);
+			$this->assertFalse($data['R']['ComposerOutput']['success']);
+		}
+		$this->assertSame([], $this->C['Composer']->commands);
+		$data = $this->bulk('deactivate', ['fremeo/shop' => '1']);
+		$this->assertTrue($data['R']['ComposerOutput']['success']);
 	}
 
 	private function states(): array {
@@ -215,5 +235,14 @@ class ModuleListTest extends TestCase {
 		$this->assertStringContainsString('form="modForm" class="btn btn-primary btn-sm">Speichern', $html);
 		$this->assertStringContainsString('>Abbrechen</a>', $html);
 		$this->assertStringNotContainsString('sticky-bottom', $html);
+		$this->C['Composer']->available = false;
+		$smarty->assign('D', $this->page([], 'GET'));
+		$html = $smarty->fetch("extends:{$tpl}index__index.tpl|{$tpl}index__admin.tpl|{$tpl}admin__module.list.tpl|{$tpl}include/input.tpl");
+		$this->assertStringContainsString('Paketverwaltung nicht verfuegbar', $html);
+		$this->assertStringContainsString('<fieldset disabled>', $html);
+		$this->assertStringContainsString('disabled onclick="modAction(\'update-all\'', $html);
+		$this->assertStringNotContainsString('value="uninstall">', $html);
+		$this->assertStringNotContainsString('value="update">', $html);
+		$this->assertStringContainsString('value="activate">Aktivieren', $html);
 	}
 }

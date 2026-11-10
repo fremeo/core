@@ -6,7 +6,10 @@ use PHPUnit\Framework\TestCase;
 /**
  * setup/Composer.php: Ist proc_open gesperrt (disable_functions), läuft Composer im selben PHP-Prozess.
  * Der Test simuliert das, indem er canSpawnProcess() überschreibt.
+ * Composer-PHARs verschiedener Testprojekte registrieren dieselben globalen Klassen: je Test ein eigener PHP-Prozess.
  */
+#[\PHPUnit\Framework\Attributes\RunTestsInSeparateProcesses]
+#[\PHPUnit\Framework\Attributes\PreserveGlobalState(false)]
 class SetupComposerTest extends TestCase {
 
 	private string $setupDir;
@@ -43,6 +46,7 @@ class SetupComposerTest extends TestCase {
 	}
 
 	public function testRunsComposerWithoutProcOpen(): void {
+		$this->tempProject([]);
 		$composer = $this->inProcessComposer();
 		$cwd = getcwd();
 
@@ -54,6 +58,7 @@ class SetupComposerTest extends TestCase {
 	}
 
 	public function testUnknownCommandIsReportedByComposer(): void {
+		$this->tempProject([]);
 		$composer = $this->inProcessComposer();
 		$cwd = getcwd();
 
@@ -263,5 +268,46 @@ class SetupComposerTest extends TestCase {
 		$this->assertStringContainsString('missing.zip', $result['output']);
 		$this->assertFileExists("$tmp/system/vendor/test/module/init.php");
 		$this->assertFileDoesNotExist("$tmp/migration.txt");
+	}
+
+	public function testSetupComposerCanRemoveLegacyBundledArchiveWithoutProcessStart(): void {
+		$this->checkSelfUpdate(false);
+	}
+
+	public function testSetupComposerCanRemoveLegacyBundledArchiveInChildProcess(): void {
+		$this->checkSelfUpdate(true);
+	}
+
+	private function checkSelfUpdate(bool $spawn): void {
+		if (!class_exists(\ZipArchive::class)) $this->markTestSkipped('ZipArchive erforderlich');
+		$tmp = $this->tempProject([]);
+		$archives = [];
+		foreach (['1.0.0', '1.1.0'] as $version) {
+			$archives[$version] = "$tmp/self-$version.zip";
+			$zip = new \ZipArchive();
+			$this->assertTrue($zip->open($archives[$version], \ZipArchive::CREATE));
+			$zip->addFromString('module/init.php', "<?php // $version");
+			if ($version === '1.0.0') {
+				$zip->addFile("{$this->setupDir}/composer.phar", 'module/composer.phar');
+			}
+			$zip->close();
+		}
+		$this->packageProject($tmp, $archives, '1.0.0');
+		$result = $this->projectComposer($tmp, true)->run('update');
+		$this->assertTrue($result['success'], $result['output']);
+		unlink("$tmp/migration.txt");
+		$this->packageProject($tmp, $archives, '1.1.0');
+		$composer = $this->projectComposer($tmp, $spawn);
+		$result = $composer->run('update');
+		$this->assertTrue($result['success'], $result['output']);
+		$this->assertStringContainsString('1.1.0', file_get_contents("$tmp/system/vendor/test/module/init.php"));
+		$this->assertFileDoesNotExist("$tmp/system/vendor/test/module/composer.phar");
+		$this->assertFileExists("$tmp/migration.txt");
+		$this->assertDirectoryDoesNotExist("$tmp/data_c/composer-runtime");
+		if ($spawn) {
+			$this->assertStringContainsString($this->setupDir, file_get_contents("$tmp/composer_debug.txt"));
+		}
+		$result = $composer->run('show test/module');
+		$this->assertTrue($result['success'], $result['output']);
 	}
 }
