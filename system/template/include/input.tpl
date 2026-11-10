@@ -115,6 +115,7 @@
 				             ein neu hochgeladenes Bild (upload) setzt der Server. Bei max>1 aktiviert mainname zusätzlich den Stern (Titelbild) je Kachel.
 				main       aktuelle Datei-ID
 				help       Hilfetext
+				queue      1 = Dateien beim Speichern einzeln senden; Seite muss UploadQueue-JSON-Antworten und UploadToken bereitstellen.
 				Bilder werden als file/{id}_{res}x{res}.webp geladen (res = 2 x size). Das Formular braucht enctype="multipart/form-data".
 				Gelöschte Bilder trägt nur der Server aus: __DELETE__ ist nur ein Flag, Dateien selbst löscht z.B. $C['modul']['File']->delete().
 			*}
@@ -124,7 +125,7 @@
 			{$ff = $p.filefield}{if !$ff}{$ff = 'FileId'}{/if}
 			{$sf = $p.sortfield}{if !$sf}{$sf = 'Sort'}{/if}
 			{$count = 0}{if $p.value}{$count = count($p.value)}{/if}
-			<div id="img_{$h}" class="img-input d-flex flex-wrap gap-1" data-max="{if $p.max}{$p.max}{else}0{/if}">
+			<div id="img_{$h}" class="img-input d-flex flex-wrap gap-1" data-max="{if $p.max}{$p.max}{else}0{/if}"{if $p.queue} data-upload-queue="1" data-upload-token="{$p.upload_token|escape}"{/if}>
 				{foreach $p.value as $id => $item}
 					{$fid = $item[$ff]}{if !$fid}{$fid = $id}{/if}
 					<div class="img-tile position-relative border rounded overflow-hidden bg-light" data-fid="{$fid|escape}" style="width:{$size}px;height:{$size}px;{if $p.sortable}cursor:move;{/if}"{if $p.sortable} draggable="true"{/if}{if $item.Title} title="{$item.Title|escape}"{/if}>
@@ -146,9 +147,13 @@
 					</div>
 				{/foreach}
 				{if $p.upload}
-					<label class="img-add btn btn-outline-secondary position-relative d-flex align-items-center justify-content-center p-0{if $p.max && $count >= $p.max} d-none{/if}" style="width:{$size}px;height:{$size}px;border-style:dashed;" title="Bilder hinzufügen">
+					<label for="img_file_{$h}" class="img-add btn btn-outline-secondary position-relative d-flex align-items-center justify-content-center p-0{if $p.max && $count >= $p.max} d-none{/if}" style="width:{$size}px;height:{$size}px;border-style:dashed;" title="Bilder hinzufügen">
 						<i class="fa-solid fa-plus"></i>
-						<input type="file" class="img-file d-none" name="{$p.upload|escape}[]" multiple accept="{if $p.accept}{$p.accept|escape}{else}image/*{/if}">
+						{if $p.queue}
+							<span class="img-progress small" role="status" hidden></span>
+							<progress class="img-progressbar position-absolute bottom-0 start-0 w-100" style="height:5px;" max="100" value="0" aria-label="Upload-Fortschritt" hidden></progress>
+						{/if}
+						<input type="file" id="img_file_{$h}" class="img-file d-none" name="{$p.upload|escape}[]" multiple accept="{if $p.accept}{$p.accept|escape}{else}image/*{/if}">
 						<span class="img-addcount badge text-bg-primary position-absolute top-0 end-0 d-none"></span>
 					</label>
 				{/if}
@@ -157,10 +162,92 @@
 			<div class="form-text"><span class="img-n">{$count}</span>{if $p.max} / {$p.max}{/if} Bilder{if $p.help} &ndash; {$p.help}{/if}</div>
 			{literal}
 			<script>
+			function initImageUploadQueue(widget) {
+				var form = widget.closest('form');
+				if (!form || form.dataset.uploadQueue) return;
+				form.dataset.uploadQueue = '1';
+				var status = widget.querySelector('.img-progress'), bar = widget.querySelector('.img-progressbar'),
+					plus = widget.querySelector('.img-add > i'), badge = widget.querySelector('.img-addcount'),
+					errorText = document.createElement('div'), pending = [], done = 0, running = false, started = false;
+				errorText.className = 'small text-danger';
+				errorText.setAttribute('role', 'alert');
+				errorText.hidden = true;
+				widget.nextElementSibling.after(errorText);
+				function progress() {
+					status.textContent = done + '/' + pending.length;
+					bar.value = pending.length ? done / pending.length * 100 : 0;
+				}
+				function leaving(event) { event.preventDefault(); event.returnValue = ''; }
+				form.addEventListener('submit', async function(event) {
+					event.preventDefault();
+					event.stopImmediatePropagation();
+					if (running) return;
+					if (!started) {
+						pending = Array.from(form.querySelectorAll('[data-upload-queue] input[type="file"]')).flatMap(function(input) {
+							return Array.from(input.files).map(function(file) { return { name: input.name, file: file }; });
+						});
+						done = 0;
+					}
+					status.hidden = false;
+					bar.hidden = false;
+					plus.hidden = true;
+					badge.classList.add('d-none');
+					errorText.hidden = true;
+					progress();
+					running = true;
+					window.addEventListener('beforeunload', leaving);
+					var controls = Array.from(form.elements), disabled = controls.map(function(input) { return input.disabled; });
+					var body = new FormData(form);
+					controls.forEach(function(input) { input.disabled = true; });
+					var url = new URL(form.action, location.href);
+					url.searchParams.set('R[UploadQueue]', '1');
+					async function send(data, count) {
+						data.set('R[UploadToken]', widget.dataset.uploadToken);
+						var response = await fetch(url.href, { method: 'POST', credentials: 'same-origin', body: data });
+						if (response.redirected) throw new Error('Anmeldung abgelaufen. Seite neu laden.');
+						var result;
+						try { result = await response.json(); }
+						catch (error) { throw new Error('Keine gueltige Upload-Antwort (HTTP ' + response.status + '). Serverlimit oder Anmeldung pruefen.'); }
+						if (!response.ok || result.saved !== true || result.received !== count) throw new Error(result.error || 'Upload wurde nicht vollstaendig bestaetigt.');
+						if (result.info) window.alert(result.info);
+					}
+					try {
+						if (!started) {
+							form.querySelectorAll('[data-upload-queue] input[type="file"]').forEach(function(input) { body.delete(input.name); });
+							await send(body, 0);
+							started = true;
+						}
+						while (done < pending.length) {
+							var entry = pending[done], data = new FormData();
+							data.set('R[ACTION]', 'save');
+							data.set('R[UploadOnly]', '1');
+							data.set('R[FileModified]', JSON.stringify({ [entry.file.name.toLowerCase()]: entry.file.lastModified }));
+							data.append(entry.name, entry.file);
+							await send(data, 1);
+							done++;
+							progress();
+						}
+						window.removeEventListener('beforeunload', leaving);
+						location.assign(form.action);
+					} catch (error) {
+						errorText.hidden = false;
+						errorText.textContent = 'Upload gestoppt' + (pending[done] ? ' bei ' + pending[done].file.name : '') + ': ' + error.message
+							+ ' (' + done + ' / ' + pending.length + ' hochgeladen). Speichern versucht den verbleibenden Upload erneut.';
+						console.error('Bilder-Upload:', error);
+					} finally {
+						running = false;
+						controls.forEach(function(input, index) {
+							input.disabled = disabled[index] || started && input.type !== 'submit';
+						});
+						if (!started) window.removeEventListener('beforeunload', leaving);
+					}
+				}, true);
+			}
 			$(function() {
 				$('.img-input').each(function() {
 					if (this.dataset.init) return;
 					this.dataset.init = 1;
+					if (this.dataset.uploadQueue === '1') initImageUploadQueue(this);
 					var $w = $(this), max = parseInt(this.dataset.max) || 0, drag = null;
 					var tiles = function() { return $w.children('.img-tile:not(.d-none)'); };
 					var refresh = function() {

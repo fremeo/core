@@ -1,5 +1,10 @@
 # Changelog
 #0.0.8 (unveroeffentlicht)
++ Bild-Hinzufuegen-Kachel explizit mit Datei-Eingabe verknuepft, damit der neue Fortschrittsbalken nicht die Aktivierung des Dateidialogs uebernimmt.
++ Bild-Upload-Fortschritt ersetzt waehrend des Uploads das Plus-Symbol mittig in der Hinzufuegen-Kachel; schmaler Fortschrittsbalken am unteren Rand, Fehlermeldungen separat.
++ SEO-Routing setzt HTTP-Status ueber http_response_code statt rohem HTTP-Header; spaetere JSON-Antworten (z.B. Galerie-Uploads) werden nicht durch PHP-Warnungen verunreinigt.
++ Bild-Upload-Warteschlange zeigt bestaetigte Uploads kompakt als fertig/gesamt direkt im Bilder-Container.
++ Optionales queue/upload_token fuer image-Felder: Formular einmal speichern, ausgewaehlte Dateien einzeln mit Fortschritt und bestaetigter Antwort senden; bei Fehlern stoppen und verbleibende Dateien erneut versuchen.
 + Builder-Ebenen: einheitlicher Stift zum Bearbeiten/Anlegen und Papierkorb mit Bestaetigung. Loeschungen bleiben rueckgaengig machbare Entwuerfe und entfernen erst beim Veroeffentlichen die ganze Ebene samt Sprachstaenden.
 + Builder-Bereichsvererbung: aktive individuelle Seite (Page+Id) vor Seitentyp (Page) vor allgemeinem Inhalt, ohne ModuleId-Filter und getrennt nach Frontend/Admin. Deaktivierte Ebenen erben weiter; aktive leere Ebenen bleiben leer.
 + Aufklappbare Bereichsebenen mit Herkunftsanzeige, Aktivierung und ausdruecklicher Bearbeitung; keine individuelle Zeile ohne Id, echte Id 0 bleibt gueltig. Unabhaengige Inhaltskopien statt Ueberschreiben vorhandener gemeinsamer Ebenen.

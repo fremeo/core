@@ -53,7 +53,7 @@ if( isset($R['SEO_URL']) ) {
 					$R = $D['R'] = array_replace_recursive((array)($d['R']),($R??[]) );#ToDo: 
 				}
 
-				header( "HTTP/1.1 200 OK" );
+				http_response_code(200);
 				$D['R']['ModuleId'] = $kMOD;
 				break;
 			}
@@ -61,7 +61,7 @@ if( isset($R['SEO_URL']) ) {
 	}
 	
 	if(!isset($D['R']['ModuleId'])) {
-		header( "HTTP/1.1 404 Not Found" );
+		http_response_code(404);
 		$D['_PAGE'] = 'error.404';
 		$D['R']['Page'] = 'error.404';
 		$D['R']['ModuleId'] = 'fremeo/core';
