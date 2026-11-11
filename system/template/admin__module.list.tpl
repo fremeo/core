@@ -7,9 +7,9 @@
 		{if $D.R.ComposerOutput|default:null}
 			<div class="alert {if $D.R.ComposerOutput.success}alert-success{else}alert-danger{/if}">
 				<pre class="mb-0" style="white-space:pre-wrap;">{$D.R.ComposerOutput.output|escape}</pre>
-			</fieldset>
+			</div>
 		{/if}
-		<ul class="nav nav-tabs mb-3" role="tablist">
+		<ul class="nav nav-tabs" role="tablist">
 			{foreach $D.R.ModuleTabs as $tabId => $tab}
 				<li class="nav-item" role="presentation"><button class="nav-link{if $tabId == 'active'} active{/if}" id="modules-{$tabId}-tab" data-bs-toggle="tab" data-bs-target="#modules-{$tabId}" type="button" role="tab" aria-controls="modules-{$tabId}" aria-selected="{if $tabId == 'active'}true{else}false{/if}">{$tab.Label|escape} <span class="badge text-bg-secondary">{count($tab.Items)}</span></button></li>
 			{/foreach}
@@ -51,7 +51,7 @@
 						{if $MOD.version != $MOD.version_latest}<button type="button" class="btn btn-primary btn-sm" onclick="modAction('update-module','{$kMOD|escape:'javascript'}')">Update</button>{/if}
 						<button type="button" class="btn btn-primary btn-sm" onclick="modAction('reinstall-module','{$kMOD|escape:'javascript'}','{$kMOD|escape:'javascript'} neu installieren?')">Reinstall</button>
 						{if $MOD.type != 'core'}<button type="button" class="btn btn-danger btn-sm" onclick="modAction('uninstall-module','{$kMOD|escape:'javascript'}','{$kMOD|escape:'javascript'} wirklich deinstallieren?')">Uninstall</button>{/if}
-					</div>
+					</fieldset>
 					{/if}
 				</td>
 				{$_sum_size = $MOD.size + $_sum_size}

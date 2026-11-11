@@ -1,5 +1,11 @@
 # Changelog
 #0.0.10 (unveroeffentlicht)
+! Modulliste: vertauschte div-/fieldset-Abschluesse korrigiert, damit Erfolgsmeldungen nicht die gesamte Liste umschliessen; Tabs ohne Abstand direkt an der Tabelle.
+! Datei-Drop und gelbliche Hervorhebung auf die einzelnen Bild-/Plus-Kacheln begrenzt statt der gesamten Formularbreite.
++ Bild-Dropflaechen beim Ziehen externer Dateien gelblich hervorheben; beim Verlassen oder Ablegen zuruecksetzen, deaktivierte Felder nicht hervorheben.
+! Upload-Fortschritt und Fehler je Bildfeld statt am ersten Queue-Feld darstellen; Startbild separat beim Formularrequest bestaetigen, leere Felder ohne Fortschrittsanzeige, mehrere Warteschlangen mit eigenen Zaehlern und erhaltenem Wiederholungsstand.
+! Bild-Upload-Warteschlange markiert nur ihre Bildfelder, nicht das gesamte Formular: Startbild und andere normale Datei-Uploads werden wieder mit dem ersten Formularrequest gespeichert statt faelschlich einzeln als Album-Bilder gesendet.
++ Dateien per Drag & Drop auf Bildfelder uebernehmen; gleiche Aenderungsereignisse, Mengenpruefung und Speicherung wie bei der weiterhin verfuegbaren Dateiauswahl per Klick.
 ! Composer-Klasse und PHAR aus dem Core entfernt: optionale Paketverwaltung ausschliesslich aus dem Loader-Setup ausserhalb von vendor, ohne Laufzeitkopien.
 + PackageManager liest installierte Pakete auch ohne Setup; Composer-Aktionen bei fehlendem Setup sichtbar deaktiviert und serverseitig gesperrt, Website, Suche und Modulstatus bleiben nutzbar.
 ! Regressionstests fuer fehlendes Setup und Paketupdates, die die alte mitgelieferte PHAR entfernen, mit und ohne CLI-Prozess.

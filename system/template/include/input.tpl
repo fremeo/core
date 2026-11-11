@@ -116,6 +116,7 @@
 				main       aktuelle Datei-ID
 				help       Hilfetext
 				queue      1 = Dateien beim Speichern einzeln senden; Seite muss UploadQueue-JSON-Antworten und UploadToken bereitstellen.
+				Dateien koennen per Klick oder Drop zugewiesen werden; beide Wege laden erst beim Speichern hoch.
 				Bilder werden als file/{id}_{res}x{res}.webp geladen (res = 2 x size). Das Formular braucht enctype="multipart/form-data".
 				Gelöschte Bilder trägt nur der Server aus: __DELETE__ ist nur ein Flag, Dateien selbst löscht z.B. $C['modul']['File']->delete().
 			*}
@@ -149,10 +150,8 @@
 				{if $p.upload}
 					<label for="img_file_{$h}" class="img-add btn btn-outline-secondary position-relative d-flex align-items-center justify-content-center p-0{if $p.max && $count >= $p.max} d-none{/if}" style="width:{$size}px;height:{$size}px;border-style:dashed;" title="Bilder hinzufügen">
 						<i class="fa-solid fa-plus"></i>
-						{if $p.queue}
 							<span class="img-progress small" role="status" hidden></span>
 							<progress class="img-progressbar position-absolute bottom-0 start-0 w-100" style="height:5px;" max="100" value="0" aria-label="Upload-Fortschritt" hidden></progress>
-						{/if}
 						<input type="file" id="img_file_{$h}" class="img-file d-none" name="{$p.upload|escape}[]" multiple accept="{if $p.accept}{$p.accept|escape}{else}image/*{/if}">
 						<span class="img-addcount badge text-bg-primary position-absolute top-0 end-0 d-none"></span>
 					</label>
@@ -162,20 +161,56 @@
 			<div class="form-text"><span class="img-n">{$count}</span>{if $p.max} / {$p.max}{/if} Bilder{if $p.help} &ndash; {$p.help}{/if}</div>
 			{literal}
 			<script>
+			function initImageFileDrop(widget) {
+				widget.querySelectorAll('.img-add, .img-tile').forEach(function(zone) {
+				function highlight(active) {
+					zone.classList.toggle('bg-warning-subtle', active);
+				}
+				zone.addEventListener('dragover', function(event) {
+					if (!Array.from(event.dataTransfer.types).includes('Files')) return;
+					event.preventDefault();
+					var input = widget.querySelector('.img-file');
+					if (!input || input.disabled) {
+						highlight(false);
+						event.dataTransfer.dropEffect = 'none';
+						return;
+					}
+					highlight(true);
+					event.dataTransfer.dropEffect = 'copy';
+				});
+				zone.addEventListener('dragleave', function(event) {
+					if (!event.relatedTarget || !zone.contains(event.relatedTarget)) highlight(false);
+				});
+				zone.addEventListener('dragend', function() { highlight(false); });
+				zone.addEventListener('drop', function(event) {
+					highlight(false);
+					if (!Array.from(event.dataTransfer.types).includes('Files')) return;
+					event.preventDefault();
+					var input = widget.querySelector('.img-file');
+					if (!input || input.disabled) return;
+					var transfer = new DataTransfer();
+					Array.from(event.dataTransfer.files).forEach(function(file) { transfer.items.add(file); });
+					input.files = transfer.files;
+					input.dispatchEvent(new Event('change', { bubbles: true }));
+				});
+				});
+			}
 			function initImageUploadQueue(widget) {
 				var form = widget.closest('form');
-				if (!form || form.dataset.uploadQueue) return;
-				form.dataset.uploadQueue = '1';
-				var status = widget.querySelector('.img-progress'), bar = widget.querySelector('.img-progressbar'),
-					plus = widget.querySelector('.img-add > i'), badge = widget.querySelector('.img-addcount'),
-					errorText = document.createElement('div'), pending = [], done = 0, running = false, started = false;
-				errorText.className = 'small text-danger';
-				errorText.setAttribute('role', 'alert');
-				errorText.hidden = true;
-				widget.nextElementSibling.after(errorText);
+				if (!form || form.dataset.imageQueueInitialized) return;
+				form.dataset.imageQueueInitialized = '1';
+				var groups = [], pending = [], done = 0, running = false, started = false, active = null;
 				function progress() {
-					status.textContent = done + '/' + pending.length;
-					bar.value = pending.length ? done / pending.length * 100 : 0;
+					groups.forEach(function(group) {
+						var selected = group.files.length > 0;
+						group.status.hidden = !selected;
+						group.bar.hidden = !selected;
+						if (!selected) return;
+						group.status.textContent = group.done + '/' + group.files.length;
+						group.bar.value = group.done / group.files.length * 100;
+						group.plus.hidden = true;
+						group.badge.classList.add('d-none');
+					});
 				}
 				function leaving(event) { event.preventDefault(); event.returnValue = ''; }
 				form.addEventListener('submit', async function(event) {
@@ -183,16 +218,28 @@
 					event.stopImmediatePropagation();
 					if (running) return;
 					if (!started) {
-						pending = Array.from(form.querySelectorAll('[data-upload-queue] input[type="file"]')).flatMap(function(input) {
-							return Array.from(input.files).map(function(file) { return { name: input.name, file: file }; });
+						groups = Array.from(form.querySelectorAll('.img-input')).filter(function(field) {
+							return field.querySelector('.img-file');
+						}).map(function(field) {
+							var input = field.querySelector('.img-file'), errorText = field.imageUploadError;
+							if (!errorText) {
+								errorText = document.createElement('div');
+								errorText.className = 'img-upload-error small text-danger';
+								errorText.setAttribute('role', 'alert');
+								field.nextElementSibling.after(errorText);
+								field.imageUploadError = errorText;
+							}
+							return { input: input, files: input.disabled ? [] : Array.from(input.files), done: 0,
+								queued: field.dataset.uploadQueue === '1', errorText: errorText,
+								status: field.querySelector('.img-progress'), bar: field.querySelector('.img-progressbar'),
+								plus: field.querySelector('.img-add > i'), badge: field.querySelector('.img-addcount') };
+						});
+						pending = groups.filter(function(group) { return group.queued; }).flatMap(function(group) {
+							return group.files.map(function(file) { return { name: group.input.name, file: file, group: group }; });
 						});
 						done = 0;
 					}
-					status.hidden = false;
-					bar.hidden = false;
-					plus.hidden = true;
-					badge.classList.add('d-none');
-					errorText.hidden = true;
+					groups.forEach(function(group) { group.errorText.hidden = true; });
 					progress();
 					running = true;
 					window.addEventListener('beforeunload', leaving);
@@ -213,26 +260,31 @@
 					}
 					try {
 						if (!started) {
+							active = groups.find(function(group) { return !group.queued && group.files.length; }) || groups[0];
 							form.querySelectorAll('[data-upload-queue] input[type="file"]').forEach(function(input) { body.delete(input.name); });
 							await send(body, 0);
+							groups.forEach(function(group) { if (!group.queued) group.done = group.files.length; });
+							progress();
 							started = true;
 						}
 						while (done < pending.length) {
 							var entry = pending[done], data = new FormData();
+							active = entry.group;
 							data.set('R[ACTION]', 'save');
 							data.set('R[UploadOnly]', '1');
 							data.set('R[FileModified]', JSON.stringify({ [entry.file.name.toLowerCase()]: entry.file.lastModified }));
 							data.append(entry.name, entry.file);
 							await send(data, 1);
 							done++;
+							entry.group.done++;
 							progress();
 						}
 						window.removeEventListener('beforeunload', leaving);
 						location.assign(form.action);
 					} catch (error) {
-						errorText.hidden = false;
-						errorText.textContent = 'Upload gestoppt' + (pending[done] ? ' bei ' + pending[done].file.name : '') + ': ' + error.message
-							+ ' (' + done + ' / ' + pending.length + ' hochgeladen). Speichern versucht den verbleibenden Upload erneut.';
+						active.errorText.hidden = false;
+						active.errorText.textContent = 'Upload gestoppt' + (started && pending[done] ? ' bei ' + pending[done].file.name : '') + ': ' + error.message
+							+ ' (' + active.done + ' / ' + active.files.length + ' hochgeladen). Speichern versucht den verbleibenden Upload erneut.';
 						console.error('Bilder-Upload:', error);
 					} finally {
 						running = false;
@@ -247,6 +299,7 @@
 				$('.img-input').each(function() {
 					if (this.dataset.init) return;
 					this.dataset.init = 1;
+					initImageFileDrop(this);
 					if (this.dataset.uploadQueue === '1') initImageUploadQueue(this);
 					var $w = $(this), max = parseInt(this.dataset.max) || 0, drag = null;
 					var tiles = function() { return $w.children('.img-tile:not(.d-none)'); };

@@ -218,10 +218,25 @@ class ModuleListTest extends TestCase {
 		$smarty = new \Smarty();
 		$smarty->setCompileDir($this->tmp);
 		$smarty->error_reporting = E_ALL & ~E_WARNING & ~E_NOTICE & ~E_DEPRECATED & ~E_USER_DEPRECATED;
-		$smarty->assign('D', $this->page([], 'GET'));
+		$data = $this->page([], 'GET');
+		$data['R']['ComposerOutput'] = ['success' => true, 'output' => 'Modulstatus gespeichert.'];
+		$smarty->assign('D', $data);
 		$tpl = __DIR__ . '/../system/template/';
 		$html = $smarty->fetch("extends:{$tpl}index__index.tpl|{$tpl}index__admin.tpl|{$tpl}admin__module.list.tpl|{$tpl}include/input.tpl");
 		$smarty->clearAllAssign();
+		$document = new \DOMDocument();
+		$previous = libxml_use_internal_errors(true);
+		try {
+			$document->loadHTML($html);
+			$xpath = new \DOMXPath($document);
+			$this->assertSame(0, $xpath->query('//div[contains(@class,"alert-success")]//table | //div[contains(@class,"alert-success")]//ul')->length);
+			$this->assertSame(1, $xpath->query('//div[contains(@class,"alert-success")]//pre')->length);
+			$this->assertSame(substr_count($html, '<fieldset'), substr_count($html, '</fieldset>'));
+			$this->assertStringContainsString('class="nav nav-tabs" role="tablist"', $html);
+		} finally {
+			libxml_clear_errors();
+			libxml_use_internal_errors($previous);
+		}
 		$this->assertStringContainsString('id="modules-active"', $html);
 		$this->assertStringContainsString('id="modules-inactive"', $html);
 		$this->assertStringContainsString('id="modules-libraries"', $html);
