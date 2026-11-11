@@ -87,6 +87,7 @@ if($D['R']['ModuleId']) {
 	#Template und php Verkettung
 	$_tpl = $C['Template']->getExtends($D['MODULE']['D'], $D['R']['ModuleId'], $D['R']['Page']);
 	$_theme = $C['Template']->resolveTheme($_tpl['tpl']);
+	$C['LanguageVariable']->configure($C['Smarty'], $_theme, 'DE');
 	if (($_theme['Branch'] ?? '') === 'frontend' && !array_filter($D['MODULE']['D'], static fn ($module) => $module['INFO']['Type'] === 'template' && $module['Active'])) {
 		http_response_code(503);
 		echo 'Das Frontend ist deaktiviert. Die Administration bleibt erreichbar.';

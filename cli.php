@@ -18,6 +18,7 @@ $target = $argv[2] ?? '*'; // Wenn kein Modul angegeben ist, gilt '*' für alle
 
 // 2. Prüfen, ob der Befehl 'migration' lautet
 if ($befehl === 'migration') {
+	$C['LanguageVariable']->clearCache();
     echo "----------------------------------------\n";
     echo " MIGRATION GESTARTET\n";
     echo "----------------------------------------\n";
@@ -57,6 +58,7 @@ if ($befehl === 'migration') {
     echo "----------------------------------------\n";
 }
 else if ($befehl === 'uninstall') {
+	$C['LanguageVariable']->clearCache();
     # 2. Prüfen, ob der Befehl 'uninstall' lautet
     echo "----------------------------------------\n";
     echo " MODUL DEINSTALLATION GESTARTET\n";

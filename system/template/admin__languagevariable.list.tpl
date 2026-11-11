@@ -5,7 +5,9 @@
 			<ul class="nav nav-tabs" role="tablist">
 				{foreach from=$D.R.LanguageRows key="kMOD" item="rows" name="tabs"}
 					<li class="nav-item">
-						<a class="nav-link{if $smarty.foreach.tabs.first} active{/if}" id="lang-tab-{md5($kMOD)}" href="#lang-{md5($kMOD)}" data-bs-toggle="tab" role="tab" aria-controls="lang-{md5($kMOD)}" aria-selected="{if $smarty.foreach.tabs.first}true{else}false{/if}">{$kMOD|escape}</a>
+						<a class="nav-link position-relative{if $smarty.foreach.tabs.first} active{/if}" id="lang-tab-{md5($kMOD)}" href="#lang-{md5($kMOD)}" data-bs-toggle="tab" role="tab" aria-controls="lang-{md5($kMOD)}" aria-selected="{if $smarty.foreach.tabs.first}true{else}false{/if}">{$kMOD|escape}
+							{if count($rows) > 0}<span class="badge rounded-pill bg-danger">{count($rows)}</span>{/if}
+						</a>
 					</li>
 				{/foreach}
 			</ul>
@@ -27,7 +29,16 @@
 								<tr>
 									<th scope="row">{$id|escape}</th>
 									{foreach from=$values key="iso" item="value"}
-										<td>{input p=['name' => "D[MODULE][D][{$kMOD}][LANGUAGE][D][{$iso}][I18N][D][{$id}][Value]", 'type' => 'text', 'value' => $value]}</td>
+										<td>
+											{input p=['name' => "D[MODULE][D][{$kMOD}][LANGUAGE][D][{$iso}][I18N][D][{$id}][Value]", 'type' => 'textarea', 'value' => $value|escape]}
+											{$meta = $D.R.LanguageMeta[$kMOD][$id][$iso]|default:[]}
+											{if $meta.Missing|default:false}<span class="badge text-bg-warning" title="{$meta.Source|escape}">Uebersetzung fehlt</span>
+											{elseif $meta.Override|default:false}<span class="badge text-bg-secondary">Individuell</span>{/if}
+											<input type="hidden" class="lang-resetflag" name="{$D.C.Security->registerSecurityD("D[MODULE][D][{$kMOD}][LANGUAGE][D][{$iso}][I18N][D][{$id}][Reset]")|escape}" value="1" disabled>
+											<button type="button" class="btn btn-outline-secondary btn-sm lang-reset" data-default="{$meta.Default|default:''|escape}">Standard</button>
+											<input type="hidden" class="lang-emptyflag" name="{$D.C.Security->registerSecurityD("D[MODULE][D][{$kMOD}][LANGUAGE][D][{$iso}][I18N][D][{$id}][Empty]")|escape}" value="1" disabled>
+											<button type="button" class="btn btn-outline-secondary btn-sm lang-empty">Leer</button>
+										</td>
 									{/foreach}
 									<td class="text-end">
 										<input type="hidden" class="lang-delflag" name="{$D.C.Security->registerSecurityD("D[MODULE][D][{$kMOD}][LANGUAGE][D][{$D.R.LanguageIsos[0]}][I18N][D][{$id}]")|escape}" value="__DELETE__" disabled>
@@ -46,6 +57,18 @@
 	</form>
 	{literal}
 	<script>
+		$('.lang-reset').on('click', function() {
+			var cell = $(this).closest('td');
+			cell.find('textarea').val(this.dataset.default).prop('disabled', true);
+			cell.find('.lang-resetflag').prop('disabled', false);
+			cell.find('.lang-emptyflag').prop('disabled', true);
+		});
+		$('.lang-empty').on('click', function() {
+			var cell = $(this).closest('td');
+			cell.find('textarea').val('').prop('disabled', true);
+			cell.find('.lang-resetflag').prop('disabled', true);
+			cell.find('.lang-emptyflag').prop('disabled', false);
+		});
 		$('.lang-delete').on('click', function() {
 			if (!confirm('Sprachvariable wirklich loeschen? Das Loeschen erfolgt erst beim Speichern.')) return;
 			var tr = $(this).closest('tr');

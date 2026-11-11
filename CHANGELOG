@@ -1,5 +1,11 @@
 # Changelog
 #0.0.10 (unveroeffentlicht)
+~ Sprachvariablen als Entwicklungsregel dokumentiert: neue Oberflaechentexte direkt in die Modul-de.php, bestehende Texte bei Seitenueberarbeitung portieren und vor Veroeffentlichung sinngemaess in en.php ergaenzen.
++ LanguageVariable mit Modul-/Template-Vererbung, Datenbank-Overrides und automatischer Erfassung fehlender Schluessel; DE vorerst feste Ausgabe-/Ersatzsprache, zunaechst nur Login umgestellt.
++ Allgemeines i18n-Compiler-Plugin mit austauschbarem Resolver und ICU/ext-intl: statische Texte direkt im Kompilat, dynamische Muster eingebettet, Textwerte automatisch HTML-maskiert; keine Smarty-Ausfuehrung in Sprachtexten und keine Sprachabfragen beim Rendern.
+! Unbenutzten i18n-Templatefunktions-Platzhalter aus input.tpl entfernt, damit er das neue Compiler-Plugin in der Seitenvererbung nicht ueberlagert.
++ Sprachverwaltung: Anzahl-Badges je Modul-Tab, mehrzeilige Quelltexte, Fehlend-/Override-Status sowie Standard-/Leer-Aktionen; vorhandene Werte ohne Missing-Kennzeichen bleiben Overrides.
+~ Sprachkonzept und verbindliche Pflege dokumentiert; Smarty-Kompilate/Ausgabecache bei Sprach-, Modul- und Theme-Aenderungen leeren, Sprachdateien als Abhaengigkeiten verfolgen, keine Revisionen und keine erneuten Sprachabfragen bei bereits kompilierter Ausgabe.
 ! Modulliste: vertauschte div-/fieldset-Abschluesse korrigiert, damit Erfolgsmeldungen nicht die gesamte Liste umschliessen; Tabs ohne Abstand direkt an der Tabelle.
 ! Datei-Drop und gelbliche Hervorhebung auf die einzelnen Bild-/Plus-Kacheln begrenzt statt der gesamten Formularbreite.
 + Bild-Dropflaechen beim Ziehen externer Dateien gelblich hervorheben; beim Verlassen oder Ablegen zuruecksetzen, deaktivierte Felder nicht hervorheben.

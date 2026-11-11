@@ -50,6 +50,7 @@ foreach ($D['MODULE']['D'] as $kMOD => $MOD) {
 		}
 		if ($valid && $update) {
 			$C[$kMOD]['CData']->set_object($update);
+			if (isset($posted['theme'])) $C['LanguageVariable']->clearCache();
 		}
 	}
 	unset($D['MODULE']['D'][$kMOD]['SETTING']);

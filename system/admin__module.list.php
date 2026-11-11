@@ -48,12 +48,14 @@ if ($_action === 'save') {
 			}
 		}
 		$R['ComposerOutput'] = ['success' => $_cacheSuccess, 'output' => implode("\n", $_cacheLines)];
+		$C['LanguageVariable']->clearCache();
 	} elseif (in_array($_bulkAction, ['activate', 'deactivate'], true)) {
 		$_update = [];
 		foreach ($_selected as $_moduleId) {
 			$_update['MODULE']['D'][$_moduleId]['Active'] = $_bulkAction === 'activate' ? 1 : 0;
 		}
 		$C['fremeo/core']['CData']->set_object($_update);
+		$C['LanguageVariable']->clearCache();
 		$_moduleState = null;
 		$C['fremeo/core']['CData']->get_object($_moduleState, $_moduleFilter);
 		$R['ComposerOutput'] = ['success' => true, 'output' => count($_selected) . ' Modulstatus gespeichert. Die Aenderung gilt ab der naechsten Anfrage.'];

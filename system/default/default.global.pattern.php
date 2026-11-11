@@ -21,6 +21,8 @@ return [
 	# [<iso2>][<lang_id>]
 	'LANGUAGE'	=> ['D' => ['I18N' => [
 		'Value'		=> ['Type' => 'text'],
+		'Missing'	=> ['Type' => 'checkbox'],
+		'Source'	=> ['Type' => 'text'],
 		]],
 	],
 ];

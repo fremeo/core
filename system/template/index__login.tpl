@@ -37,7 +37,7 @@
 			
 			<div class="login-card">
 
-				<h2 class="login-title">{#login_title#}</h2>
+				<h2 class="login-title">{i18n key="login_title"}</h2>
 
 				<form method="post">
 					<input type="hidden" name="D[PAGE]" value="login">
@@ -50,22 +50,24 @@
 					<!-- Username -->
 					<div class="input-group mb-3">
 						<span class="input-group-text">👤</span>
-						<input name="R[UserName]" value="{$D.R.UserName}" class="form-control" type="text" placeholder="{#login_username#}" required autofocus>
+						{capture assign="loginUsername"}{i18n key="login_username"}{/capture}
+						<input name="R[UserName]" value="{$D.R.UserName|escape}" class="form-control" type="text" placeholder="{$loginUsername|escape}" required autofocus>
 					</div>
 					<!-- Password -->
 					<div class="input-group mb-2">
 						<span class="input-group-text">🔒</span>
-						<input name="R[Password]" class="form-control" type="password" placeholder="{#login_password#}" required>
+						{capture assign="loginPassword"}{i18n key="login_password"}{/capture}
+						<input name="R[Password]" class="form-control" type="password" placeholder="{$loginPassword|escape}" required>
 					</div>
 
 					<!-- Passwort vergessen -->
 					<a href="?R[Page]=index__password_forgot&R[ModuleId]=fremeo/core" class="forgot-link">
-						{#login_password_forgot#}
+						{i18n key="login_password_forgot"}
 					</a>
 
 					<!-- Login Button -->
 					<button type="submit" class="btn btn-primary w-100 mt-3">
-						{#login_btn_login#}
+						{i18n key="login_btn_login"}
 					</button>
 				</form>
 
@@ -76,4 +78,3 @@
 
 
 	{/block}
-

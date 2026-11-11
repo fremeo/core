@@ -4,7 +4,7 @@ namespace fremeo\core;
 class PackageManager {
 	public const UNAVAILABLE = 'Paketverwaltung nicht verfuegbar: setup/Composer.php oder setup/composer.phar fehlt oder ist nicht lesbar.';
 
-	public function __construct(private string $projectRoot) {}
+	public function __construct(private string $projectRoot, private ?\Closure $invalidateTemplates = null) {}
 
 	public function isAvailable(): bool {
 		return is_file($this->projectRoot . '/setup/Composer.php')
@@ -18,7 +18,13 @@ class PackageManager {
 			return ['success' => false, 'output' => self::UNAVAILABLE];
 		}
 		require_once $this->projectRoot . '/setup/Composer.php';
-		return (new \Composer($this->projectRoot . '/setup/composer.phar', $this->projectRoot))->run($command);
+		try {
+			return (new \Composer($this->projectRoot . '/setup/composer.phar', $this->projectRoot))->run($command);
+		} finally {
+			if ($this->invalidateTemplates !== null && preg_match('/^(require|install|update|reinstall|remove)\b/', $command)) {
+				($this->invalidateTemplates)();
+			}
+		}
 	}
 
 	public function getInstalledPackages(): array {

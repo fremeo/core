@@ -3,6 +3,7 @@ namespace fremeo\core\tests;
 
 use fremeo\core\Container;
 use fremeo\core\Security;
+use fremeo\core\LanguageVariable;
 use phploader\CData;
 use PHPUnit\Framework\TestCase;
 use Symfony\Component\Filesystem\Filesystem;
@@ -27,10 +28,17 @@ class AdminLanguageVariableListTest extends TestCase {
 		$db->registerPattern(require __DIR__ . '/../system/default/default.global.pattern.php');
 		$this->C->set('CData', $db, 'fremeo/core');
 		$this->modules = [
-			'fremeo/core' => ['INFO' => ['Type' => 'core', 'ModulDir' => $this->tmp], 'Active' => 1],
+			'fremeo/core' => ['INFO' => ['Type' => 'core', 'ModulDir' => $this->tmp, 'DataDir' => $this->tmp], 'Active' => 1],
 			'fremeo/shop' => ['INFO' => ['Type' => 'module', 'ModulDir' => $this->tmp], 'Active' => 0],
 			'fremeo/library' => ['INFO' => ['Type' => 'library', 'ModulDir' => $this->tmp]],
 		];
+		$this->C->set('Filesystem', new Filesystem());
+		$smarty = new \Smarty();
+		$smarty->setCompileDir($this->tmp . '/compiled');
+		$smarty->setCacheDir($this->tmp . '/html-cache');
+		$this->C->set('Smarty', $smarty);
+		$data = ['MODULE' => ['D' => $this->modules]];
+		$this->C->set('LanguageVariable', new LanguageVariable($this->C, $data));
 	}
 
 	protected function tearDown(): void {
@@ -102,6 +110,28 @@ class AdminLanguageVariableListTest extends TestCase {
 		$this->assertArrayNotHasKey('custom', $stored['LANGUAGE']['D']['FR']['I18N']['D'] ?? []);
 	}
 
+	public function testMissingValuesCanBecomeOverridesAndResetOrStayExplicitlyBlank(): void {
+		$this->C['fremeo/core']['CData']->set_object($this->values([
+			'DE' => ['I18N' => ['D' => ['new_key' => ['Missing' => 1, 'Source' => 'example.tpl']]]],
+		]));
+		$this->assertTrue($this->page()['LanguageMeta']['fremeo/core']['new_key']['DE']['Missing']);
+		$R = $this->page(['fremeo/core' => $this->values([
+			'DE' => ['I18N' => ['D' => ['new_key' => ['Value' => '<u>{$name|escape}</u>']]]],
+		])], 'POST');
+		$this->assertTrue($R['LanguageMeta']['fremeo/core']['new_key']['DE']['Override']);
+		$this->assertFalse($R['LanguageMeta']['fremeo/core']['new_key']['DE']['Missing']);
+		$this->assertSame('<u>{$name|escape}</u>', $R['LanguageRows']['fremeo/core']['new_key']['DE']);
+		$R = $this->page(['fremeo/core' => $this->values([
+			'DE' => ['I18N' => ['D' => ['title' => ['Empty' => 1]]]],
+		])], 'POST');
+		$this->assertSame('', $R['LanguageRows']['fremeo/core']['title']['DE']);
+		$this->assertTrue($R['LanguageMeta']['fremeo/core']['title']['DE']['Override']);
+		$R = $this->page(['fremeo/core' => $this->values([
+			'DE' => ['I18N' => ['D' => ['title' => ['Reset' => 1]]]],
+		])], 'POST');
+		$this->assertSame('Standard', $R['LanguageRows']['fremeo/core']['title']['DE']);
+	}
+
 	#[\PHPUnit\Framework\Attributes\WithoutErrorHandler]
 	public function testThemeAwareTemplateAndFooter(): void {
 		if (!defined('SCRIPT_NAME')) define('SCRIPT_NAME', '/test/');
@@ -125,6 +155,7 @@ class AdminLanguageVariableListTest extends TestCase {
 		$this->assertStringContainsString('form="language-list-form"', $html);
 		$this->assertStringContainsString('>Abbrechen</a>', $html);
 		$this->assertStringContainsString('Anzahl: 1', $html);
+		$this->assertStringContainsString('badge rounded-pill bg-danger">1</span>', $html);
 		$this->assertStringContainsString('&lt;title&gt;', $html);
 		$this->assertStringContainsString('Keine Sprachvariablen vorhanden.', $html);
 		$this->assertStringContainsString('tab-pane fade show active', $html);

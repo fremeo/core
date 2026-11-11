@@ -704,19 +704,6 @@
 {/function}
 
 
-{function name=i18n id='' lang=null}
-{strip}
-	{if $D.SYSTEM.LANGUAGE_ID && !isset($lang)}{$lang = $D.SYSTEM.LANGUAGE_ID}{/if}
-		{*ToDo!!!*}
-		{*$D.LANGUAGE.D[DE].I18N.D[KEY].Value*}
-	{*if $D.LANGUAGE.D[$lang]['LANGUAGE.I18N'].D["{$lang}.{$id}"].Value}
-		{$D.LANGUAGE.D[$lang]['LANGUAGE.I18N'].D["{$lang}.{$id}"].Value}
-	{else*}
-		#{$id}#
-	{*/if*}
-{/strip}
-{/function}
-
 {function name=table head=[] rows=[]}
 {strip}
 <table class="table">

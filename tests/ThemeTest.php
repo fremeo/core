@@ -22,6 +22,9 @@ class ThemeTest extends TestCase {
 		$this->fs = new Filesystem();
 		$this->C = new Container();
 		$this->C->set('Filesystem', $this->fs);
+		$this->C->set('LanguageVariable', new class {
+			function clearCache(): void {}
+		});
 		$this->D = ['MODULE' => ['D' => []]];
 		$this->template = new Template($this->C, $this->D);
 		$this->C->set('Template', $this->template);

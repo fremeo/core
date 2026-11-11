@@ -16,12 +16,15 @@ $C = new fremeo\core\Container(); # Klassen Instanz Array, für alle Module und 
 # Module Klassen Instanzen werden in $C['ModulId']['KlassenName'] gespeichert
 $C->set('Security', fn () => new \fremeo\core\Security());
 $C->set('Packagist', fn () => new Packagist() );
-$C->set('Composer', fn () => new \fremeo\core\PackageManager(PROJECT_ROOT) );
+$C->set('Composer', fn () => new \fremeo\core\PackageManager(PROJECT_ROOT, fn () => $C['LanguageVariable']->clearCache()) );
 $C->set('Filesystem', fn () => new Filesystem() );
 $C->set('ImageManager', fn () => new ImageManager( Driver::class ) );
 $C->set('Finder', fn () => new Finder() );
-$C->set('Smarty', fn () => (new Smarty())->addPluginsDir(__DIR__ . '/system/core/smarty_plugin'));
+$C->set('Smarty', fn () => (new Smarty())->addPluginsDir(__DIR__ . '/system/core/smarty_plugin')
+	->setCompileDir(PROJECT_ROOT . '/data_c/fremeo~core/template_c/')
+	->setCacheDir(PROJECT_ROOT . '/data_c/fremeo~core/template_cache/'));
 $C->set('Template', function () use ($C, &$D) { return new \fremeo\core\Template($C, $D); });
+$C->set('LanguageVariable', function () use ($C, &$D) { return new \fremeo\core\LanguageVariable($C, $D); });
 $C->set('Setting', function () use ($C, &$D) { return new \fremeo\core\Setting($C, $D); });
 $C->set('Builder', fn () => new \fremeo\core\Builder($C['fremeo/core']['CData']));
 

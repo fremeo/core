@@ -47,9 +47,18 @@ class PackageManagerTest extends TestCase {
 		mkdir($this->tmp . '/setup');
 		copy("$setup/Composer.php", $this->tmp . '/setup/Composer.php');
 		copy("$setup/composer.phar", $this->tmp . '/setup/composer.phar');
-		$result = (new PackageManager($this->tmp))->run('--version');
+		$clears = 0;
+		$manager = new PackageManager($this->tmp, function () use (&$clears): void { $clears++; });
+		$result = $manager->run('--version');
 		$this->assertTrue($result['success'], $result['output']);
+		$this->assertSame(0, $clears);
 		$this->assertStringContainsString('Composer version', $result['output']);
+		$result = $manager->run('update --no-install --no-audit --no-scripts');
+		$this->assertTrue($result['success'], $result['output']);
+		$this->assertSame(1, $clears);
+		$result = $manager->run('update --invalid-language-cache-test-option');
+		$this->assertFalse($result['success']);
+		$this->assertSame(2, $clears);
 		$this->assertFileDoesNotExist(__DIR__ . '/../system/core/Composer.php');
 		$this->assertFileDoesNotExist(__DIR__ . '/../system/core/composer.phar');
 	}

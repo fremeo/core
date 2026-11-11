@@ -23,6 +23,10 @@ class ModuleListTest extends TestCase {
 		$this->C = new Container();
 		$this->C->set('CData', $this->db, 'fremeo/core');
 		$this->C->set('Security', new Security());
+		$this->C->set('LanguageVariable', new class {
+			public int $clears = 0;
+			function clearCache(): void { $this->clears++; }
+		});
 		$this->modules = [];
 		$packages = [];
 		foreach (['fremeo/core' => 'core', 'fremeo/frontend' => 'template', 'fremeo/shop' => 'module', 'vendor/library' => 'library'] as $id => $type) {
@@ -84,6 +88,7 @@ class ModuleListTest extends TestCase {
 		$this->assertSame([], $this->C['Composer']->commands);
 		$data = $this->bulk('deactivate', ['fremeo/shop' => '1']);
 		$this->assertTrue($data['R']['ComposerOutput']['success']);
+		$this->assertSame(1, $this->C['LanguageVariable']->clears);
 	}
 
 	private function states(): array {
@@ -151,6 +156,7 @@ class ModuleListTest extends TestCase {
 		});
 		$result = $this->bulk('clear-cache', ['fremeo/shop' => '1']);
 		$this->assertTrue($result['R']['ComposerOutput']['success']);
+		$this->assertSame(1, $this->C['LanguageVariable']->clears);
 		$this->assertSame([PROJECT_ROOT . 'data_c/fremeo~shop'], $this->C['Filesystem']->paths);
 		$this->assertDirectoryDoesNotExist("{$this->tmp}/data_c/fremeo~shop");
 		$this->assertFileExists("{$this->tmp}/data_c/fremeo~frontend/keep.txt");
