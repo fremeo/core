@@ -24,10 +24,10 @@ return [
             'D' => [
                 'GROUP' => [
                     'Active'		=> ['Type' => 'checkbox'],
-                ],
+                ],/*
                 'ACCOUNT' => [#ToDo: Prüfen ob Accounts wirklich in phpapp angelegt werden müssen. 
                     'Active'		=> ['Type' => 'checkbox'],
-                ]
+                ]*/
             ]
 	],
 	'USER_GROUP' => [ #Rechteverwaltung
@@ -38,11 +38,11 @@ return [
 						'Active'		=> ['Type' => 'checkbox'],
 					]
 				]
-	],
+	],/*
 	'ACCOUNT' => [ #Kunden Accounts
 			'Active'		=> ['Type' => 'checkbox'],
 			'Name'			=> ['Type' => 'text'], #??
-	],
+],*/
 	'MODULE' => [ # Module management
 		'Active'		=> ['Type' => 'checkbox'],
 	],

@@ -1,5 +1,6 @@
 # Changelog
 #0.0.10 (unveroeffentlicht)
+~ Pattern-Dateistruktur als verbindliche Modulregel dokumentiert: eigene Definitionen in system/default/default.pattern.php, isoliert laden und moduleigen registrieren; globale Patterns getrennt halten.
 ~ Sprachvariablen als Entwicklungsregel dokumentiert: neue Oberflaechentexte direkt in die Modul-de.php, bestehende Texte bei Seitenueberarbeitung portieren und vor Veroeffentlichung sinngemaess in en.php ergaenzen.
 + LanguageVariable mit Modul-/Template-Vererbung, Datenbank-Overrides und automatischer Erfassung fehlender Schluessel; DE vorerst feste Ausgabe-/Ersatzsprache, zunaechst nur Login umgestellt.
 + Allgemeines i18n-Compiler-Plugin mit austauschbarem Resolver und ICU/ext-intl: statische Texte direkt im Kompilat, dynamische Muster eingebettet, Textwerte automatisch HTML-maskiert; keine Smarty-Ausfuehrung in Sprachtexten und keine Sprachabfragen beim Rendern.

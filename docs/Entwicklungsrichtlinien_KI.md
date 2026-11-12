@@ -65,6 +65,7 @@ Ergänzend gilt [.github/Programmierleitfaden_Module.md](../../../../../.github/
 
 ## 4. Daten und Datenbank (`CData`)
 
+- Fuer alle Module: eigene Pattern-Definitionen als `return [...]` in `system/default/default.pattern.php` hinterlegen, nicht in `init.php` aufbauen. Dort in isolierter Closure laden und nur beim moduleigenen `CData` registrieren, ohne gemeinsame `$Pattern`-Variablen zu ueberschreiben. Das zentrale globale Pattern bleibt getrennt; beim Auslagern bestehende Pfade, Felder, Typen und Optionen unveraendert erhalten.
 - Die Modulaktion `Cache leeren` entfernt ausschliesslich `data_c/<vendor>~<paket>` fuer validierte, ausgewaehlte Module ueber den Filesystem-Dienst. Daten unter `data/`, andere Module und `data_c/public` bleiben erhalten. Gesperrte Dateien oder fehlende Rechte werden als Fehler angezeigt; benoetigte Cache-Dateien entstehen bei folgenden Zugriffen neu.
 - Jedes Modul hat eine eigene Datenbank. In `init.php` wird das **globale Pattern** (`system/default/default.global.pattern.php`) bei **jedem** Modul registriert, auch beim Core (fehlt z.B. `LINK`, entsteht bei gelöschtem Cache ein SQL-Syntaxfehler).
 - Globales Pattern (aktuell): `LINK`, `FILE`, `MIGRATION`, `SETTING` (`Value`), `LANGUAGE.D[<ISO2>].I18N.D[<id>].Value`.
